@@ -19,8 +19,8 @@ namespace Simulation
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             // TODO: Only add presentation for Clients, not Server
-            foreach (var (_, playerEntity) in SystemAPI
-                         .Query<PlayerCharacter>()
+            foreach (var (playerComponent, playerEntity) in SystemAPI
+                         .Query<ThirdPersonPlayer>()
                          .WithNone<PlayerInputProvider>()
                          .WithAll<GhostOwnerIsLocal>()
                          .WithEntityAccess())
@@ -31,7 +31,7 @@ namespace Simulation
                     commandBuffer.AddComponent(playerEntity, new PlayerInputProvider() 
                         { Input = inputAdapter });
                     var link = new PresentationLink() { Root = playerPresentation };
-                    commandBuffer.AddComponent(playerEntity, link);
+                    commandBuffer.AddComponent(playerComponent.ControlledCharacter, link);
                 }
                 else
                 {

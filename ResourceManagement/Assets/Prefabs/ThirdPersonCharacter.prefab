@@ -12,11 +12,9 @@ GameObject:
   - component: {fileID: 8041698241194078798}
   - component: {fileID: 6689285571920954877}
   - component: {fileID: 7542772330835976783}
-  - component: {fileID: 6538577337918525787}
   - component: {fileID: 5252362587670932209}
   - component: {fileID: 3891771194088326505}
   - component: {fileID: 7319851766752248559}
-  - component: {fileID: 1617192996958225708}
   m_Layer: 0
   m_Name: ThirdPersonCharacter
   m_TagString: Untagged
@@ -136,18 +134,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   Target: {fileID: 2861637503494133753}
---- !u!114 &6538577337918525787
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1692896102597148395}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f2566c9cc4424af1b2f9155ec0c9da02, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &5252362587670932209
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -196,22 +182,10 @@ MonoBehaviour:
   Importance: 1
   prefabId: 5fbcc801dea8fd640a004697d22ed448
   HasOwner: 1
-  SupportAutoCommandTarget: 1
+  SupportAutoCommandTarget: 0
   TrackInterpolationDelay: 0
   GhostGroup: 0
   UsePreSerialization: 0
---- !u!114 &1617192996958225708
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1692896102597148395}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6771a53d332e4a47b492cebd03fc9ccb, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &2861637503494133753
 GameObject:
   m_ObjectHideFlags: 0

@@ -7,6 +7,9 @@ using UnityEngine;
 
 namespace NetCode
 {
+    public struct ClientJoinRequest : IRpcCommand
+    { }
+    
     /// <summary>
     /// This allows sending RPCs between a stand alone build and the editor for testing purposes in the event when you finish this example
     /// you want to connect a server-client stand alone build to a client configured editor instance. 
@@ -24,20 +27,15 @@ namespace NetCode
         }
     }
 
-    // RPC request from client to server for game to go "in game" and send snapshots / inputs
-    public struct GoInGameRequest : IRpcCommand
-    {
-    }
-
     // When client has a connection with network id, go in game and tell server to also go in game
     [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
-    public partial struct GoInGameClientSystem : ISystem
+    public partial struct ClientGameSetupSystem : ISystem
     {
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<CharacterEntitySpawner>();
+            state.RequireForUpdate<GameSetup>();
             
             var builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<NetworkId>()
@@ -53,7 +51,7 @@ namespace NetCode
             {
                 commandBuffer.AddComponent<NetworkStreamInGame>(entity);
                 var req = commandBuffer.CreateEntity();
-                commandBuffer.AddComponent<GoInGameRequest>(req);
+                commandBuffer.AddComponent(req, new ClientJoinRequest());
                 commandBuffer.AddComponent(req, new SendRpcCommandRequest { TargetConnection = entity });
             }
             commandBuffer.Playback(state.EntityManager);
@@ -63,17 +61,17 @@ namespace NetCode
     // When server receives go in game request, go in game and delete request
     [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
-    public partial struct GoInGameServerSystem : ISystem
+    public partial struct ServerGameSetupSystem : ISystem
     {
         private ComponentLookup<NetworkId> networkIdFromEntity;
 
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            state.RequireForUpdate<CharacterEntitySpawner>();
+            state.RequireForUpdate<GameSetup>();
             
             var builder = new EntityQueryBuilder(Allocator.Temp)
-                .WithAll<GoInGameRequest>()
+                .WithAll<ClientJoinRequest>()
                 .WithAll<ReceiveRpcCommandRequest>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
             networkIdFromEntity = state.GetComponentLookup<NetworkId>(true);
@@ -82,35 +80,46 @@ namespace NetCode
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            // Get the prefab to instantiate
-            var prefab = SystemAPI.GetSingleton<CharacterEntitySpawner>().Simulated;
-        
-            // Get the name of the prefab being instantiated
-            state.EntityManager.GetName(prefab, out var prefabName);
-            var worldName = new FixedString32Bytes(state.WorldUnmanaged.Name);
+            EntityCommandBuffer ecb = SystemAPI.GetSingletonRW<EndSimulationEntityCommandBufferSystem.Singleton>().ValueRW.CreateCommandBuffer(state.WorldUnmanaged);
 
-            var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
-            networkIdFromEntity.Update(ref state);
+            // Get our GameSetup singleton, which contains the prefabs we'll spawn
+            GameSetup gameSetup = SystemAPI.GetSingleton<GameSetup>();
+            
+            // When a client wants to join, spawn and setup a character for them
+            foreach (var (recieveRPC, joinRequest, entity) in SystemAPI.Query<ReceiveRpcCommandRequest, ClientJoinRequest>().WithEntityAccess())
+            {                
+                // Spawn character, player, and camera ghost prefabs
+                Entity characterEntity = ecb.Instantiate(gameSetup.CharacterSimulation);
+                Entity playerEntity = ecb.Instantiate(gameSetup.Player);
+                //Entity cameraEntity = ecb.Instantiate(gameSetup.CameraPrefab);
+                    
+                // Add spawned prefabs to the connection entity's linked entities, so they get destroyed along with it
+                ecb.AppendToBuffer(recieveRPC.SourceConnection, new LinkedEntityGroup { Value = characterEntity });
+                ecb.AppendToBuffer(recieveRPC.SourceConnection, new LinkedEntityGroup { Value = playerEntity });
+                //ecb.AppendToBuffer(recieveRPC.SourceConnection, new LinkedEntityGroup { Value = cameraEntity });
+                
+                // Setup the owners of the ghost prefabs (which are all owner-predicted) 
+                // The owner is the client connection that sent the join request
+                int clientConnectionId = SystemAPI.GetComponent<NetworkId>(recieveRPC.SourceConnection).Value;
+                ecb.SetComponent(characterEntity, new GhostOwner { NetworkId = clientConnectionId });
+                ecb.SetComponent(playerEntity, new GhostOwner { NetworkId = clientConnectionId });
+                //ecb.SetComponent(cameraEntity, new GhostOwner { NetworkId = clientConnectionId });
 
-            foreach (var (reqSrc, reqEntity) in SystemAPI.Query<RefRO<ReceiveRpcCommandRequest>>().WithAll<GoInGameRequest>().WithEntityAccess())
-            {
-                commandBuffer.AddComponent<NetworkStreamInGame>(reqSrc.ValueRO.SourceConnection);
-                // Get the NetworkId for the requesting client
-                var networkId = networkIdFromEntity[reqSrc.ValueRO.SourceConnection];
-
-                // Log information about the connection request that includes the client's assigned NetworkId and the name of the prefab spawned.
-                UnityEngine.Debug.Log($"'{worldName}' setting connection '{networkId.Value}' to in game, spawning a Ghost '{prefabName}' for them!");
-
-                // Instantiate the prefab
-                var player = commandBuffer.Instantiate(prefab);
-                // Associate the instantiated prefab with the connected client's assigned NetworkId
-                commandBuffer.SetComponent(player, new GhostOwner { NetworkId = networkId.Value});
-
-                // Add the player to the linked entity group so it is destroyed automatically on disconnect
-                commandBuffer.AppendToBuffer(reqSrc.ValueRO.SourceConnection, new LinkedEntityGroup{Value = player});
-                commandBuffer.DestroyEntity(reqEntity);
+                // Setup links between the prefabs
+                ThirdPersonPlayer player = SystemAPI.GetComponent<ThirdPersonPlayer>(gameSetup.Player);
+                player.ControlledCharacter = characterEntity;
+                //player.ControlledCamera = cameraEntity;
+                ecb.SetComponent(playerEntity, player);
+                
+                // Place character at a random point around world origin
+                //ecb.SetComponent(characterEntity, LocalTransform.FromPosition(_random.NextFloat3(new float3(-5f,0f,-5f), new float3(5f,0f,5f))));
+                
+                // Allow this client to stream in game
+                ecb.AddComponent<NetworkStreamInGame>(recieveRPC.SourceConnection);
+                    
+                // Destroy the RPC since we've processed it
+                ecb.DestroyEntity(entity);
             }
-            commandBuffer.Playback(state.EntityManager);
         }
 
     }

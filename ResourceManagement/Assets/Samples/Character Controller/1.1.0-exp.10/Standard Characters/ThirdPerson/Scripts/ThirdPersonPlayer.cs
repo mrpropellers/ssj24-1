@@ -5,10 +5,12 @@ using Unity.Mathematics;
 using Unity.NetCode;
 
 [Serializable]
+[GhostComponent]
 public struct ThirdPersonPlayer : IComponentData
 {
+    [GhostField]
     public Entity ControlledCharacter;
-    public Entity ControlledCamera;
+    //public Entity ControlledCamera;
 }
 
 [Serializable]

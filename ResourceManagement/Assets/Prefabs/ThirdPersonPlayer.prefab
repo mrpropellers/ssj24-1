@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 5910332505473654983}
   - component: {fileID: -5635188181027715522}
   - component: {fileID: 2147256977499607397}
+  - component: {fileID: 7388668440028090409}
   m_Layer: 0
   m_Name: ThirdPersonPlayer
   m_TagString: Untagged
@@ -48,8 +49,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ControlledCharacter: {fileID: 1692896102597148395, guid: 5fbcc801dea8fd640a004697d22ed448,
     type: 3}
-  ControlledCamera: {fileID: 7568817337597995144, guid: 492a184cc1501fe4da86d69b5eddc366,
-    type: 3}
 --- !u!114 &-5635188181027715522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -84,3 +83,21 @@ MonoBehaviour:
   TrackInterpolationDelay: 0
   GhostGroup: 0
   UsePreSerialization: 0
+--- !u!114 &7388668440028090409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4729649056687684238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfdaa6c06fe64fbda2b16e07a4ee0b25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ComponentOverrides:
+  - FullTypeName: Unity.Transforms.LocalTransform
+    EntityIndex: 0
+    PrefabType: -1
+    SendTypeOptimization: -1
+    VariantHash: 10188360468653526834

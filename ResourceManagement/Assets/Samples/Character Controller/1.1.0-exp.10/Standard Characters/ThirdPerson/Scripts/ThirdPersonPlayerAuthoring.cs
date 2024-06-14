@@ -5,7 +5,7 @@ using Unity.Entities;
 public class ThirdPersonPlayerAuthoring : MonoBehaviour
 {
     public GameObject ControlledCharacter;
-    public GameObject ControlledCamera;
+    //public GameObject ControlledCamera;
 
     public class Baker : Baker<ThirdPersonPlayerAuthoring>
     {
@@ -15,7 +15,7 @@ public class ThirdPersonPlayerAuthoring : MonoBehaviour
             AddComponent(entity, new ThirdPersonPlayer
             {
                 ControlledCharacter = GetEntity(authoring.ControlledCharacter, TransformUsageFlags.Dynamic),
-                ControlledCamera = GetEntity(authoring.ControlledCamera, TransformUsageFlags.Dynamic),
+                //ControlledCamera = GetEntity(authoring.ControlledCamera, TransformUsageFlags.Dynamic),
             });
             AddComponent<ThirdPersonPlayerInputs>(entity);
         }
