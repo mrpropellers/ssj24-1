@@ -5,12 +5,12 @@ using Unity.Mathematics;
 using Unity.Physics;
 using Unity.Transforms;
 using Unity.CharacterController;
+using Unity.NetCode;
 
-[UpdateInGroup(typeof(SimulationSystemGroup))]
-[UpdateAfter(typeof(FixedStepSimulationSystemGroup))]
-[UpdateAfter(typeof(ThirdPersonPlayerVariableStepControlSystem))]
+[UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
+[UpdateAfter(typeof(PredictedFixedStepSimulationSystemGroup))]
+// [UpdateAfter(typeof(ThirdPersonPlayerVariableStepControlSystem))]
 [UpdateAfter(typeof(ThirdPersonCharacterVariableUpdateSystem))]
-[UpdateBefore(typeof(TransformSystemGroup))]
 [BurstCompile]
 public partial struct OrbitCameraSimulationSystem : ISystem
 {

@@ -7,6 +7,7 @@ using UnityEngine;
 
 namespace Simulation
 {
+    [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial struct CharacterInitializationSystem : ISystem
     {
         public void OnCreate(ref SystemState state)
@@ -18,8 +19,8 @@ namespace Simulation
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
             // TODO: Only add presentation for Clients, not Server
-            foreach (var (character, playerEntity) in SystemAPI
-                         .Query<Character>()
+            foreach (var (_, playerEntity) in SystemAPI
+                         .Query<PlayerCharacter>()
                          .WithNone<PlayerInputProvider>()
                          .WithAll<GhostOwnerIsLocal>()
                          .WithEntityAccess())
