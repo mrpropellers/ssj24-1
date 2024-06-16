@@ -1,5 +1,4 @@
 using Presentation;
-using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.NetCode;
@@ -18,7 +17,6 @@ namespace Simulation
         public void OnUpdate(ref SystemState state)
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
-            // TODO: Only add presentation for Clients, not Server
             foreach (var (playerComponent, playerEntity) in SystemAPI
                          .Query<ThirdPersonPlayer>()
                          .WithNone<PlayerInputProvider>()

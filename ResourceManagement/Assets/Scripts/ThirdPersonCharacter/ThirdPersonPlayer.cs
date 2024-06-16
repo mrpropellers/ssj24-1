@@ -1,5 +1,4 @@
 using System;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.NetCode;
@@ -20,4 +19,5 @@ public struct ThirdPersonPlayerInputs : IInputComponentData
     public float2 CameraLookInput;
     public float CameraZoomInput;
     public InputEvent JumpPressed;
+    public InputEvent ThrowPressed;
 }

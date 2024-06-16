@@ -30,6 +30,10 @@ public partial class ThirdPersonPlayerInputsSystem : SystemBase
                      .WithAll<GhostOwnerIsLocal>())
         {
             inputs.ValueRW.MoveInput = inputProvider.Input.MoveVector;
+            if (inputProvider.Input.ThrowIsDown)
+            {
+                inputs.ValueRW.ThrowPressed.Set();
+            }
 
             // NetworkInputUtilities.AddInputDelta(ref playerInputs.ValueRW.CameraLookInput.x, Input.GetAxis("Mouse X"));
             // NetworkInputUtilities.AddInputDelta(ref playerInputs.ValueRW.CameraLookInput.y, Input.GetAxis("Mouse Y"));
@@ -126,6 +130,7 @@ public partial struct ThirdPersonPlayerFixedStepControlSystem : ISystem
 
                 // Jump
                 characterControl.Jump = playerInputs.JumpPressed.IsSet;
+                characterControl.Throw = playerInputs.ThrowPressed.IsSet;
 
                 SystemAPI.SetComponent(player.ControlledCharacter, characterControl);
             }

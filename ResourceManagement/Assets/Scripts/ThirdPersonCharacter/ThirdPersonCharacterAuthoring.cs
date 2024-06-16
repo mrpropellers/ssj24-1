@@ -1,3 +1,4 @@
+using Simulation;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Physics.Authoring;
@@ -19,6 +20,9 @@ public class ThirdPersonCharacterAuthoring : MonoBehaviour
     public float AirDrag = 0f;
     public float JumpSpeed = 10f;
     public float3 Gravity = math.up() * -30f;
+    public float ThrowHeight = 1f;
+    public float ThrowCooldownSeconds = 1f;
+    public float ThrowVelocity = 10f;
     public bool PreventAirAccelerationAgainstUngroundedHits = true;
     public BasicStepAndSlopeHandlingParameters StepAndSlopeHandling = BasicStepAndSlopeHandlingParameters.GetDefault();
 
@@ -44,6 +48,14 @@ public class ThirdPersonCharacterAuthoring : MonoBehaviour
                 StepAndSlopeHandling = authoring.StepAndSlopeHandling,
             });
             AddComponent(entity, new ThirdPersonCharacterControl());
+            AddComponent(entity, new CharacterRatState()
+            {
+                InitialRatVelocity = authoring.ThrowVelocity,
+                ThrowHeight = authoring.ThrowHeight,
+                ThrowCooldown = Mathf.FloorToInt(authoring.ThrowCooldownSeconds 
+                    // TODO: read this value from tick rate
+                    * 60f)
+            });
         }
     }
 

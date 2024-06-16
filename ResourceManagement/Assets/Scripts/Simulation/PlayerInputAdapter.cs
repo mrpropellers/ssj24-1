@@ -16,13 +16,16 @@ namespace Simulation
         PlayerInput _playerInput;
         
         InputAction _move;
+        InputAction _throw;
 
         void Start()
         {
             _playerInput = GetComponent<PlayerInput>();
             _move = _playerInput.actions.FindAction("Move", true);
+            _throw = _playerInput.actions.FindAction("Throw", true);
         }
 
         public Vector2 MoveVector => _move.ReadValue<Vector2>();
+        public bool ThrowIsDown => _throw.IsPressed();
     }
 }
