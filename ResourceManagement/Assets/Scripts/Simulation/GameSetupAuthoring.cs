@@ -7,6 +7,7 @@ namespace Simulation
     {
         public Entity Player;
         public Entity CharacterSimulation;
+        public Entity RatProjectile;
     }
 
     public class GameSetupAuthoring : MonoBehaviour
@@ -15,7 +16,9 @@ namespace Simulation
         GameObject PlayerPrefab;
         [SerializeField]
         GameObject CharacterPrefab;
-        
+        [SerializeField]
+        GameObject RatProjectilePrefab;
+
         public class GameSetupBaker : Baker<GameSetupAuthoring>
         {
             public override void Bake(GameSetupAuthoring authoring)
@@ -24,6 +27,7 @@ namespace Simulation
                 {
                     CharacterSimulation = GetEntity(authoring.CharacterPrefab, TransformUsageFlags.None),
                     Player = GetEntity(authoring.PlayerPrefab, TransformUsageFlags.None),
+                    RatProjectile = GetEntity(authoring.RatProjectilePrefab, TransformUsageFlags.None),
                     //CameraPrefab = GetEntity(authoring.CameraPrefab, TransformUsageFlags.None),
                 });
             }
