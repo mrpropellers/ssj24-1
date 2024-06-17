@@ -29,10 +29,10 @@ namespace Simulation
                 if (!control.ValueRO.Throw)
                     continue;
 
-                if (ratThrowState.ValueRO.NumThrowableRats == 0)
+                if (ratThrowState.ValueRW.NumThrowableRats == 0)
                     continue;
 
-                if (tick.TicksSince(ratThrowState.ValueRO.TickLastRatThrown) < ratThrowState.ValueRO.ThrowCooldown)
+                if (tick.TicksSince(ratThrowState.ValueRW.TickLastRatThrown) < ratThrowState.ValueRW.ThrowCooldown)
                     continue;
                 
                 

@@ -1,0 +1,49 @@
+using Unity.Burst;
+using Unity.Collections;
+using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Physics;
+using Unity.Transforms;
+using UnityEngine;
+
+namespace Simulation
+{
+    // TODO? Should I run this in the prediction system group? Seems like it'd be a heavy lift, but rat position
+    //  will need to be synced occasionally in case a player loses control of them?
+    [UpdateInGroup(typeof(LateSimulationSystemGroup))]
+    public partial struct FollowerSystem : ISystem
+    {
+        [BurstCompile]
+        public void OnCreate(ref SystemState state)
+        {
+            
+        }
+
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            var deltaTime = SystemAPI.Time.DeltaTime;
+            //var ecb = new EntityCommandBuffer(Allocator.Temp);
+            foreach (var (tf, pickUp, follower) in SystemAPI
+                         .Query<RefRW<LocalTransform>, RefRO<PickUp>, RefRO<Follower>>())
+            {
+                if (!pickUp.ValueRO.HasSetOwner)
+                    continue;
+
+                var targetTf = SystemAPI.GetComponent<LocalTransform>(pickUp.ValueRO.Owner);
+                if (math.distance(targetTf.Position, tf.ValueRW.Position) < follower.ValueRO.GoalDistance)
+                    continue;
+
+                var direction = math.normalize(targetTf.Position - tf.ValueRW.Position);
+                var travelVector = direction * follower.ValueRO.Speed * deltaTime;
+                travelVector.y = 0f;
+                tf.ValueRW.Position += travelVector;
+                // TODO: Figure out how to do this with velocities so the rats can collide with each other
+                //velocity.ValueRW.Linear = travelVector;
+            }
+        }
+
+        [BurstCompile]
+        public void OnDestroy(ref SystemState state) { }
+    }
+}
