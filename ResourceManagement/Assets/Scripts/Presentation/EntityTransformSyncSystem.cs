@@ -1,3 +1,4 @@
+using Cinemachine;
 using Unity.Entities;
 using Unity.Transforms;
 
@@ -15,8 +16,7 @@ namespace Presentation
             foreach (var (tf, gameObjectLink) in SystemAPI
                          .Query<RefRO<LocalTransform>, PresentationLink>())
             {
-                var gameObjectTf = gameObjectLink.Root.transform;
-                gameObjectTf.SetLocalPositionAndRotation(tf.ValueRO.Position, tf.ValueRO.Rotation);
+                gameObjectLink.TransformSetter.EcsTransform = tf.ValueRO;
             }
         }
     }

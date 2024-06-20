@@ -1,3 +1,5 @@
+using System;
+using Cinemachine;
 using UnityEngine;
 
 namespace Presentation 
@@ -8,23 +10,19 @@ namespace Presentation
 
         [SerializeField]
         GameObject CharacterPrefab;
-        
-        static CharacterInstantiator Instance
-        {
-            get
-            {
-                if (ReferenceEquals(null, _instance))
-                {
-                    _instance = FindObjectOfType<CharacterInstantiator>();
-                }
+        [SerializeField]
+        CinemachineVirtualCamera PlayerVCam;
 
-                return _instance;
-            }
+        public static CinemachineVirtualCamera PlayerCamera => _instance.PlayerVCam;
+
+        void Start()
+        {
+            _instance = this;
         }
 
         public static GameObject CreateCharacterPresentation()
         {
-            return Instantiate(Instance.CharacterPrefab);
+            return Instantiate(_instance.CharacterPrefab);
         }
     }
 }

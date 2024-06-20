@@ -1,3 +1,4 @@
+using Cinemachine;
 using Presentation;
 using Unity.Collections;
 using Unity.Entities;
@@ -28,13 +29,20 @@ namespace Simulation
                 {
                     commandBuffer.AddComponent(playerEntity, new PlayerInputProvider() 
                         { Input = inputAdapter });
-                    var link = new PresentationLink() { Root = playerPresentation };
+                    var link = new PresentationLink()
+                    {
+                        Root = playerPresentation,
+                        CinemachineBrain = CinemachineCore.Instance.GetActiveBrain(0),
+                        TransformSetter = playerPresentation.GetComponent<TransformSetter>()
+                    };
                     commandBuffer.AddComponent(playerComponent.ControlledCharacter, link);
                 }
                 else
                 {
                     Debug.LogError("Failed to find the InputAdapter on the player presentation");
                 }
+                CharacterInstantiator.PlayerCamera.Follow = playerPresentation.transform;
+                CharacterInstantiator.PlayerCamera.LookAt = playerPresentation.transform;
             }
             commandBuffer.Playback(state.EntityManager);
         }
