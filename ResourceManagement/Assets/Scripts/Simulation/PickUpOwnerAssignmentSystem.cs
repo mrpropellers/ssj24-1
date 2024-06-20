@@ -1,7 +1,6 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.NetCode;
 using Unity.Physics;
 using Unity.Physics.Systems;
 using UnityEngine;
@@ -22,8 +21,6 @@ namespace Simulation
         
         [ReadOnly]
         public ComponentLookup<ThirdPersonCharacterComponent> CharacterLookup;
-        // [ReadOnly]
-        // public BufferLookup<PendingPickUp> CharacterPickUpBuffer;
         [ReadOnly]
         public ComponentLookup<PickUp> PickUpLookup;
         [ReadOnly]
@@ -49,12 +46,6 @@ namespace Simulation
             {
                 return;
             }
-
-            // if (!CharacterPickUpBuffer.TryGetBuffer(character, out var pendingPickUps))
-            // {
-            //     // TODO: Raise this error case
-            //     return;
-            // }
 
             if (!PickUpLookup.TryGetComponent(otherEntity, out var pickUp) || !pickUp.CanBePickedUp)
                 return;
