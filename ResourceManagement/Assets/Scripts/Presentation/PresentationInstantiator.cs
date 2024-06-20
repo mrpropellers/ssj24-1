@@ -4,12 +4,14 @@ using UnityEngine;
 
 namespace Presentation 
 {
-    public class CharacterInstantiator : MonoBehaviour
+    public class PresentationInstantiator : MonoBehaviour
     {
-        static CharacterInstantiator _instance;
+        static PresentationInstantiator _instance;
 
         [SerializeField]
         GameObject CharacterPrefab;
+        [SerializeField]
+        GameObject RatPickupPrefab;
         [SerializeField]
         CinemachineVirtualCamera PlayerVCam;
 
@@ -23,6 +25,11 @@ namespace Presentation
         public static GameObject CreateCharacterPresentation()
         {
             return Instantiate(_instance.CharacterPrefab);
+        }
+        
+        public static GameObject CreateRatPickupPresentation()
+        {
+            return Instantiate(_instance.RatPickupPrefab);
         }
     }
 }

@@ -1,4 +1,3 @@
-using Cinemachine;
 using Unity.Entities;
 using Unity.Transforms;
 
@@ -14,7 +13,7 @@ namespace Presentation
         protected override void OnUpdate()
         {
             foreach (var (tf, gameObjectLink) in SystemAPI
-                         .Query<RefRO<LocalTransform>, PresentationLink>())
+                         .Query<RefRO<LocalTransform>, TransformLink>())
             {
                 gameObjectLink.TransformSetter.EcsTransform = tf.ValueRO;
             }

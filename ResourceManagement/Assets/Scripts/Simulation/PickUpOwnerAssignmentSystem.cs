@@ -26,21 +26,24 @@ namespace Simulation
         // public BufferLookup<PendingPickUp> CharacterPickUpBuffer;
         [ReadOnly]
         public ComponentLookup<PickUp> PickUpLookup;
+        [ReadOnly]
+        public ComponentLookup<Follower> FollowerLookup;
         
         
         public void Execute(TriggerEvent triggerEvent)
         {
-            Entity character;
-            Entity other;
-            if (CharacterLookup.HasComponent(triggerEvent.EntityA))
+            Entity characterEntity;
+            ThirdPersonCharacterComponent character;
+            Entity otherEntity;
+            if (CharacterLookup.TryGetComponent(triggerEvent.EntityA, out character))
             {
-                character = triggerEvent.EntityA;
-                other = triggerEvent.EntityB;
+                characterEntity = triggerEvent.EntityA;
+                otherEntity = triggerEvent.EntityB;
             }
-            else if (CharacterLookup.HasComponent(triggerEvent.EntityA))
+            else if (CharacterLookup.TryGetComponent(triggerEvent.EntityA, out character))
             {
-                character = triggerEvent.EntityB;
-                other = triggerEvent.EntityA;
+                characterEntity = triggerEvent.EntityB;
+                otherEntity = triggerEvent.EntityA;
             }
             else
             {
@@ -53,13 +56,21 @@ namespace Simulation
             //     return;
             // }
 
-            if (!PickUpLookup.TryGetComponent(other, out var pickUp) || !pickUp.CanBePickedUp)
+            if (!PickUpLookup.TryGetComponent(otherEntity, out var pickUp) || !pickUp.CanBePickedUp)
                 return;
-
+            
+            
             Debug.Log("Picking something up");
-            pickUp.Owner = character;
+            pickUp.Owner = characterEntity;
             pickUp.HasSetOwner = true;
-            ECB.SetComponent(other, pickUp);
+            ECB.SetComponent(otherEntity, pickUp);
+            if (FollowerLookup.TryGetComponent(otherEntity, out var follower))
+            {
+                follower.OwnerQueueRank = character.NumFollowers;
+                ECB.SetComponent(otherEntity, follower);
+                character.NumFollowers++;
+                ECB.SetComponent(characterEntity, character);
+            }
         }
     }
     
@@ -72,6 +83,7 @@ namespace Simulation
         // [ReadOnly]
         // public BufferLookup<PendingPickUp> CharacterPickUpBuffer;
         ComponentLookup<PickUp> _pickUpLookup;
+        ComponentLookup<Follower> _followerLookup;
         
         public void OnCreate(ref SystemState state)
         {
@@ -82,13 +94,15 @@ namespace Simulation
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            _characterLookup = state.GetComponentLookup<ThirdPersonCharacterComponent>(true);
+            _characterLookup = state.GetComponentLookup<ThirdPersonCharacterComponent>(false);
             _pickUpLookup = state.GetComponentLookup<PickUp>(false);
+            _followerLookup = state.GetComponentLookup<Follower>(false);
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
             state.Dependency = new PickUpJob()
                 {
                     CharacterLookup = _characterLookup,
                     PickUpLookup = _pickUpLookup,
+                    FollowerLookup = _followerLookup,
                     ECB = ecb
                 }
                 .Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);

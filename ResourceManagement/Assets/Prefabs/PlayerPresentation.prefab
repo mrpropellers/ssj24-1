@@ -142,6 +142,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1f6812f93b32492c92d311133c828ff7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  ApplySmoothing: 1
+  LinearSmoothingTime: 0.1
+  AngularSmoothingTime: 0.02
 --- !u!1001 &5720440692155406539
 PrefabInstance:
   m_ObjectHideFlags: 0

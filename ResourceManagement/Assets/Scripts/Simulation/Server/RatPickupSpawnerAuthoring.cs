@@ -1,6 +1,7 @@
 using Unity.Entities;
 using Unity.NetCode;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Simulation.Server
 {
@@ -10,13 +11,14 @@ namespace Simulation.Server
         public NetworkTick TickLastSpawned;
         public float SpawnRadius;
         public int SpawnCooldownTicks;
-        public Entity RatPickup;
+        public Entity Simulation;
     }
 
     public class RatPickupSpawnerAuthoring : MonoBehaviour
     {
+        [FormerlySerializedAs("RatPickupPrefab")]
         [SerializeField]
-        GameObject RatPickupPrefab;
+        GameObject RatPickupSimulation;
         [SerializeField, Min(1f)]
         float SpawnRadius = 5f;
         [SerializeField, Min(1f)]
@@ -30,7 +32,7 @@ namespace Simulation.Server
                 AddComponent(entity, new RatPickupSpawner()
                 {
                     TickLastSpawned = NetworkTick.Invalid,
-                    RatPickup = GetEntity(authoring.RatPickupPrefab, TransformUsageFlags.None),
+                    Simulation = GetEntity(authoring.RatPickupSimulation, TransformUsageFlags.Dynamic),
                     SpawnRadius = authoring.SpawnRadius,
                     SpawnCooldownTicks = Mathf.FloorToInt(authoring.SpawnCooldownSeconds * 60),
                 });

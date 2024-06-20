@@ -8,6 +8,7 @@ using Unity.CharacterController;
 [Serializable]
 public struct ThirdPersonCharacterComponent : IComponentData
 {
+    public int NumFollowers;
     public float RotationSharpness;
     public float GroundMaxSpeed;
     public float GroundedMovementSharpness;

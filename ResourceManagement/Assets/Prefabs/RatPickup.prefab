@@ -16,7 +16,6 @@ GameObject:
   - component: {fileID: 2651294781728332450}
   - component: {fileID: 1210306622233738237}
   - component: {fileID: 8892309332343785103}
-  - component: {fileID: 3274247535433193432}
   m_Layer: 6
   m_Name: RatPickup
   m_TagString: Untagged
@@ -170,21 +169,3 @@ MonoBehaviour:
   TrackInterpolationDelay: 0
   GhostGroup: 0
   UsePreSerialization: 0
---- !u!114 &3274247535433193432
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5024494472191067875}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bfdaa6c06fe64fbda2b16e07a4ee0b25, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  ComponentOverrides:
-  - FullTypeName: Unity.Transforms.LocalTransform
-    EntityIndex: 0
-    PrefabType: -1
-    SendTypeOptimization: -1
-    VariantHash: 6907887384974514810

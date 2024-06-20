@@ -7,6 +7,7 @@ namespace Simulation
     {
         public float GoalDistance;
         public float Speed;
+        public int OwnerQueueRank;
     }
 
     public class FollowerAuthoring : MonoBehaviour

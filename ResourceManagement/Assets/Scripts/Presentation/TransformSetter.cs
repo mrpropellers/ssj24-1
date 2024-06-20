@@ -1,7 +1,6 @@
 using System;
 using Unity.Transforms;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Presentation
 {
@@ -13,11 +12,13 @@ namespace Presentation
         float m_AngularVelocity = 0f;
         
         public LocalTransform EcsTransform { get; set; }
-
-        [Range(0f, 1f)]
-        public float LinearSmoothingTime = 0.1f;
-        [Range(0f, 1f)]
-        public float AngularSmoothingTime = 0.02f;
+        
+        [SerializeField]
+        bool ApplySmoothing;
+        [SerializeField, Range(0f, 1f)]
+        float LinearSmoothingTime = 0.1f;
+        [SerializeField, Range(0f, 1f)] 
+        float AngularSmoothingTime = 0.02f;
 
         void Start()
         {
@@ -26,6 +27,13 @@ namespace Presentation
 
         void Update()
         {
+            if (!ApplySmoothing)
+            {
+                m_Tf.position = EcsTransform.Position;
+                m_Tf.rotation = EcsTransform.Rotation;
+                return;
+            }
+
             // We damp the updates coming from our Systems to smooth out prediction jitter
             // TODO: Optimize by porting to a System.Update
             //  I think there are SystemGroups that only execute once per MonoBehaviour.Update where we could

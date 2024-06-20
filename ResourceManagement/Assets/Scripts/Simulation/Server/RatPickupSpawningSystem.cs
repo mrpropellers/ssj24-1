@@ -1,3 +1,4 @@
+using Presentation;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -51,10 +52,11 @@ namespace Simulation.Server
                 ratSpawner.ValueRW.TickLastSpawned = tick;
                 var randomVector = ratSpawner.ValueRW.SpawnRadius * s_Rand.NextFloat3();
                 randomVector.y = tf.ValueRO.Position.y + 0.25f;
-                var rat = ecb.Instantiate(ratSpawner.ValueRW.RatPickup);
+                var rat = ecb.Instantiate(ratSpawner.ValueRW.Simulation);
+                var spawnLocation = tf.ValueRO.Position + randomVector;
                 ecb.SetComponent(rat, new LocalTransform()
                 {
-                    Position = tf.ValueRO.Position + randomVector
+                    Position = spawnLocation
                 });
             }
             ecb.Playback(state.EntityManager);
