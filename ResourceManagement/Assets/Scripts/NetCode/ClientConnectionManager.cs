@@ -7,7 +7,9 @@ using Unity.Entities;
 using Unity.NetCode;
 using Unity.Networking.Transport;
 using UnityEngine.UIElements;
+//using Simulation;
 //using UnityEngine.UI;
+
 namespace NetCode
 {
     public class ClientConnectionManager : MonoBehaviour
@@ -39,23 +41,23 @@ namespace NetCode
             _addressField = uiDoc.Q<TextElement>("_addressField");
             _portField = uiDoc.Q<TextElement>("_portField");
 
-            _connectionButton.onClick = () => {
-                OnButtonConnect()
-                }
+            _connectionButton.clicked += () => {
+                OnButtonConnect();
+                };
             //_connectionButton.onClick.AddListener(OnButtonConnect);
 
                 //_connectionModeDropdown.onValueChanged.AddListener(OnConnectionModeChanged);
                 //_connectionButton.onClick.AddListener(OnButtonConnect);
-            OnConnectionModeChanged(_connectionModeDropdown.value);
+            //OnConnectionModeChanged(_connectionModeDropdown.value);
         }
 
         private void OnDisable()
         {
-            _connectionModeDropdown.onValueChanged.RemoveAllListeners();
-            _connectionButton.onClick.RemoveAllListeners();
+            //_connectionModeDropdown.onValueChanged.RemoveAllListeners();
+            //_connectionButton.onClick.RemoveAllListeners();
         }
 
-        private void OnConnectionModeChanged(int connectionMode)
+        /*private void OnConnectionModeChanged(string connectionMode)
         {
             string buttonLabel;
             _connectionButton.enabled = true;
@@ -70,14 +72,14 @@ namespace NetCode
                     Debug.LogError("Error: Unknown connection mode", gameObject);
                     break;
             }
-        }
+        }*/
 
         private void OnButtonConnect()
         {
             DestroyLocalSimulationWorld();
             SceneManager.LoadScene(1);
 
-            switch (_connectionModeDropdown.value)
+            switch (_connectionModeDropdown.index)
             {
                 case 0:
                     StartServer();
