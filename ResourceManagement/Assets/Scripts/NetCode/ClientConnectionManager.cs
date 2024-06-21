@@ -7,6 +7,7 @@ using Unity.Entities;
 using Unity.NetCode;
 using Unity.Networking.Transport;
 using UnityEngine.UIElements;
+using System;
 //using Simulation;
 //using UnityEngine.UI;
 
@@ -18,16 +19,16 @@ namespace NetCode
         //[SerializeField] private TMP_InputField _portField;
         //[SerializeField] private TMP_Dropdown _connectionModeDropdown;
         //[SerializeField] private Button _connectionButton;
-
-        private TextElement _addressField;
-        private TextElement _portField;
-        private DropdownField _connectionModeDropdown;
+        private VisualElement uiDoc;
+        private TextField _addressField => uiDoc.Q<TextField>("_addressField");
+        private TextField _portField => uiDoc.Q<TextField>("_portField");
+        private DropdownField _connectionModeDropdown => uiDoc.Q<DropdownField>("_connectionModeDropdown");
         private Button _connectionButton;
 
         private ushort Port => ushort.Parse(_portField.text);
         private string Address => _addressField.text;
 
-        private VisualElement uiDoc;
+        
 
         private void Awake()
         {
@@ -37,13 +38,9 @@ namespace NetCode
         private void OnEnable()
         {
             _connectionButton = uiDoc.Q<Button>("_connectionButton");
-            _connectionModeDropdown = uiDoc.Q<DropdownField>("_connectionModeDropdown");
-            _addressField = uiDoc.Q<TextElement>("_addressField");
-            _portField = uiDoc.Q<TextElement>("_portField");
-
             _connectionButton.clicked += () => {
                 OnButtonConnect();
-                };
+              };
             //_connectionButton.onClick.AddListener(OnButtonConnect);
 
                 //_connectionModeDropdown.onValueChanged.AddListener(OnConnectionModeChanged);
@@ -76,8 +73,9 @@ namespace NetCode
 
         private void OnButtonConnect()
         {
+            Debug.Log("port is: " + _portField.text);
             DestroyLocalSimulationWorld();
-            SceneManager.LoadScene(1);
+            SceneManager.LoadScene("DevinCharacterScene");
 
             switch (_connectionModeDropdown.index)
             {
@@ -108,6 +106,7 @@ namespace NetCode
 
         private void StartServer()
         {
+            Debug.Log("Starting server");
             var serverWorld = ClientServerBootstrap.CreateServerWorld("Turbo Server World");
             var serverEndpoint = NetworkEndpoint.AnyIpv4.WithPort(Port);
             {
