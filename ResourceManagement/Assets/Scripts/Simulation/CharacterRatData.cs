@@ -3,6 +3,9 @@ using Unity.NetCode;
 
 namespace Simulation
 {
+
+    public struct Rat : IComponentData { }
+
     public struct CharacterRatState : IComponentData
     {
         // immutable

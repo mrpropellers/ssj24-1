@@ -14,6 +14,7 @@ namespace Simulation
     public class PlayerInputAdapter : MonoBehaviour 
     {
         PlayerInput _playerInput;
+        Camera _mainCamera;
         
         InputAction _move;
         InputAction _throw;
@@ -21,11 +22,14 @@ namespace Simulation
         void Start()
         {
             _playerInput = GetComponent<PlayerInput>();
+            _mainCamera = Camera.main;
             _move = _playerInput.actions.FindAction("Move", true);
             _throw = _playerInput.actions.FindAction("Throw", true);
         }
 
         public Vector2 MoveVector => _move.ReadValue<Vector2>();
+        public Quaternion CameraOrientation => _mainCamera.transform.rotation;
+
         public bool ThrowIsDown => _throw.IsPressed();
     }
 }

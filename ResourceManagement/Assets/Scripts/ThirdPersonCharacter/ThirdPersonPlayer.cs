@@ -16,6 +16,7 @@ public struct ThirdPersonPlayer : IComponentData
 public struct ThirdPersonPlayerInputs : IInputComponentData 
 {
     public float2 MoveInput;
+    public quaternion CameraOrientation;
     public float2 CameraLookInput;
     public float CameraZoomInput;
     public InputEvent JumpPressed;

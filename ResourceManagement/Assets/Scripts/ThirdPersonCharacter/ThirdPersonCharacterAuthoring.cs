@@ -56,6 +56,7 @@ public class ThirdPersonCharacterAuthoring : MonoBehaviour
                     // TODO: read this value from tick rate
                     * 60f)
             });
+            //AddBuffer<PendingPickUp>(entity);
         }
     }
 
