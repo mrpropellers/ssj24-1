@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/mainmenu_stylesheet.uss?fileID=7433441132597879392&amp;guid=dfc74694f4da28543b5efc1fdb326778&amp;type=3#mainmenu_stylesheet" />
+    <ui:VisualElement style="flex-grow: 1; background-color: rgba(16, 69, 99, 0);">
+        <ui:Label tabindex="-1" text="Game Connection Details" parse-escape-sequences="true" display-tooltip-when-elided="true" name="main-menu__title" style="align-items: center; align-self: center;" />
+        <ui:DropdownField label="Game Mode" name="_connectionModeDropdown" view-data-key="_connectionModeDropdown" choices="host, join" />
+        <ui:TextField picking-mode="Ignore" label="Connection Address" value="127.0.0.1" name="_addressField" view-data-key="_addressField" />
+        <ui:TextField picking-mode="Ignore" label="Connection Port" value="7979" name="_portField" view-data-key="_portField" />
+    </ui:VisualElement>
+    <ui:Button text="Start Host" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_connectionButton" view-data-key="_connectionButton" />
+</ui:UXML>
