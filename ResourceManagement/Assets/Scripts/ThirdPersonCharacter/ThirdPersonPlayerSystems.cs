@@ -30,6 +30,11 @@ public partial class ThirdPersonPlayerInputsSystem : SystemBase
                      .WithAll<GhostOwnerIsLocal>())
         {
             inputs.ValueRW.MoveInput = inputProvider.Input.MoveVector;
+            inputs.ValueRW.CameraOrientation = inputProvider.Input.CameraOrientation;
+            if (inputProvider.Input.ThrowIsDown)
+            {
+                inputs.ValueRW.ThrowPressed.Set();
+            }
 
             // NetworkInputUtilities.AddInputDelta(ref playerInputs.ValueRW.CameraLookInput.x, Input.GetAxis("Mouse X"));
             // NetworkInputUtilities.AddInputDelta(ref playerInputs.ValueRW.CameraLookInput.y, Input.GetAxis("Mouse Y"));
@@ -108,7 +113,7 @@ public partial struct ThirdPersonPlayerFixedStepControlSystem : ISystem
                 float3 characterUp = MathUtilities.GetUpFromRotation(SystemAPI.GetComponent<LocalTransform>(player.ControlledCharacter).Rotation);
                 
                 // Get camera rotation, since our movement is relative to it.
-                quaternion cameraRotation = quaternion.identity;
+                quaternion cameraRotation = playerInputs.CameraOrientation;
                 // if (SystemAPI.HasComponent<OrbitCamera>(player.ControlledCamera))
                 // {
                 //     // Camera rotation is calculated rather than gotten from transform, because this allows us to 
@@ -126,6 +131,7 @@ public partial struct ThirdPersonPlayerFixedStepControlSystem : ISystem
 
                 // Jump
                 characterControl.Jump = playerInputs.JumpPressed.IsSet;
+                characterControl.Throw = playerInputs.ThrowPressed.IsSet;
 
                 SystemAPI.SetComponent(player.ControlledCharacter, characterControl);
             }

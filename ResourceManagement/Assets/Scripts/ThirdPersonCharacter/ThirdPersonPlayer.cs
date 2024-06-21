@@ -1,5 +1,4 @@
 using System;
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.NetCode;
@@ -17,7 +16,9 @@ public struct ThirdPersonPlayer : IComponentData
 public struct ThirdPersonPlayerInputs : IInputComponentData 
 {
     public float2 MoveInput;
+    public quaternion CameraOrientation;
     public float2 CameraLookInput;
     public float CameraZoomInput;
     public InputEvent JumpPressed;
+    public InputEvent ThrowPressed;
 }

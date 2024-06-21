@@ -13,10 +13,9 @@ namespace Presentation
         protected override void OnUpdate()
         {
             foreach (var (tf, gameObjectLink) in SystemAPI
-                         .Query<RefRO<LocalTransform>, PresentationLink>())
+                         .Query<RefRO<LocalTransform>, TransformLink>())
             {
-                var gameObjectTf = gameObjectLink.Root.transform;
-                gameObjectTf.SetLocalPositionAndRotation(tf.ValueRO.Position, tf.ValueRO.Rotation);
+                gameObjectLink.TransformSetter.EcsTransform = tf.ValueRO;
             }
         }
     }

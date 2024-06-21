@@ -24,7 +24,7 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "Fire",
+                    "name": "Throw",
                     "type": "Button",
                     "id": "54b80a1e-40ad-41a5-a538-a1449c82453f",
                     "expectedControlType": "Button",
@@ -206,7 +206,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Gamepad",
-                    "action": "Fire",
+                    "action": "Throw",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -217,7 +217,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Keyboard&Mouse",
-                    "action": "Fire",
+                    "action": "Throw",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -228,7 +228,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": ";Touch",
-                    "action": "Fire",
+                    "action": "Throw",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -239,7 +239,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "Joystick",
-                    "action": "Fire",
+                    "action": "Throw",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
@@ -250,7 +250,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "XR",
-                    "action": "Fire",
+                    "action": "Throw",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

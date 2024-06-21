@@ -8,6 +8,7 @@ using Unity.CharacterController;
 [Serializable]
 public struct ThirdPersonCharacterComponent : IComponentData
 {
+    public int NumFollowers;
     public float RotationSharpness;
     public float GroundMaxSpeed;
     public float GroundedMovementSharpness;
@@ -25,4 +26,5 @@ public struct ThirdPersonCharacterControl : IComponentData
 {
     public float3 MoveVector;
     public bool Jump;
+    public bool Throw;
 }
