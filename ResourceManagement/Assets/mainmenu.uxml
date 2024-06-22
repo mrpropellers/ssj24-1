@@ -2,9 +2,14 @@
     <Style src="project://database/Assets/mainmenu_stylesheet.uss?fileID=7433441132597879392&amp;guid=dfc74694f4da28543b5efc1fdb326778&amp;type=3#mainmenu_stylesheet" />
     <ui:VisualElement style="flex-grow: 1; background-color: rgba(16, 69, 99, 0);">
         <ui:Label tabindex="-1" text="Game Connection Details" parse-escape-sequences="true" display-tooltip-when-elided="true" name="main-menu__title" style="align-items: center; align-self: center;" />
-        <ui:DropdownField label="Game Mode" name="_connectionModeDropdown" view-data-key="_connectionModeDropdown" choices="host, join" />
+        <ui:DropdownField label="Game Mode" name="_connectionModeDropdown" view-data-key="_connectionModeDropdown" choices="host, join" index="0" />
         <ui:TextField picking-mode="Ignore" label="Connection Address" value="127.0.0.1" name="_addressField" view-data-key="_addressField" />
         <ui:TextField picking-mode="Ignore" label="Connection Port" value="7979" name="_portField" view-data-key="_portField" is-delayed="true" hide-mobile-input="false" max-length="4" />
+        <ui:RadioButtonGroup label="Games Available" value="-1" name="_lobbyRadioButtonGroup" style="display: none;" />
+        <ui:ListView name="_lobbyMembers" focusable="false" header-title="Lobby Members" horizontal-scrolling="false" show-foldout-header="true" selection-type="None" style="display: none;" />
     </ui:VisualElement>
-    <ui:Button text="Start Host" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_connectionButton" view-data-key="_connectionButton" />
+    <ui:Button text="Close Lobby" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_cancelLobby" style="display: none;" />
+    <ui:Button text="Host Lobby" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_hostLobby" />
+    <ui:Button text="Join Lobby" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_joinLobby" style="display: none;" />
+    <ui:Button text="Start Game" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_connectionButton" view-data-key="_connectionButton" style="display: none;" />
 </ui:UXML>
