@@ -13,6 +13,8 @@ namespace Presentation
         [SerializeField]
         GameObject RatPickupPrefab;
         [SerializeField]
+        GameObject RatProjectilePrefab;
+        [SerializeField]
         CinemachineVirtualCamera PlayerVCam;
 
         public static CinemachineVirtualCamera PlayerCamera => _instance.PlayerVCam;
@@ -30,6 +32,11 @@ namespace Presentation
         public static GameObject CreateRatPickupPresentation()
         {
             return Instantiate(_instance.RatPickupPrefab);
+        }
+        
+        public static GameObject CreateRatProjectilePresentation()
+        {
+            return Instantiate(_instance.RatProjectilePrefab);
         }
     }
 }

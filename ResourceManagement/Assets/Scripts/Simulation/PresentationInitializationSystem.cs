@@ -1,8 +1,6 @@
-using System.Collections.Generic;
 using Presentation;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
 using Unity.NetCode;
 using Unity.Transforms;
 using UnityEngine;
@@ -93,7 +91,7 @@ namespace Simulation
 
             // Initialize any newly spawned rat pickups
             foreach (var (tf, _, __, ratPickupEntity) in SystemAPI
-                         .Query<LocalTransform, PickUp, Follower>()
+                         .Query<LocalTransform, Ownership, Follower>()
                          .WithNone<TransformLink>()
                          .WithEntityAccess())
             {

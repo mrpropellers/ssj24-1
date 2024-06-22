@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Simulation
 {
     [GhostComponent]
-    public struct PickUp : IComponentData
+    public struct Ownership : IComponentData
     {
         //public bool HasPendingOwner;
         [GhostField]
@@ -13,17 +13,17 @@ namespace Simulation
         [GhostField]
         public Entity Owner;
 
-        public bool CanBePickedUp => !HasSetOwner;
+        public bool CanBeClaimed => !HasSetOwner;
     }
 
-    public class PickUpAuthoring : MonoBehaviour
+    public class OwnershipAuthoring : MonoBehaviour
     {
-        public class PickUpBaker : Baker<PickUpAuthoring>
+        public class OwnershipBaker : Baker<OwnershipAuthoring>
         {
-            public override void Bake(PickUpAuthoring authoring)
+            public override void Bake(OwnershipAuthoring authoring)
             {
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
-                AddComponent(entity, new PickUp { HasSetOwner = false, Owner = default });
+                AddComponent(entity, new Ownership { HasSetOwner = false, Owner = default });
             }
         }
     }

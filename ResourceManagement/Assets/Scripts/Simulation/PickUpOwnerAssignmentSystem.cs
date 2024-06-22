@@ -1,6 +1,7 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.NetCode;
 using Unity.Physics;
 using Unity.Physics.Systems;
 using UnityEngine;
@@ -20,17 +21,21 @@ namespace Simulation
         public EntityCommandBuffer ECB;
         
         [ReadOnly]
-        public ComponentLookup<ThirdPersonCharacterComponent> CharacterLookup;
+        public ComponentLookup<CharacterFollowerThrowing> CharacterLookup;
         [ReadOnly]
-        public ComponentLookup<PickUp> PickUpLookup;
+        public ComponentLookup<Ownership> PickUpLookup;
+        [ReadOnly]
+        public ComponentLookup<GhostOwner> GhostOwnerLookup;
         [ReadOnly]
         public ComponentLookup<Follower> FollowerLookup;
+        [ReadOnly]
+        public ComponentLookup<NetworkId> OwnerIdLookup;
         
         
         public void Execute(TriggerEvent triggerEvent)
         {
             Entity characterEntity;
-            ThirdPersonCharacterComponent character;
+            CharacterFollowerThrowing character;
             Entity otherEntity;
             if (CharacterLookup.TryGetComponent(triggerEvent.EntityA, out character))
             {
@@ -47,33 +52,53 @@ namespace Simulation
                 return;
             }
 
-            if (!PickUpLookup.TryGetComponent(otherEntity, out var pickUp) || !pickUp.CanBePickedUp)
+            if (!PickUpLookup.TryGetComponent(otherEntity, out var pickUp) || !pickUp.CanBeClaimed)
                 return;
-            
+
+            // if (!GhostOwnerLookup.TryGetComponent(otherEntity, out var ghostOwner))
+            //     return;
+
+            // if (!OwnerIdLookup.TryGetComponent(characterEntity, out var networkId))
+            //     return;
             
             Debug.Log("Picking something up");
+            
             pickUp.Owner = characterEntity;
             pickUp.HasSetOwner = true;
             ECB.SetComponent(otherEntity, pickUp);
+            //ghostOwner.NetworkId = networkId.Value;
+            //ECB.SetComponent(otherEntity, ghostOwner);
             if (FollowerLookup.TryGetComponent(otherEntity, out var follower))
             {
-                follower.OwnerQueueRank = character.NumFollowers;
+                character.NumThrowableFollowers++;
+                follower.OwnerQueueRank = character.NumThrowableFollowers + character.NumThrownFollowers;
                 ECB.SetComponent(otherEntity, follower);
-                character.NumFollowers++;
                 ECB.SetComponent(characterEntity, character);
+                ECB.AppendToBuffer(characterEntity, new ThrowableFollowerElement()
+                {
+                    Follower = otherEntity
+                });
             }
         }
     }
     
+    // TODO? Use RPCs from client to set PickUp state
+    //  Right now the server is simulating the pickups and needs to detect the triggers to assign Ownership, but this
+    //  is problematic because something breaks if we add a RigidBody to the rat pickups... instead we could just
+    //  have the client report when it picks something up and then the Server can replicate down the Ownership update,
+    //  then everyone can locally simulate the follower code rather than relying on updates from the server
+    //[UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
     [UpdateInGroup(typeof(PhysicsSystemGroup))]
     [UpdateAfter(typeof(PhysicsSimulationGroup))]
-    //[WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+    //[WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
     public partial struct PickUpOwnerAssignmentSystem : ISystem
     {
-        ComponentLookup<ThirdPersonCharacterComponent> _characterLookup;
+        ComponentLookup<CharacterFollowerThrowing> _characterLookup;
         // [ReadOnly]
         // public BufferLookup<PendingPickUp> CharacterPickUpBuffer;
-        ComponentLookup<PickUp> _pickUpLookup;
+        ComponentLookup<Ownership> _pickUpLookup;
+        ComponentLookup<GhostOwner> _ghostOwnerLookup;
+        ComponentLookup<NetworkId> _idLookup;
         ComponentLookup<Follower> _followerLookup;
         
         public void OnCreate(ref SystemState state)
@@ -85,8 +110,10 @@ namespace Simulation
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            _characterLookup = state.GetComponentLookup<ThirdPersonCharacterComponent>(false);
-            _pickUpLookup = state.GetComponentLookup<PickUp>(false);
+            _characterLookup = state.GetComponentLookup<CharacterFollowerThrowing>(false);
+            _pickUpLookup = state.GetComponentLookup<Ownership>(false);
+            _ghostOwnerLookup = state.GetComponentLookup<GhostOwner>(false);
+            _idLookup = state.GetComponentLookup<NetworkId>(true);
             _followerLookup = state.GetComponentLookup<Follower>(false);
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
             state.Dependency = new PickUpJob()
@@ -94,6 +121,8 @@ namespace Simulation
                     CharacterLookup = _characterLookup,
                     PickUpLookup = _pickUpLookup,
                     FollowerLookup = _followerLookup,
+                    GhostOwnerLookup = _ghostOwnerLookup,
+                    OwnerIdLookup = _idLookup,
                     ECB = ecb
                 }
                 .Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);

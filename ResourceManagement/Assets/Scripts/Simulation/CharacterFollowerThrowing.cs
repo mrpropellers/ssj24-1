@@ -3,20 +3,21 @@ using Unity.NetCode;
 
 namespace Simulation
 {
-
-    public struct Rat : IComponentData { }
-
-    public struct CharacterRatState : IComponentData
+    [GhostComponent]
+    public struct CharacterFollowerThrowing : IComponentData
     {
         // immutable
         // public int MaxThrowableRats;
         public float InitialRatVelocity;
         public float ThrowHeight;
         public int ThrowCooldown;
-        
+
         // mutable
-        public int NumThrowableRats;
-        // Probably need some kind of cooldown system
+        //public DynamicBuffer<ThrowableFollowerElement> ThrowableFollowers;
+        public int NumThrownFollowers;
+        [GhostField]
+        public int NumThrowableFollowers;
+        // To track cooldowns
         public NetworkTick TickLastRatThrown;
     }
 }

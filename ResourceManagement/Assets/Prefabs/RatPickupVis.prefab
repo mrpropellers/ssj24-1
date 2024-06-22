@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 5900198563995106714}
   - component: {fileID: 3031494924469975622}
   m_Layer: 0
-  m_Name: RatPresentation
+  m_Name: RatPickupVis
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -29,10 +29,12 @@ public partial class ThirdPersonPlayerInputsSystem : SystemBase
                      .Query<PlayerInputProvider,RefRW<ThirdPersonPlayerInputs>>()
                      .WithAll<GhostOwnerIsLocal>())
         {
+            inputs.ValueRW = default;
             inputs.ValueRW.MoveInput = inputProvider.Input.MoveVector;
             inputs.ValueRW.CameraOrientation = inputProvider.Input.CameraOrientation;
-            if (inputProvider.Input.ThrowIsDown)
+            if (inputProvider.Input.ThrowIsDown && !inputs.ValueRW.ThrowPressed.IsSet)
             {
+                Debug.Log("Throw is down.");
                 inputs.ValueRW.ThrowPressed.Set();
             }
 
@@ -131,7 +133,12 @@ public partial struct ThirdPersonPlayerFixedStepControlSystem : ISystem
 
                 // Jump
                 characterControl.Jump = playerInputs.JumpPressed.IsSet;
-                characterControl.Throw = playerInputs.ThrowPressed.IsSet;
+                var shouldThrow = playerInputs.ThrowPressed.IsSet;
+                if (shouldThrow)
+                {
+                    Debug.Log("Throw Pressed.");
+                }
+                characterControl.Throw = shouldThrow;
 
                 SystemAPI.SetComponent(player.ControlledCharacter, characterControl);
             }

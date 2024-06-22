@@ -591,6 +591,8 @@ MonoBehaviour:
     type: 3}
   RatPickupPrefab: {fileID: 96712748957043641, guid: d86b00f23862db24794da9eb55a2f6d2,
     type: 3}
+  RatProjectilePrefab: {fileID: 220295339761624859, guid: 47d75f89d75a3754d892b74497b2d6ed,
+    type: 3}
   PlayerVCam: {fileID: 1666398592}
 --- !u!4 &1679798987
 Transform:

@@ -48,14 +48,16 @@ public class ThirdPersonCharacterAuthoring : MonoBehaviour
                 StepAndSlopeHandling = authoring.StepAndSlopeHandling,
             });
             AddComponent(entity, new ThirdPersonCharacterControl());
-            AddComponent(entity, new CharacterRatState()
+            AddComponent(entity, new CharacterFollowerThrowing()
             {
                 InitialRatVelocity = authoring.ThrowVelocity,
                 ThrowHeight = authoring.ThrowHeight,
                 ThrowCooldown = Mathf.FloorToInt(authoring.ThrowCooldownSeconds 
                     // TODO: read this value from tick rate
-                    * 60f)
+                    * 60f),
             });
+            AddBuffer<ThrowableFollowerElement>(entity);
+
             //AddBuffer<PendingPickUp>(entity);
         }
     }

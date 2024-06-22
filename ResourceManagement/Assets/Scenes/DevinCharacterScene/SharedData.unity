@@ -605,6 +605,12 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 5024494472191067875, guid: 016f5f3dba3f50049bd17083eb60bb5a,
         type: 3}
+    - target: {fileID: 3453634279400771905, guid: 9576ce5d2c17aae4e833dc74c11848d4,
+        type: 3}
+      propertyPath: RatProjectilePrefab
+      value: 
+      objectReference: {fileID: 5777140509846256843, guid: 9b9bda4cd53d3c744be975038fa1d3bf,
+        type: 3}
     - target: {fileID: 7898438725837507785, guid: 9576ce5d2c17aae4e833dc74c11848d4,
         type: 3}
       propertyPath: PlayerVCam
