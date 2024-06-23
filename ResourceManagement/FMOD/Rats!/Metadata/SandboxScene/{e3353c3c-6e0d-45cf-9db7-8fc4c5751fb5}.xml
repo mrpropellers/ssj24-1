@@ -46,10 +46,13 @@
 	</object>
 	<object class="SandboxEmitter" id="{c8f159ae-8dfa-4893-a220-a5e429338db2}">
 		<property name="positionX">
-			<value>-0.0250000004</value>
+			<value>0.187132046</value>
 		</property>
 		<property name="positionZ">
-			<value>8.47500038</value>
+			<value>16.323885</value>
+		</property>
+		<property name="rotationY">
+			<value>-140.916046</value>
 		</property>
 		<relationship name="event">
 			<destination>{e0f9e3cb-83e1-4813-976d-c8532d016cdf}</destination>
@@ -146,10 +149,13 @@
 	</object>
 	<object class="SandboxEmitter" id="{ff14b8b0-93e3-4f64-8b16-c8c28ce89227}">
 		<property name="positionX">
-			<value>9.4221983</value>
+			<value>8.99793434</value>
 		</property>
 		<property name="positionZ">
-			<value>8.13172817</value>
+			<value>14.2835569</value>
+		</property>
+		<property name="rotationY">
+			<value>-34.4237213</value>
 		</property>
 		<relationship name="event">
 			<destination>{3d93deef-1615-474c-8cf0-ed8bd91b68c5}</destination>
@@ -171,13 +177,13 @@
 	</object>
 	<object class="SandboxEmitter" id="{4a73148f-6ae1-4c1e-8e80-04ec02f52537}">
 		<property name="positionX">
-			<value>-8.52063656</value>
+			<value>9.4398756</value>
 		</property>
 		<property name="positionZ">
-			<value>3.71231031</value>
+			<value>3.111269</value>
 		</property>
 		<property name="rotationY">
-			<value>-125.461723</value>
+			<value>27.7356491</value>
 		</property>
 		<relationship name="event">
 			<destination>{ecc075c7-f054-466b-8b54-1a4e7bec1444}</destination>
