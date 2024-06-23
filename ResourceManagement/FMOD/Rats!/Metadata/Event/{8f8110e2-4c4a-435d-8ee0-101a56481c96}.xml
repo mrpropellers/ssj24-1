@@ -69,9 +69,6 @@
 		<property name="dopplerScale">
 			<value>500</value>
 		</property>
-		<property name="maximumDistance">
-			<value>15</value>
-		</property>
 	</object>
 	<object class="MarkerTrack" id="{1239a009-576a-453e-9d35-625c5276f7f1}" />
 	<object class="GroupTrack" id="{25d05a02-886a-465f-93a4-d3464ec31a9c}">
@@ -90,9 +87,6 @@
 		</relationship>
 	</object>
 	<object class="EventMixerMaster" id="{66203a56-a114-4290-a210-c4cc2ad398ed}">
-		<property name="volume">
-			<value>-14</value>
-		</property>
 		<relationship name="effectChain">
 			<destination>{97742d75-6555-409c-b986-4e1545dbee80}</destination>
 		</relationship>
@@ -165,8 +159,8 @@
 	</object>
 	<object class="MixerBusFader" id="{7d43c619-d8e9-4696-a786-02b443fd3ae9}" />
 	<object class="SpatialiserEffect" id="{ec7b2485-cd4b-4b96-838b-68f8486d31f8}">
-		<property name="maximumDistance">
-			<value>15</value>
+		<property name="distanceRolloffType">
+			<value>1</value>
 		</property>
 	</object>
 	<object class="MixerSend" id="{e63d47ef-0693-41dc-a2ed-357a08adf500}">

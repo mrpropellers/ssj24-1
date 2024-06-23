@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="AudioFile" id="{6d0bc4ae-aa57-46db-959e-c0cc62751e05}">
+		<property name="assetPath">
+			<value>Cauldron Hum.wav</value>
+		</property>
+		<property name="isStreaming">
+			<value>true</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>12.5</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{7c7d737a-3af0-4714-87d5-62dea20eba2f}</destination>
+		</relationship>
+	</object>
+</objects>
