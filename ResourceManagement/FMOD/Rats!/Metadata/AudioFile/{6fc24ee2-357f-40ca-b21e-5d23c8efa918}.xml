@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<objects serializationModel="Studio.02.02.00">
+	<object class="AudioFile" id="{6fc24ee2-357f-40ca-b21e-5d23c8efa918}">
+		<property name="assetPath">
+			<value>RatSqueak 2.wav</value>
+		</property>
+		<property name="frequencyInKHz">
+			<value>44.0999985</value>
+		</property>
+		<property name="channelCount">
+			<value>2</value>
+		</property>
+		<property name="length">
+			<value>0.80727891156462583</value>
+		</property>
+		<relationship name="masterAssetFolder">
+			<destination>{7c7d737a-3af0-4714-87d5-62dea20eba2f}</destination>
+		</relationship>
+	</object>
+</objects>
