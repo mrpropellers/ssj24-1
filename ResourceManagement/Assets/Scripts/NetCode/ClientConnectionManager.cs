@@ -13,6 +13,7 @@ using Steamworks;
 using System.Linq;
 using Unity.VisualScripting;
 using System.Threading.Tasks;
+using System.Net;
 //using Simulation;
 //using UnityEngine.UI;
 
@@ -48,14 +49,18 @@ namespace NetCode
         public List<Friend> membersInLobby = new List<Friend>();
 
         private Lobby targetLobby;
-
-        private ushort Port => ushort.Parse(_portField.text);
+        private string melon;
+        
         private string Address => _addressField.text;
         [SerializeField] private string defaultTitle = "Welcome to Ratking";
         [SerializeField] GameObject steamManagerObject;
         [SerializeField] private string defaultScene = "DevinCharacterScene";
         [SerializeField] private string ratKingPass = "abc123throwthemrats";
+        [SerializeField] private ushort defaultPort = 7979;
+        [SerializeField] GameObject ratKingIPManager;
         private SteamManager SteamManager { get; set; }
+        private RatKingIPManager RatKingIPManager { get; set; }
+        private ushort Port => defaultPort; //ushort.Parse(defaultPort);
 
         private void Awake()
         {
@@ -65,6 +70,7 @@ namespace NetCode
         private void Start()
         {
             SteamManager = steamManagerObject.GetComponent<SteamManager>();
+            RatKingIPManager = ratKingIPManager.GetComponent<RatKingIPManager>();
         }
 
         private void OnEnable()
@@ -156,12 +162,6 @@ namespace NetCode
             }
         }
 
-        async private void OnSetupHost()
-        {
-            Debug.Log("Host Selected");
-            setUI(uiModes.setupHost);
-        }
-
         private void OnLobbyChosen(ChangeEvent<bool> clickEvent)
         {
             Debug.Log("Change Event called");
@@ -200,6 +200,12 @@ namespace NetCode
             }
         }
 
+        async private void OnSetupHost()
+        {
+            Debug.Log("Host Selected");
+            setUI(uiModes.setupHost);
+        }
+
         async private void OnHostLobby()
         {
             var createLobby = false;
@@ -216,7 +222,10 @@ namespace NetCode
             {
                 Debug.Log($"Lobby created: {SteamManager.currentLobby.Id}");
                 Debug.Log(SteamManager.currentLobby.ToString());
+                Debug.Log($"melon: {RatKingIPManager.myAddressGlobal}");   
                 SteamManager.currentLobby.SetData("ratMakerId", ratKingPass);
+                SteamManager.currentLobby.SetData("mymelon", RatKingIPManager.myAddressGlobal);
+                melon = RatKingIPManager.myAddressGlobal;
                 setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
                 setUI(uiModes.Host);
 
@@ -228,6 +237,12 @@ namespace NetCode
             setUI(uiModes.chooseMode);
         }
 
+        private string speakFriend()
+        {
+            //IPHostEntry melon = Dns.GetHostEntry(Dns.GetHostName());
+            return RatKingIPManager.myAddressGlobal;
+        }
+
         async private void OnJoinLobby()
         {
             
@@ -237,6 +252,8 @@ namespace NetCode
                 SteamManager.currentLobby = SteamManager.activeLobbies[_lobbiesList.selectedIndex];
                 Debug.Log($"Lobby entered! Current Lobby {SteamManager.currentLobby.Id}");
                 setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
+                Debug.Log($"melon is {SteamManager.currentLobby.GetData("mymelon")}");
+                melon = SteamManager.currentLobby.GetData("mymelon");
                 setUI(uiModes.inLobby);
             } else
             {
@@ -420,7 +437,7 @@ namespace NetCode
         private void StartClient()
         {
             var clientWorld = ClientServerBootstrap.CreateClientWorld("Ratking Client World");
-            var connectionEndpoint = NetworkEndpoint.Parse(Address, Port);
+            var connectionEndpoint = NetworkEndpoint.Parse(melon, Port);
             {
                 using var networkDriverQuery = clientWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
                 networkDriverQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Connect(clientWorld.EntityManager, connectionEndpoint);
