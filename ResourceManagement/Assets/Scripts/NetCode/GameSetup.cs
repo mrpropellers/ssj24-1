@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Simulation;
 using Unity.Burst;
 using Unity.Collections;
@@ -7,8 +8,15 @@ using UnityEngine;
 
 namespace NetCode
 {
+    public struct ClientUid : IComponentData
+    {
+        public ulong Value;
+    }
+    
     public struct ClientJoinRequest : IRpcCommand
-    { }
+    {
+        public ClientUid Id;
+    }
     
     /// <summary>
     /// This allows sending RPCs between a stand alone build and the editor for testing purposes in the event when you finish this example
@@ -32,6 +40,8 @@ namespace NetCode
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
     public partial struct ClientGameSetupSystem : ISystem
     {
+        static ulong Guids = 0;
+        
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
@@ -43,7 +53,7 @@ namespace NetCode
             state.RequireForUpdate(state.GetEntityQuery(builder));
         }
 
-        [BurstCompile]
+        //[BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var commandBuffer = new EntityCommandBuffer(Allocator.Temp);
@@ -51,7 +61,10 @@ namespace NetCode
             {
                 commandBuffer.AddComponent<NetworkStreamInGame>(entity);
                 var req = commandBuffer.CreateEntity();
-                commandBuffer.AddComponent(req, new ClientJoinRequest());
+                // TODO: Get the ClientUID from Steam or something
+                commandBuffer.AddComponent(req, new ClientJoinRequest() {
+                    Id = new ClientUid() { Value = Guids++}
+                });
                 commandBuffer.AddComponent(req, new SendRpcCommandRequest { TargetConnection = entity });
             }
             commandBuffer.Playback(state.EntityManager);
@@ -59,13 +72,14 @@ namespace NetCode
     }
 
     // When server receives go in game request, go in game and delete request
-    [BurstCompile]
+    //[BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     public partial struct ServerGameSetupSystem : ISystem
     {
         private ComponentLookup<NetworkId> networkIdFromEntity;
+        //Dictionary<ClientUid, NetworkId> UidToNetworkIdMap;
 
-        [BurstCompile]
+        //[BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<GameSetup>();
@@ -75,9 +89,10 @@ namespace NetCode
                 .WithAll<ReceiveRpcCommandRequest>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
             networkIdFromEntity = state.GetComponentLookup<NetworkId>(true);
+            //UidToNetworkIdMap = new Dictionary<ClientUid, NetworkId>();
         }
 
-        [BurstCompile]
+        //[BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             EntityCommandBuffer ecb = SystemAPI.GetSingletonRW<EndSimulationEntityCommandBufferSystem.Singleton>().ValueRW.CreateCommandBuffer(state.WorldUnmanaged);
@@ -88,6 +103,8 @@ namespace NetCode
             // When a client wants to join, spawn and setup a character for them
             foreach (var (recieveRPC, joinRequest, entity) in SystemAPI.Query<ReceiveRpcCommandRequest, ClientJoinRequest>().WithEntityAccess())
             {                
+                // TODO: Check the UidToNetworkIdMap to see if this player has already joined
+                //  if so, just re-enable all their stuff
                 // Spawn character, player, and camera ghost prefabs
                 Entity characterEntity = ecb.Instantiate(gameSetup.CharacterSimulation);
                 Entity playerEntity = ecb.Instantiate(gameSetup.Player);
@@ -100,9 +117,11 @@ namespace NetCode
                 
                 // Setup the owners of the ghost prefabs (which are all owner-predicted) 
                 // The owner is the client connection that sent the join request
-                int clientConnectionId = SystemAPI.GetComponent<NetworkId>(recieveRPC.SourceConnection).Value;
-                ecb.SetComponent(characterEntity, new GhostOwner { NetworkId = clientConnectionId });
-                ecb.SetComponent(playerEntity, new GhostOwner { NetworkId = clientConnectionId });
+                var clientConnectionId = SystemAPI.GetComponent<NetworkId>(recieveRPC.SourceConnection);
+                int clientConnectionIdValue = clientConnectionId.Value;
+                //UidToNetworkIdMap[joinRequest.Id] = clientConnectionId;
+                ecb.SetComponent(characterEntity, new GhostOwner { NetworkId = clientConnectionIdValue });
+                ecb.SetComponent(playerEntity, new GhostOwner { NetworkId = clientConnectionIdValue });
                 //ecb.SetComponent(cameraEntity, new GhostOwner { NetworkId = clientConnectionId });
 
                 // Setup links between the prefabs

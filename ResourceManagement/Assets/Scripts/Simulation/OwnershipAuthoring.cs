@@ -9,11 +9,17 @@ namespace Simulation
     {
         //public bool HasPendingOwner;
         [GhostField]
-        public bool HasSetOwner;
+        public bool HasConfiguredOwner;
         [GhostField]
         public Entity Owner;
 
-        public bool CanBeClaimed => !HasSetOwner;
+        public bool CanBeClaimed => !HasConfiguredOwner;
+    }
+
+    [GhostComponent]
+    public struct NeedsOwnerAssignment : IComponentData
+    {
+        
     }
 
     public class OwnershipAuthoring : MonoBehaviour
@@ -23,7 +29,8 @@ namespace Simulation
             public override void Bake(OwnershipAuthoring authoring)
             {
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
-                AddComponent(entity, new Ownership { HasSetOwner = false, Owner = default });
+                AddComponent(entity, new Ownership { HasConfiguredOwner = false, Owner = default });
+                AddComponent(entity, new NeedsOwnerAssignment());
             }
         }
     }

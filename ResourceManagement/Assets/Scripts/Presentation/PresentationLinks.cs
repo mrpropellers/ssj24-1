@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Presentation
 {
-    public class TransformLink : IComponentData
+    public class TransformLink : ICleanupComponentData 
     {
         public GameObject Root;
         public TransformSetter TransformSetter;

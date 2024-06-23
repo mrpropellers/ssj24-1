@@ -196,8 +196,8 @@ MonoBehaviour:
     x: -0
     y: -30
     z: -0
-  ThrowHeight: 1
-  ThrowCooldownSeconds: 1
+  ThrowHeight: 1.5
+  ThrowCooldownSeconds: 0.5
   ThrowVelocity: 10
   PreventAirAccelerationAgainstUngroundedHits: 1
   StepAndSlopeHandling:
@@ -265,9 +265,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DefaultGhostMode: 2
-  SupportedGhostModes: 3
+  SupportedGhostModes: 2
   OptimizationMode: 0
-  Importance: 1
+  Importance: 100
   prefabId: 5fbcc801dea8fd640a004697d22ed448
   HasOwner: 1
   SupportAutoCommandTarget: 0
@@ -283,8 +283,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4929474551208610331}
-  - component: {fileID: 2589874652737986780}
-  m_Layer: 6
+  - component: {fileID: 8980767570539353426}
+  m_Layer: 8
   m_Name: PickUpCollider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -306,8 +306,8 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1692896102597148394}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!135 &2589874652737986780
-SphereCollider:
+--- !u!65 &8980767570539353426
+BoxCollider:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -321,12 +321,12 @@ SphereCollider:
     serializedVersion: 2
     m_Bits: 0
   m_LayerOverridePriority: 0
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Radius: 3
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 6, y: 1, z: 6}
+  m_Center: {x: 0, y: 0.5, z: 0}
 --- !u!1 &2861637503494133753
 GameObject:
   m_ObjectHideFlags: 0

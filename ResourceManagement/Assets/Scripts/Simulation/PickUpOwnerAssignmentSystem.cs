@@ -14,7 +14,7 @@ namespace Simulation
     // {
     //     
     // }
-    
+
     [BurstCompile]
     public struct PickUpJob : ITriggerEventsJob
     {
@@ -23,26 +23,23 @@ namespace Simulation
         [ReadOnly]
         public ComponentLookup<CharacterFollowerThrowing> CharacterLookup;
         [ReadOnly]
-        public ComponentLookup<Ownership> PickUpLookup;
+        public ComponentLookup<Ownership> OwnershipLookup;
         [ReadOnly]
-        public ComponentLookup<GhostOwner> GhostOwnerLookup;
+        public ComponentLookup<NeedsOwnerAssignment> NeedsAssignmentLookup;
         [ReadOnly]
         public ComponentLookup<Follower> FollowerLookup;
-        [ReadOnly]
-        public ComponentLookup<NetworkId> OwnerIdLookup;
         
-        
+        [BurstCompile]
         public void Execute(TriggerEvent triggerEvent)
         {
             Entity characterEntity;
-            CharacterFollowerThrowing character;
             Entity otherEntity;
-            if (CharacterLookup.TryGetComponent(triggerEvent.EntityA, out character))
+            if (CharacterLookup.TryGetComponent(triggerEvent.EntityA, out _))
             {
                 characterEntity = triggerEvent.EntityA;
                 otherEntity = triggerEvent.EntityB;
             }
-            else if (CharacterLookup.TryGetComponent(triggerEvent.EntityA, out character))
+            else if (CharacterLookup.TryGetComponent(triggerEvent.EntityA, out _))
             {
                 characterEntity = triggerEvent.EntityB;
                 otherEntity = triggerEvent.EntityA;
@@ -52,33 +49,24 @@ namespace Simulation
                 return;
             }
 
-            if (!PickUpLookup.TryGetComponent(otherEntity, out var pickUp) || !pickUp.CanBeClaimed)
+            // If no Follower component, it's probably not a rat
+            if (!FollowerLookup.TryGetComponent(otherEntity, out _))
+                return;
+            
+            // If it has an Ownership component, it's already been claimed
+            if (!NeedsAssignmentLookup.TryGetComponent(otherEntity, out _))
                 return;
 
-            // if (!GhostOwnerLookup.TryGetComponent(otherEntity, out var ghostOwner))
-            //     return;
-
-            // if (!OwnerIdLookup.TryGetComponent(characterEntity, out var networkId))
-            //     return;
+            if (!OwnershipLookup.TryGetComponent(otherEntity, out var ownership) || ownership.Owner != default)
+                return;
             
             Debug.Log("Picking something up");
             
-            pickUp.Owner = characterEntity;
-            pickUp.HasSetOwner = true;
-            ECB.SetComponent(otherEntity, pickUp);
-            //ghostOwner.NetworkId = networkId.Value;
-            //ECB.SetComponent(otherEntity, ghostOwner);
-            if (FollowerLookup.TryGetComponent(otherEntity, out var follower))
+            ECB.SetComponent(otherEntity, new Ownership()
             {
-                character.NumThrowableFollowers++;
-                follower.OwnerQueueRank = character.NumThrowableFollowers + character.NumThrownFollowers;
-                ECB.SetComponent(otherEntity, follower);
-                ECB.SetComponent(characterEntity, character);
-                ECB.AppendToBuffer(characterEntity, new ThrowableFollowerElement()
-                {
-                    Follower = otherEntity
-                });
-            }
+                Owner = characterEntity,
+                HasConfiguredOwner = false
+            });
         }
     }
     
@@ -91,16 +79,19 @@ namespace Simulation
     [UpdateInGroup(typeof(PhysicsSystemGroup))]
     [UpdateAfter(typeof(PhysicsSimulationGroup))]
     //[WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
+    [BurstCompile]
     public partial struct PickUpOwnerAssignmentSystem : ISystem
     {
         ComponentLookup<CharacterFollowerThrowing> _characterLookup;
         // [ReadOnly]
         // public BufferLookup<PendingPickUp> CharacterPickUpBuffer;
-        ComponentLookup<Ownership> _pickUpLookup;
-        ComponentLookup<GhostOwner> _ghostOwnerLookup;
-        ComponentLookup<NetworkId> _idLookup;
+        ComponentLookup<Ownership> _ownershipLookup;
+        ComponentLookup<NeedsOwnerAssignment> _needsAssignmentLookup;
+        //ComponentLookup<GhostOwner> _ghostOwnerLookup;
+        //ComponentLookup<NetworkId> _idLookup;
         ComponentLookup<Follower> _followerLookup;
         
+        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<SimulationSingleton>();
@@ -111,22 +102,78 @@ namespace Simulation
         public void OnUpdate(ref SystemState state)
         {
             _characterLookup = state.GetComponentLookup<CharacterFollowerThrowing>(false);
-            _pickUpLookup = state.GetComponentLookup<Ownership>(false);
-            _ghostOwnerLookup = state.GetComponentLookup<GhostOwner>(false);
-            _idLookup = state.GetComponentLookup<NetworkId>(true);
+            _ownershipLookup = state.GetComponentLookup<Ownership>(false);
+            _needsAssignmentLookup = state.GetComponentLookup<NeedsOwnerAssignment>(true);
+            //_idLookup = state.GetComponentLookup<NetworkId>(true);
             _followerLookup = state.GetComponentLookup<Follower>(false);
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
+            
+            // Set up any followers collected last frame
+            foreach (var (follower, ownership, followerEntity) in SystemAPI
+                         .Query<RefRW<Follower>, RefRW<Ownership>>()
+                         .WithAll<NeedsOwnerAssignment>()
+                         .WithEntityAccess())
+            {
+                if (ownership.ValueRW.Owner == default)
+                    continue;
+                if (ownership.ValueRW.HasConfiguredOwner)
+                {
+                    // We should have already cleaned up its NeedsOwnerAssignment tag by now...
+                    Debug.LogWarning("Detected a follower that's already been configured. That shouldn't be possible!");
+                    continue;
+                }
+
+                _characterLookup.TryGetComponent(ownership.ValueRO.Owner, out var character);
+                character.NumThrowableFollowers++;
+                ecb.SetComponent(ownership.ValueRO.Owner, character);
+                follower.ValueRW.OwnerQueueRank = character.NumThrowableFollowers + character.NumThrownFollowers;
+                ecb.AppendToBuffer(ownership.ValueRO.Owner, new ThrowableFollowerElement()
+                {
+                    Follower = followerEntity
+                });
+                
+                ownership.ValueRW.HasConfiguredOwner = true;
+            }
+            
             state.Dependency = new PickUpJob()
                 {
                     CharacterLookup = _characterLookup,
-                    PickUpLookup = _pickUpLookup,
+                    OwnershipLookup = _ownershipLookup,
+                    NeedsAssignmentLookup = _needsAssignmentLookup,
                     FollowerLookup = _followerLookup,
-                    GhostOwnerLookup = _ghostOwnerLookup,
-                    OwnerIdLookup = _idLookup,
+                    // GhostOwnerLookup = _ghostOwnerLookup,
+                    // OwnerIdLookup = _idLookup,
                     ECB = ecb
                 }
                 .Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
             state.Dependency.Complete();
+            ecb.Playback(state.EntityManager);
+            ecb.Dispose();
+        }
+    }
+
+    [UpdateInGroup(typeof(AfterPhysicsSystemGroup))]
+    [BurstCompile]
+    //[WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
+    public partial struct CleanUpOwnerAssignmentTagSystem : ISystem
+    {
+        // Removes the NeedsOwnerAssignment tag component when things have been successfully configured
+        // Has to be in its own System because we're not allowed to make structural changes (remove a component)
+        // inside the PhysicsSystemGroup
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
+            foreach (var (ownership, entity) in SystemAPI
+                         .Query<RefRO<Ownership>>().WithAll<NeedsOwnerAssignment>().WithEntityAccess())
+            {
+                // Leave any unconfigured things alone
+                if (!ownership.ValueRO.HasConfiguredOwner)
+                    continue;
+                
+                ecb.RemoveComponent<NeedsOwnerAssignment>(entity);
+            }
+            
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
         }

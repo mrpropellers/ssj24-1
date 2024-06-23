@@ -14,7 +14,7 @@ namespace Presentation
         public LocalTransform EcsTransform { get; set; }
         
         [SerializeField]
-        bool ApplySmoothing;
+        public bool ApplySmoothing;
         [SerializeField, Range(0f, 1f)]
         float LinearSmoothingTime = 0.1f;
         [SerializeField, Range(0f, 1f)] 

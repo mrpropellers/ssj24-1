@@ -32,9 +32,9 @@ public partial class ThirdPersonPlayerInputsSystem : SystemBase
             inputs.ValueRW = default;
             inputs.ValueRW.MoveInput = inputProvider.Input.MoveVector;
             inputs.ValueRW.CameraOrientation = inputProvider.Input.CameraOrientation;
-            if (inputProvider.Input.ThrowIsDown && !inputs.ValueRW.ThrowPressed.IsSet)
+            if (inputProvider.Input.ConsumeThrowInput())
             {
-                Debug.Log("Throw is down.");
+                //Debug.Log("Throw is down.");
                 inputs.ValueRW.ThrowPressed.Set();
             }
 
@@ -136,7 +136,7 @@ public partial struct ThirdPersonPlayerFixedStepControlSystem : ISystem
                 var shouldThrow = playerInputs.ThrowPressed.IsSet;
                 if (shouldThrow)
                 {
-                    Debug.Log("Throw Pressed.");
+                    //Debug.Log("Throw Pressed.");
                 }
                 characterControl.Throw = shouldThrow;
 

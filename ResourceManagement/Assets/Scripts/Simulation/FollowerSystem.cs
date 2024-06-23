@@ -27,9 +27,10 @@ namespace Simulation
             var deltaTime = SystemAPI.Time.DeltaTime;
             //var ecb = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (tf, pickUp, follower) in SystemAPI
-                         .Query<RefRW<LocalTransform>, RefRO<Ownership>, RefRO<Follower>>())
+                         .Query<RefRW<LocalTransform>, RefRO<Ownership>, RefRO<Follower>>()
+                         .WithNone<ConvertToProjectile, NeedsOwnerAssignment>())
             {
-                if (!pickUp.ValueRO.HasSetOwner)
+                if (!pickUp.ValueRO.HasConfiguredOwner)
                     continue;
 
                 var targetTf = SystemAPI.GetComponent<LocalTransform>(pickUp.ValueRO.Owner);

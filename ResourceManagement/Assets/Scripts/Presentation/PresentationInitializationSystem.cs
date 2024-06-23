@@ -1,11 +1,11 @@
-using Presentation;
+using Simulation;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.NetCode;
 using Unity.Transforms;
 using UnityEngine;
 
-namespace Simulation
+namespace Presentation 
 {
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial struct PresentationInitializationSystem : ISystem
@@ -13,10 +13,15 @@ namespace Simulation
         static void AddPresentationLinks(
             ref EntityCommandBuffer commandBuffer, in Entity entity, in LocalTransform tf, GameObject presentation)
         {
+            if (!presentation.TryGetComponent<TransformSetter>(out var tfSetter))
+            {
+                Debug.LogWarning($"{presentation} has not {nameof(TransformSetter)}, adding one now (you should fix the prefab tho)");
+                tfSetter = presentation.AddComponent<TransformSetter>();
+            }
             var link = new TransformLink()
             {
                 Root = presentation,
-                TransformSetter = presentation.GetComponent<TransformSetter>()
+                TransformSetter = tfSetter
             };
             commandBuffer.AddComponent(entity, link);
             if (presentation.TryGetComponent(out Animator animator))
@@ -90,14 +95,34 @@ namespace Simulation
             }
 
             // Initialize any newly spawned rat pickups
-            foreach (var (tf, _, __, ratPickupEntity) in SystemAPI
-                         .Query<LocalTransform, Ownership, Follower>()
+            foreach (var (tf, _, ratPickupEntity) in SystemAPI
+                         .Query<LocalTransform, Follower>()
                          .WithNone<TransformLink>()
                          .WithEntityAccess())
             {
                 var ratPresentation = PresentationInstantiator.CreateRatPickupPresentation();
                 //ratPresentation.transform.position = tf.Position;
                 AddPresentationLinks(ref commandBuffer, in ratPickupEntity, tf, ratPresentation);
+            }
+            
+            foreach (var (tf, _, projectileEntity) in SystemAPI
+                         .Query<LocalTransform, Projectile>()
+                         .WithNone<TransformLink>()
+                         .WithEntityAccess())
+            {
+                var presentation = PresentationInstantiator.CreateRatProjectilePresentation();
+                //ratPresentation.transform.position = tf.Position;
+                AddPresentationLinks(ref commandBuffer, in projectileEntity, tf, presentation);
+            }
+            
+            // Cleanup any destroyed Entity's presentation GameObjects
+            foreach (var (link, entity) in SystemAPI
+                         .Query<TransformLink>()
+                         .WithNone<LocalToWorld>()
+                         .WithEntityAccess())
+            {
+                Object.Destroy(link.Root);
+                commandBuffer.RemoveComponent<TransformLink>(entity);
             }
             
             commandBuffer.Playback(state.EntityManager);

@@ -7,6 +7,8 @@ namespace Simulation
     {
         public float GoalDistance;
         public float Speed;
+        public float ProjectileSpeed;
+        public int ToProjectileTicks;
         public int OwnerQueueRank;
     }
 
@@ -14,6 +16,8 @@ namespace Simulation
     {
         public float FollowDistance = 2f;
         public float FollowSpeed = 10f;
+        public float ThrowSpeed = 10f;
+        public float ProjectileConversionTime = 0.2f;
         
         public class FollowerBaker : Baker<FollowerAuthoring>
         {
@@ -23,7 +27,9 @@ namespace Simulation
                 AddComponent(entity, new Follower()
                 {
                     GoalDistance = authoring.FollowDistance,
-                    Speed = authoring.FollowSpeed
+                    Speed = authoring.FollowSpeed,
+                    ProjectileSpeed = authoring.ThrowSpeed,
+                    ToProjectileTicks = Mathf.RoundToInt(authoring.ProjectileConversionTime * 60f),
                 });
             }
         }

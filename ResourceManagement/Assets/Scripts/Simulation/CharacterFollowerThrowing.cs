@@ -14,6 +14,7 @@ namespace Simulation
 
         // mutable
         //public DynamicBuffer<ThrowableFollowerElement> ThrowableFollowers;
+        [GhostField]
         public int NumThrownFollowers;
         [GhostField]
         public int NumThrowableFollowers;
