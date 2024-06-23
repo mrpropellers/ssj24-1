@@ -15,5 +15,6 @@
         <ui:Button text="Cancel" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_cancel" style="display: none;" />
         <ui:Button text="Join Lobby" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_joinLobby" style="display: none;" />
         <ui:Button text="Start Game" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_startGame" style="display: none;" />
+        <ui:Button text="Find RK Lobby" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_findRatKingLobby" />
     </ui:VisualElement>
 </ui:UXML>

@@ -12,6 +12,7 @@ using Steamworks.Data;
 using Steamworks;
 using System.Linq;
 using Unity.VisualScripting;
+using System.Threading.Tasks;
 //using Simulation;
 //using UnityEngine.UI;
 
@@ -21,7 +22,7 @@ namespace NetCode
     {
         private enum uiModes {chooseMode, setupHost, Host, findLobby, inLobby, noLobbies }
         private uiModes uiMode = uiModes.chooseMode;
-
+        
         private VisualElement uiDoc;
         private TextField _addressField => uiDoc.Q<TextField>("_addressField");
         private TextField _portField => uiDoc.Q<TextField>("_portField");
@@ -34,6 +35,8 @@ namespace NetCode
         private Button _cancelLobbyButton => uiDoc.Q<Button>("_cancelLobby");
         private Button _leaveLobbyButton => uiDoc.Q<Button>("_leaveLobby");
         private Button _cancelButton => uiDoc.Q<Button>("_cancel");
+
+        private Button _findRatKingLobbyButton => uiDoc.Q<Button>("_findRatKingLobby");
         private Label _noLobbiesLabel => uiDoc.Q<Label>("_noLobbies");
 
         private Label _menuTitle => uiDoc.Q<Label>("menu__title");
@@ -51,6 +54,7 @@ namespace NetCode
         [SerializeField] private string defaultTitle = "Welcome to Ratking";
         [SerializeField] GameObject steamManagerObject;
         [SerializeField] private string defaultScene = "DevinCharacterScene";
+        [SerializeField] private string ratKingPass = "abc123throwthemrats";
         private SteamManager SteamManager { get; set; }
 
         private void Awake()
@@ -67,6 +71,10 @@ namespace NetCode
         {
             _findLobbyButton.clicked += () => {
                 OnFindLobby();
+            };
+            _findRatKingLobbyButton.clicked += () =>
+            {
+                OnFindRatKingLobby();
             };
             _setupHostButton.clicked += () => {
                 Debug.Log("Setup host clicked");
@@ -125,10 +133,29 @@ namespace NetCode
             {
                 Debug.Log("No current lobbies available");
                 setUI(uiModes.noLobbies);
-            }
-
-            
+            } 
         }
+
+        async private void OnFindRatKingLobby()
+        {
+            Debug.Log("Find RK Lobby Selected");
+            await GetRatKingLobbies();
+            var currentSteamLobbies = SteamManager.activeLobbies;
+            Debug.Log($"Rat King available count: {currentSteamLobbies.Count}");
+
+            if (currentSteamLobbies.Count > 0)
+            {
+                setFindLobbyList(currentSteamLobbies);
+                setUI(uiModes.findLobby);
+
+            }
+            else
+            {
+                Debug.Log("No current RK lobbies available");
+                setUI(uiModes.noLobbies);
+            }
+        }
+
         async private void OnSetupHost()
         {
             Debug.Log("Host Selected");
@@ -149,6 +176,30 @@ namespace NetCode
             setUI(uiModes.chooseMode);
         }
 
+        private async Task<bool> GetRatKingLobbies()
+        {
+            try
+            {
+                SteamManager.activeLobbies.Clear();
+                Lobby[] lobbies = await SteamMatchmaking.LobbyList.WithMaxResults(5).WithKeyValue("ratMakerId", ratKingPass).RequestAsync();
+                if (lobbies != null)
+                {
+                    foreach (Lobby lobby in lobbies.ToList())
+                    {
+                        SteamManager.activeLobbies.Add(lobby);
+                    }
+                    return true;
+                }
+                Debug.Log("No rat king lobbies found.");
+                return false;
+            } catch (Exception e)
+            {
+                Debug.Log(e.ToString());
+                Debug.Log("Error fetching rat king lobbies");
+                return true;
+            }
+        }
+
         async private void OnHostLobby()
         {
             var createLobby = false;
@@ -165,8 +216,10 @@ namespace NetCode
             {
                 Debug.Log($"Lobby created: {SteamManager.currentLobby.Id}");
                 Debug.Log(SteamManager.currentLobby.ToString());
+                SteamManager.currentLobby.SetData("ratMakerId", ratKingPass);
                 setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
                 setUI(uiModes.Host);
+
             }   
         }
         private void OnCancelLobby()
@@ -260,6 +313,7 @@ namespace NetCode
                     setMenuTitle(defaultTitle);
                     showElement(_setupHostButton);
                     showElement(_findLobbyButton);
+                    showElement(_findRatKingLobbyButton);
                     break;
                 case uiModes.setupHost:
                     Debug.Log("Host Set Up View");
@@ -315,6 +369,7 @@ namespace NetCode
             hideElement(_leaveLobbyButton);
             hideElement(_noLobbiesLabel);
             hideElement(_cancelButton);
+            hideElement(_findRatKingLobbyButton);
         }
         private void setMenuTitle(string headerText)
         {
