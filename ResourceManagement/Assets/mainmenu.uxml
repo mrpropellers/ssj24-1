@@ -1,15 +1,19 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
     <Style src="project://database/Assets/mainmenu_stylesheet.uss?fileID=7433441132597879392&amp;guid=dfc74694f4da28543b5efc1fdb326778&amp;type=3#mainmenu_stylesheet" />
-    <ui:VisualElement style="flex-grow: 1; background-color: rgba(16, 69, 99, 0);">
-        <ui:Label tabindex="-1" text="Game Connection Details" parse-escape-sequences="true" display-tooltip-when-elided="true" name="main-menu__title" style="align-items: center; align-self: center;" />
-        <ui:DropdownField label="Game Mode" name="_connectionModeDropdown" view-data-key="_connectionModeDropdown" choices="host, join" index="0" />
-        <ui:TextField picking-mode="Ignore" label="Connection Address" value="127.0.0.1" name="_addressField" view-data-key="_addressField" />
-        <ui:TextField picking-mode="Ignore" label="Connection Port" value="7979" name="_portField" view-data-key="_portField" is-delayed="true" hide-mobile-input="false" max-length="4" />
-        <ui:RadioButtonGroup label="Games Available" value="-1" name="_lobbyRadioButtonGroup" style="display: none;" />
-        <ui:ListView name="_lobbyMembers" focusable="false" header-title="Lobby Members" horizontal-scrolling="false" show-foldout-header="true" selection-type="None" style="display: none;" />
+    <ui:VisualElement name="VisualElement" style="flex-grow: 1; background-color: rgba(16, 69, 99, 0); width: 50%; height: 100%; align-items: center; align-self: center;">
+        <ui:Label tabindex="-1" text="Welcome to Ratking" parse-escape-sequences="true" display-tooltip-when-elided="true" name="menu__title" style="align-items: center; align-self: center;" />
+        <ui:ListView name="_lobbyMembers" focusable="false" header-title="Lobby Members" horizontal-scrolling="false" show-foldout-header="false" selection-type="Single" show-add-remove-footer="false" show-bound-collection-size="true" style="display: none;" />
+        <ui:ListView name="_lobbyList" focusable="false" header-title="Available Lobbies" horizontal-scrolling="false" show-foldout-header="false" selection-type="Single" show-add-remove-footer="false" show-bound-collection-size="true" style="display: none;" />
+        <ui:Button text="Host Game" parse-escape-sequences="false" display-tooltip-when-elided="true" name="_setupHost" class="Button" style="width: auto; min-width: 100px;" />
+        <ui:Button text="Join Game" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_findLobby" />
+        <ui:Button text="Leave Lobby" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_leaveLobby" style="display: none;" />
+        <ui:TextField picking-mode="Ignore" label="Connection Address" value="127.0.0.1" name="_addressField" view-data-key="_addressField" style="display: none;" />
+        <ui:TextField picking-mode="Ignore" label="Connection Port" value="7979" name="_portField" view-data-key="_portField" is-delayed="true" hide-mobile-input="false" max-length="4" style="display: none;" />
+        <ui:Label tabindex="-1" text="No Lobbies Available" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_noLobbies" style="align-items: auto; align-self: center; display: none;" />
+        <ui:Button text="Close Lobby" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_cancelLobby" style="display: none;" />
+        <ui:Button text="Open Lobby" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_hostLobby" style="display: none;" />
+        <ui:Button text="Cancel" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_cancel" style="display: none;" />
+        <ui:Button text="Join Lobby" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_joinLobby" style="display: none;" />
+        <ui:Button text="Start Game" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_startGame" style="display: none;" />
     </ui:VisualElement>
-    <ui:Button text="Close Lobby" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_cancelLobby" style="display: none;" />
-    <ui:Button text="Host Lobby" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_hostLobby" />
-    <ui:Button text="Join Lobby" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_joinLobby" style="display: none;" />
-    <ui:Button text="Start Game" parse-escape-sequences="true" display-tooltip-when-elided="true" name="_connectionButton" view-data-key="_connectionButton" style="display: none;" />
 </ui:UXML>

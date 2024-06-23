@@ -11,6 +11,7 @@ using System;
 using Steamworks.Data;
 using Steamworks;
 using System.Linq;
+using Unity.VisualScripting;
 //using Simulation;
 //using UnityEngine.UI;
 
@@ -18,23 +19,38 @@ namespace NetCode
 {
     public class ClientConnectionManager : MonoBehaviour
     {
+        private enum uiModes {chooseMode, setupHost, Host, findLobby, inLobby, noLobbies }
+        private uiModes uiMode = uiModes.chooseMode;
+
         private VisualElement uiDoc;
         private TextField _addressField => uiDoc.Q<TextField>("_addressField");
         private TextField _portField => uiDoc.Q<TextField>("_portField");
         private DropdownField _connectionModeDropdown => uiDoc.Q<DropdownField>("_connectionModeDropdown");
-        private Button _connectionButton => uiDoc.Q<Button>("_connectionButton");
+        private Button _setupHostButton => uiDoc.Q<Button>("_setupHost");
+        private Button _startGameButton => uiDoc.Q<Button>("_startGame");
+        private Button _findLobbyButton => uiDoc.Q<Button>("_findLobby");
         private Button _hostLobbyButton => uiDoc.Q<Button>("_hostLobby");
         private Button _joinLobbyButton => uiDoc.Q<Button>("_joinLobby");
         private Button _cancelLobbyButton => uiDoc.Q<Button>("_cancelLobby");
+        private Button _leaveLobbyButton => uiDoc.Q<Button>("_leaveLobby");
+        private Button _cancelButton => uiDoc.Q<Button>("_cancel");
+        private Label _noLobbiesLabel => uiDoc.Q<Label>("_noLobbies");
+
+        private Label _menuTitle => uiDoc.Q<Label>("menu__title");
         private RadioButtonGroup _lobbyRadioButtonGroup => uiDoc.Q<RadioButtonGroup>("_lobbyRadioButtonGroup");
+
+        private ListView _lobbiesList => uiDoc.Q<ListView>("_lobbyList");
         private ListView _lobbyMembers => uiDoc.Q<ListView>("_lobbyMembers");
 
         public List<Friend> membersInLobby = new List<Friend>();
 
+        private Lobby targetLobby;
+
         private ushort Port => ushort.Parse(_portField.text);
         private string Address => _addressField.text;
-
+        [SerializeField] private string defaultTitle = "Welcome to Ratking";
         [SerializeField] GameObject steamManagerObject;
+        [SerializeField] private string defaultScene = "DevinCharacterScene";
         private SteamManager SteamManager { get; set; }
 
         private void Awake()
@@ -49,8 +65,15 @@ namespace NetCode
 
         private void OnEnable()
         {
-            _connectionButton.clicked += () => {
-                OnButtonConnect();
+            _findLobbyButton.clicked += () => {
+                OnFindLobby();
+            };
+            _setupHostButton.clicked += () => {
+                Debug.Log("Setup host clicked");
+                OnSetupHost();
+            };
+            _startGameButton.clicked += () => {
+                OnStartGame();
             };
             _hostLobbyButton.clicked += () => {
                 OnHostLobby();
@@ -62,9 +85,15 @@ namespace NetCode
             {
                 OnCancelLobby();
             };
-            _connectionModeDropdown.RegisterValueChangedCallback(
-                (evt) => changeConnectionMode(evt.newValue));
-
+            _leaveLobbyButton.clicked += () =>
+            {
+                OnLeaveLobby();
+            };
+            _cancelButton.clicked += () =>
+            {
+                OnCancelButton();
+            };
+            //_lobbiesList.RegisterCallback<ChangeEvent<bool>>((evt) => { OnLobbyChosen(evt); });
             //callbacks for when lobbies close or open?
 
         }
@@ -78,6 +107,46 @@ namespace NetCode
         private void OnUpdate()
         {
             
+        }
+        async private void OnFindLobby()
+        {
+            Debug.Log("Find Lobby Selected");
+            await SteamManager.RefreshMultiplayerLobbies();
+            var currentSteamLobbies = SteamManager.activeLobbies;
+            Debug.Log($"Games available count: {currentSteamLobbies.Count}");
+
+            if (currentSteamLobbies.Count > 0)
+            {
+                setFindLobbyList(currentSteamLobbies);
+                setUI(uiModes.findLobby);
+
+            }
+            else
+            {
+                Debug.Log("No current lobbies available");
+                setUI(uiModes.noLobbies);
+            }
+
+            
+        }
+        async private void OnSetupHost()
+        {
+            Debug.Log("Host Selected");
+            setUI(uiModes.setupHost);
+        }
+
+        private void OnLobbyChosen(ChangeEvent<bool> clickEvent)
+        {
+            Debug.Log("Change Event called");
+            Debug.Log(clickEvent);
+            Debug.Log(clickEvent.newValue);
+            //Debug.Log(chosenLobby.Id);
+            //targetLobby = chosenLobby;
+        }
+
+        private void OnCancelButton()
+        {
+            setUI(uiModes.chooseMode);
         }
 
         async private void OnHostLobby()
@@ -97,55 +166,68 @@ namespace NetCode
                 Debug.Log($"Lobby created: {SteamManager.currentLobby.Id}");
                 Debug.Log(SteamManager.currentLobby.ToString());
                 setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
-                hidePreHostComponents();
-                revealHostComponents();
-            }
-
-            
+                setUI(uiModes.Host);
+            }   
         }
         private void OnCancelLobby()
         {
             SteamManager.currentLobby.Leave();
-            hideHostComponents();
-            revealPreHostComponents();
+            setUI(uiModes.chooseMode);
         }
 
         async private void OnJoinLobby()
         {
+            
+            RoomEnter joinedLobbySuccess = await SteamManager.activeLobbies[_lobbiesList.selectedIndex].Join();
+           
+            if (joinedLobbySuccess == RoomEnter.Success) {
+                SteamManager.currentLobby = SteamManager.activeLobbies[_lobbiesList.selectedIndex];
+                Debug.Log($"Lobby entered! Current Lobby {SteamManager.currentLobby.Id}");
+                setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
+                setUI(uiModes.inLobby);
+            } else
+            {
+                Debug.Log("Failed to enter lobby");
+            }
 
         }
-        async private void changeConnectionMode(string newValue)
+
+        private void OnLeaveLobby()
         {
-            if(newValue.Equals("host"))
+            SteamManager.currentLobby.Leave();
+            setUI(uiModes.findLobby);
+        }
+        private void setLobbyMemberList(List<Friend> members)
+        {
+
+            //private ListView _lobbyMembers = uiDoc.Q<ListView>("_lobbyMembers");
+            //public List<Friend> membersInLobby = new List<Friend>();
+            _lobbyMembers.Clear();
+            _lobbyMembers.itemsSource = members;
+        }
+
+        private void setFindLobbyList(List<Lobby> lobbies)
+        {
+            var displayLobbiesList = new List<String> { };
+            _lobbiesList.Clear();
+            foreach (var lobby in lobbies)
             {
-                Debug.Log("Host Selected");
-                hideJoinComponents();
-                revealPreHostComponents();
-            }
-            
-            if (newValue.Equals("join"))
-            {
-                Debug.Log("Join Selected");
-
-                await SteamManager.RefreshMultiplayerLobbies();
-                var currentSteamLobbies = SteamManager.activeLobbies;
-                Debug.Log($"Games available count: {currentSteamLobbies.Count}");
-
-                if(currentSteamLobbies.Count > 0)
+                if (lobby.Owner.Name.Length > 0)
                 {
-                    setLobbyList(currentSteamLobbies);
-
-                } else
+                    displayLobbiesList.Add($"{lobby.Owner.Name}'s lobby of {lobby.MemberCount} players.");
+                }
+                else
                 {
-                    Debug.Log("No current lobbies available");
+                    displayLobbiesList.Add($"Unknown's lobby of {lobby.MemberCount} players.");
                 }
 
-                hideStartGame();
-                hideHostComponents();
-                revealJoinComponents();
-                
+                if (displayLobbiesList.Count > 5) { break; };
+                //Debug.Log($"{lobby.Owner.Name}'s lobby of {lobby.MemberCount} players.");
+
             }
+            _lobbiesList.itemsSource = displayLobbiesList;
         }
+
         private void setLobbyList(List<Lobby> lobbies)
         {
             var displayLobbiesList = new List<String> {};
@@ -168,76 +250,93 @@ namespace NetCode
             _lobbyRadioButtonGroup.choices = displayLobbiesList;
         }
 
-        private void setLobbyMemberList(List<Friend> members)
+        private void setUI(uiModes uiMode)
         {
-
-            //private ListView _lobbyMembers = uiDoc.Q<ListView>("_lobbyMembers");
-            //public List<Friend> membersInLobby = new List<Friend>();
-            _lobbyMembers.Clear();
-            _lobbyMembers.itemsSource = members;
-        }
-
-        private void revealPreHostComponents()
-        {
-            _addressField.style.display = DisplayStyle.Flex;
-            _portField.style.display = DisplayStyle.Flex;
-        }
-        private void hidePreHostComponents()
-        {
-            _addressField.style.display = DisplayStyle.None;
-            _portField.style.display = DisplayStyle.None;
-        }
-
-        private void hideHostComponents()
-        {
-            hideStartGame();
-            _cancelLobbyButton.style.display = DisplayStyle.None;
-            _lobbyMembers.style.display = DisplayStyle.None;
-
-        }
-        private void revealHostComponents()
-        {
-            _cancelLobbyButton.style.display = DisplayStyle.Flex;
-            _lobbyMembers.style.display = DisplayStyle.Flex;
-            //INSERT LOBBY MEMBERS LIST
-        }
-        private void revealStartGame()
-        {
-            _connectionButton.style.display = DisplayStyle.Flex;
-        }
-        private void hideStartGame()
-        {
-            _connectionButton.style.display = DisplayStyle.None;
-        }
-
-        private void revealJoinComponents()
-        {
-            _lobbyRadioButtonGroup.style.display = DisplayStyle.Flex;
-        }
-        private void hideJoinComponents()
-        {
-            _lobbyRadioButtonGroup.style.display = DisplayStyle.None;
-        }
-
-        private void OnButtonConnect()
-        {
-            Debug.Log("port is: " + _portField.text);
-            DestroyLocalSimulationWorld();
-            SceneManager.LoadScene("DevinCharacterScene");
-
-            switch (_connectionModeDropdown.index)
+            clearUI();
+            switch(uiMode)
             {
-                case 0:
-                    StartServer();
-                    StartClient();
+                case uiModes.chooseMode:
+                    Debug.Log("Choose Mode View");
+                    setMenuTitle(defaultTitle);
+                    showElement(_setupHostButton);
+                    showElement(_findLobbyButton);
                     break;
-                case 1:
-                    StartServer();
+                case uiModes.setupHost:
+                    Debug.Log("Host Set Up View");
+                    setMenuTitle("Set host settings");
+                    showElement(_addressField);
+                    showElement(_portField);
+                    showElement(_hostLobbyButton);
+                    showElement(_cancelButton);
+                    break;
+                case uiModes.Host:
+                    Debug.Log("Host View");
+                    setMenuTitle("Your Lobby");
+                    showElement(_cancelLobbyButton);
+                    showElement(_lobbyMembers);
+                    showElement(_startGameButton);
+                    break;
+                case uiModes.findLobby:
+                    setMenuTitle("Choose a Lobby");
+                    showElement(_lobbiesList);
+                    showElement(_joinLobbyButton);
+                    showElement(_cancelButton);
+                    break;
+                case uiModes.noLobbies:
+                    setMenuTitle("Awaiting Lobbies");
+                    showElement(_noLobbiesLabel);
+                    showElement(_joinLobbyButton);
+                    showElement(_cancelButton);
+                    break;
+                case uiModes.inLobby: 
+                    setMenuTitle("In Lobby");
+                    showElement(_lobbyMembers);
+                    showElement(_leaveLobbyButton);
                     break;
                 default:
-                    Debug.LogError("Error: Unknown connection mode.");
+                    setUI(uiModes.chooseMode);
                     break;
             }
+        }
+
+        private void clearUI()
+        {
+            //got to be a way to just iterate over all elements... but brute forcing will do for now.
+            hideElement(_addressField);
+            hideElement(_portField);
+            hideElement(_findLobbyButton);
+            hideElement(_setupHostButton);
+            hideElement(_startGameButton);
+            hideElement(_hostLobbyButton);
+            hideElement(_joinLobbyButton);
+            hideElement(_cancelLobbyButton);
+            hideElement(_lobbiesList);
+            hideElement(_lobbyMembers);
+            hideElement(_leaveLobbyButton);
+            hideElement(_noLobbiesLabel);
+            hideElement(_cancelButton);
+        }
+        private void setMenuTitle(string headerText)
+        {
+            _menuTitle.text = headerText;
+        }
+
+        private void hideElement(VisualElement element)
+        {
+            element.style.display = DisplayStyle.None;
+        }
+
+        private void showElement(VisualElement element)
+        {
+            element.style.display = DisplayStyle.Flex;
+        }
+
+        private void OnStartGame()
+        {  
+            DestroyLocalSimulationWorld();
+            SceneManager.LoadScene(defaultScene);
+            StartServer();
+            StartClient();
         }
 
         private static void DestroyLocalSimulationWorld()
@@ -254,22 +353,18 @@ namespace NetCode
 
         private void StartServer()
         {
-            
             Debug.Log("Starting server");
-            var serverWorld = ClientServerBootstrap.CreateServerWorld("Turbo Server World");
+            var serverWorld = ClientServerBootstrap.CreateServerWorld("Ratking Server World");
             var serverEndpoint = NetworkEndpoint.AnyIpv4.WithPort(Port);
             {
                 using var networkDriverQuery = serverWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
                 networkDriverQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Listen(serverEndpoint);
             }
-
-            
-
         }
 
         private void StartClient()
         {
-            var clientWorld = ClientServerBootstrap.CreateClientWorld("Turbo Client World");
+            var clientWorld = ClientServerBootstrap.CreateClientWorld("Ratking Client World");
             var connectionEndpoint = NetworkEndpoint.Parse(Address, Port);
             {
                 using var networkDriverQuery = clientWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
