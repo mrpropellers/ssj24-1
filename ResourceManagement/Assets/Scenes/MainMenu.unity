@@ -533,7 +533,58 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea8fb5811f7493a4aba67fb1d1e96c69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  defaultTitle: Welcome to Ratking
   steamManagerObject: {fileID: 1901159138}
+  defaultScene: DevinCharacterScene
+  ratKingPass: abc123throwthemrats
+  defaultPort: 7979
+  ratKingIPManager: {fileID: 1712469596}
+--- !u!1 &1712469596
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1712469598}
+  - component: {fileID: 1712469597}
+  m_Layer: 0
+  m_Name: RatKingIPManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1712469597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1712469596}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87d24530f638c364ead05660d9c4a52e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myAddressLocal: 
+  myAddressGlobal: 
+--- !u!4 &1712469598
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1712469596}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1818087718
 GameObject:
   m_ObjectHideFlags: 0
@@ -635,3 +686,4 @@ SceneRoots:
   - {fileID: 1598922599}
   - {fileID: 1818087720}
   - {fileID: 1901159139}
+  - {fileID: 1712469598}

@@ -13,6 +13,7 @@ using Steamworks;
 using System.Linq;
 using Unity.VisualScripting;
 using System.Threading.Tasks;
+using System.Net;
 //using Simulation;
 //using UnityEngine.UI;
 
@@ -20,9 +21,9 @@ namespace NetCode
 {
     public class ClientConnectionManager : MonoBehaviour
     {
-        private enum uiModes {chooseMode, setupHost, Host, findLobby, inLobby, noLobbies }
+        private enum uiModes { chooseMode, setupHost, Host, findLobby, inLobby, noLobbies }
         private uiModes uiMode = uiModes.chooseMode;
-        
+
         private VisualElement uiDoc;
         private TextField _addressField => uiDoc.Q<TextField>("_addressField");
         private TextField _portField => uiDoc.Q<TextField>("_portField");
@@ -48,14 +49,18 @@ namespace NetCode
         public List<Friend> membersInLobby = new List<Friend>();
 
         private Lobby targetLobby;
+        private string melon;
 
-        private ushort Port => ushort.Parse(_portField.text);
         private string Address => _addressField.text;
         [SerializeField] private string defaultTitle = "Welcome to Ratking";
         [SerializeField] GameObject steamManagerObject;
         [SerializeField] private string defaultScene = "DevinCharacterScene";
         [SerializeField] private string ratKingPass = "abc123throwthemrats";
+        [SerializeField] private ushort defaultPort = 7979;
+        [SerializeField] GameObject ratKingIPManager;
         private SteamManager SteamManager { get; set; }
+        private RatKingIPManager RatKingIPManager { get; set; }
+        private ushort Port => defaultPort; //ushort.Parse(defaultPort);
 
         private void Awake()
         {
@@ -65,6 +70,7 @@ namespace NetCode
         private void Start()
         {
             SteamManager = steamManagerObject.GetComponent<SteamManager>();
+            RatKingIPManager = ratKingIPManager.GetComponent<RatKingIPManager>();
         }
 
         private void OnEnable()
@@ -114,7 +120,7 @@ namespace NetCode
 
         private void OnUpdate()
         {
-            
+
         }
         async private void OnFindLobby()
         {
@@ -133,7 +139,7 @@ namespace NetCode
             {
                 Debug.Log("No current lobbies available");
                 setUI(uiModes.noLobbies);
-            } 
+            }
         }
 
         async private void OnFindRatKingLobby()
@@ -154,12 +160,6 @@ namespace NetCode
                 Debug.Log("No current RK lobbies available");
                 setUI(uiModes.noLobbies);
             }
-        }
-
-        async private void OnSetupHost()
-        {
-            Debug.Log("Host Selected");
-            setUI(uiModes.setupHost);
         }
 
         private void OnLobbyChosen(ChangeEvent<bool> clickEvent)
@@ -192,12 +192,19 @@ namespace NetCode
                 }
                 Debug.Log("No rat king lobbies found.");
                 return false;
-            } catch (Exception e)
+            }
+            catch (Exception e)
             {
                 Debug.Log(e.ToString());
                 Debug.Log("Error fetching rat king lobbies");
                 return true;
             }
+        }
+
+        async private void OnSetupHost()
+        {
+            Debug.Log("Host Selected");
+            setUI(uiModes.setupHost);
         }
 
         async private void OnHostLobby()
@@ -216,11 +223,14 @@ namespace NetCode
             {
                 Debug.Log($"Lobby created: {SteamManager.currentLobby.Id}");
                 Debug.Log(SteamManager.currentLobby.ToString());
+                Debug.Log($"melon: {RatKingIPManager.myAddressGlobal}");
                 SteamManager.currentLobby.SetData("ratMakerId", ratKingPass);
+                SteamManager.currentLobby.SetData("mymelon", RatKingIPManager.myAddressGlobal);
+                melon = RatKingIPManager.myAddressGlobal;
                 setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
                 setUI(uiModes.Host);
 
-            }   
+            }
         }
         private void OnCancelLobby()
         {
@@ -228,17 +238,27 @@ namespace NetCode
             setUI(uiModes.chooseMode);
         }
 
+        private string speakFriend()
+        {
+            //IPHostEntry melon = Dns.GetHostEntry(Dns.GetHostName());
+            return RatKingIPManager.myAddressGlobal;
+        }
+
         async private void OnJoinLobby()
         {
-            
+
             RoomEnter joinedLobbySuccess = await SteamManager.activeLobbies[_lobbiesList.selectedIndex].Join();
-           
-            if (joinedLobbySuccess == RoomEnter.Success) {
+
+            if (joinedLobbySuccess == RoomEnter.Success)
+            {
                 SteamManager.currentLobby = SteamManager.activeLobbies[_lobbiesList.selectedIndex];
                 Debug.Log($"Lobby entered! Current Lobby {SteamManager.currentLobby.Id}");
                 setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
+                Debug.Log($"melon is {SteamManager.currentLobby.GetData("mymelon")}");
+                melon = SteamManager.currentLobby.GetData("mymelon");
                 setUI(uiModes.inLobby);
-            } else
+            }
+            else
             {
                 Debug.Log("Failed to enter lobby");
             }
@@ -283,7 +303,7 @@ namespace NetCode
 
         private void setLobbyList(List<Lobby> lobbies)
         {
-            var displayLobbiesList = new List<String> {};
+            var displayLobbiesList = new List<String> { };
             _lobbyRadioButtonGroup.Clear();
 
             foreach (var lobby in lobbies)
@@ -291,12 +311,13 @@ namespace NetCode
                 if (lobby.Owner.Name.Length > 0)
                 {
                     displayLobbiesList.Add($"{lobby.Owner.Name}'s lobby of {lobby.MemberCount} players.");
-                } else
+                }
+                else
                 {
                     displayLobbiesList.Add($"Unknown's lobby of {lobby.MemberCount} players.");
                 }
 
-                if(displayLobbiesList.Count > 5) { break; };
+                if (displayLobbiesList.Count > 5) { break; };
                 //Debug.Log($"{lobby.Owner.Name}'s lobby of {lobby.MemberCount} players.");
 
             }
@@ -306,7 +327,7 @@ namespace NetCode
         private void setUI(uiModes uiMode)
         {
             clearUI();
-            switch(uiMode)
+            switch (uiMode)
             {
                 case uiModes.chooseMode:
                     Debug.Log("Choose Mode View");
@@ -342,7 +363,7 @@ namespace NetCode
                     showElement(_joinLobbyButton);
                     showElement(_cancelButton);
                     break;
-                case uiModes.inLobby: 
+                case uiModes.inLobby:
                     setMenuTitle("In Lobby");
                     showElement(_lobbyMembers);
                     showElement(_leaveLobbyButton);
@@ -387,7 +408,7 @@ namespace NetCode
         }
 
         private void OnStartGame()
-        {  
+        {
             DestroyLocalSimulationWorld();
             SceneManager.LoadScene(defaultScene);
             StartServer();
@@ -420,7 +441,7 @@ namespace NetCode
         private void StartClient()
         {
             var clientWorld = ClientServerBootstrap.CreateClientWorld("Ratking Client World");
-            var connectionEndpoint = NetworkEndpoint.Parse(Address, Port);
+            var connectionEndpoint = NetworkEndpoint.Parse(melon, Port);
             {
                 using var networkDriverQuery = clientWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
                 networkDriverQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Connect(clientWorld.EntityManager, connectionEndpoint);
@@ -429,4 +450,4 @@ namespace NetCode
             World.DefaultGameObjectInjectionWorld = clientWorld;
         }
     }
-}       
+}
