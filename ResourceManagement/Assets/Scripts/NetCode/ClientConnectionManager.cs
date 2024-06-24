@@ -11,6 +11,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Unity.Entities.Serialization;
 using Unity.Scenes;
+using Simulation;
+using UnityEditor.PackageManager;
 
 namespace NetCode
 {
@@ -18,9 +20,9 @@ namespace NetCode
     {
         public static ClientConnectionManager Instance { get; private set; }
         
-        private enum uiModes { loading, startOfGame, noSteamClient, chooseMode, setupHost, Host, findLobby, inLobby, noLobbies }
+        private enum uiModes { inGame, loading, startOfGame, noSteamClient, chooseMode, setupHost, Host, findLobby, inLobby, noLobbies, pauseMenu }
         private uiModes uiMode = uiModes.chooseMode;
-
+ 
         //create all ui elements
         #region 
         public VisualElement uiDoc;
@@ -55,11 +57,14 @@ namespace NetCode
         public World clientWorld { get; private set; }
         private Lobby targetLobby;
         private string melon;
+        
         public bool IsLobbyHost { get; private set; }
         public bool IsInLobby { get; private set; }
+        
         public static bool ShouldInitializeWorlds => Instance.IsInLobby && !Instance.WorldsAreInitialized;
         public bool HasCleanedUpLocalWorld { get; private set; }
-
+        public bool ShouldStartGame { get; private set; }
+        private int currentLobbyMemberCount = 0;
         // [SerializeField]
         // SubScene GameplayScene;
         [SerializeField] private string defaultTitle = "Welcome to Ratking";
@@ -79,6 +84,7 @@ namespace NetCode
             //DontDestroyOnLoad(this);
             Instance = this;
             uiDoc = GetComponent<UIDocument>().rootVisualElement;
+            //SteamMatchmaking.OnLobbyDataChanged<SteamManager.currentLobby> += () => { OnMemberJoinedLobby(); };
         }
 
         private void Start()
@@ -100,6 +106,8 @@ namespace NetCode
             _cancelLobbyButton.clicked += () => { OnCancelLobby(); };
             _leaveLobbyButton.clicked += () => { OnLeaveLobby(); };
             _cancelButton.clicked += () => { OnCancelButton(); };
+            SteamMatchmaking.OnLobbyMemberJoined += OnLobbyChanges;
+            SteamMatchmaking.OnLobbyMemberDisconnected += OnLobbyChanges;
             //_lobbiesList.RegisterCallback<ChangeEvent<bool>>((evt) => { OnLobbyChosen(evt); });
             //callbacks for when lobbies close or open?
 
@@ -107,6 +115,7 @@ namespace NetCode
 
         void Update()
         {
+           
             if (HasCleanedUpLocalWorld || !WorldsAreInitialized)
                 return;
             
@@ -127,6 +136,11 @@ namespace NetCode
             }
         }
 
+        public void goToMenu()
+        {
+            setUI(uiModes.pauseMenu);
+        }
+
         private void OnExitClicked()
         {
             Application.Quit();
@@ -140,13 +154,15 @@ namespace NetCode
 
             if (currentSteamLobbies.Count > 0)
             {
+                uiMode = uiModes.findLobby;
                 createLobbyList(currentSteamLobbies);
-                setUI(uiModes.findLobby);
+                setUI(uiMode);
             }
             else
             {
+                uiMode = uiModes.noLobbies;
                 Debug.Log("No current RK lobbies available");
-                setUI(uiModes.noLobbies);
+                setUI(uiMode);
             }
         }
 
@@ -188,6 +204,8 @@ namespace NetCode
             setUI(uiModes.Host);
             IsLobbyHost = true;
             IsInLobby = true;
+            //activate callback function to update member list as people join/leave lobby
+
 
             // (Devin) HostSceneLoaderSystem should handle this now
             //DestroyLocalSimulationWorld();
@@ -195,10 +213,21 @@ namespace NetCode
             //GameplayScene.enabled = true;
             //StartClient();
         }
+
+        private void OnLobbyChanges(Lobby lobby, Friend friend)
+        {
+            Debug.Log("LOBBY HATH CHANGED");
+            setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
+            //setUI(uiMode);
+
+        }
         private void OnCancelLobby()
         {
-
+            serverWorld.Dispose();
+            clientWorld.Dispose();
+            SteamManager.currentLobby.SetData("melon", "000000000");
             SteamManager.currentLobby.Leave();
+            
             setUI(uiModes.chooseMode);
         }
 
@@ -210,7 +239,6 @@ namespace NetCode
             if (joinedLobbySuccess == RoomEnter.Success)
             {
                 SteamManager.currentLobby = SteamManager.activeLobbies[_lobbiesList.selectedIndex];
-                Debug.Log($"Lobby entered! Current Lobby {SteamManager.currentLobby.Id}");
                 setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
                 Debug.
                     Log($"ip is {SteamManager.currentLobby.GetData("mymelon")}");
@@ -225,10 +253,12 @@ namespace NetCode
 
         }
 
-        private void OnLeaveLobby()
+        async private void OnLeaveLobby()
         {
-            SteamManager.currentLobby.Leave();
-            setUI(uiModes.findLobby);
+            //i bet if we checked on whether or not the person who left was the host...
+            serverWorld.Dispose();
+            await GetRatKingLobbies();
+            OnFindLobby();
         }
         private void setLobbyMemberList(List<Friend> members)
         {
@@ -277,12 +307,16 @@ namespace NetCode
             _lobbiesList.itemsSource = displayLobbiesList;
         }
 
-        private void setUI(uiModes uiMode)
+        private void setUI(uiModes newUIMode)
         {
             //setUI clears all UI elements, chooses which to reveal and sets menu titles. All other logic of contents of elements is handled in the button callback functions.
+            uiMode = newUIMode;
             clearUI();
             switch (uiMode)
             {
+                case uiModes.inGame:
+                    hideElement(_menuTitle);
+                    break;
                 case uiModes.loading:
                     setMenuTitle("One moment please...");
                     break;
@@ -319,6 +353,7 @@ namespace NetCode
                 case uiModes.findLobby:
                     setMenuTitle("Choose a Lobby");
                     showElement(_lobbiesList);
+                    showElement(_refreshLobbiesButton);
                     showElement(_joinLobbyButton);
                     showElement(_cancelButton);
                     break;
@@ -326,6 +361,7 @@ namespace NetCode
                     setMenuTitle("Awaiting Lobbies");
                     setSubheader("No lobbies are available. Please wait a few moments and click refresh!");
                     showElement(_subheader);
+                    showElement(_refreshLobbiesButton);
                     showElement(_joinLobbyButton);
                     showElement(_cancelButton);
                     break;
@@ -333,6 +369,10 @@ namespace NetCode
                     setMenuTitle($"In Lobby: {SteamManager.currentLobby.GetData("lobbyName")}");
                     showElement(_lobbyMembers);
                     showElement(_leaveLobbyButton);
+                    break;
+                case uiModes.pauseMenu:
+                    setMenuTitle("PAUSE");
+                    showElement(_exitButton);
                     break;
                 default:
                     setUI(uiModes.startOfGame);
@@ -343,6 +383,7 @@ namespace NetCode
         private void clearUI()
         {
             //got to be a way to just iterate over all elements... but brute forcing will do for now.
+            showElement(_menuTitle);
             hideElement(_startButton);
             hideElement(_lobbyTitleField);
             hideElement(_findLobbyButton);
@@ -358,6 +399,7 @@ namespace NetCode
             hideElement(_exitButton);
             hideElement(_errorMessage);
             hideElement(_subheader);
+            hideElement(_refreshLobbiesButton);
         }
         private void setMenuTitle(string text)
         {
@@ -399,32 +441,17 @@ namespace NetCode
             // });
 
             GameObject.FindGameObjectWithTag("MusicManager").GetComponent<MusicManager>().PlayGameMusic();
-            Debug.LogWarning("NOTHING HERE RIGHT NOW");
-            //Debug.Log(sceneCheck);
-            
-            //Debug.Log(loadTest.GetHashCode());
-            
-         
-            //SceneManager.SetActiveScene(SceneManager.GetSceneByName(GameScene.name));
-            //var priorScene = new EntitySceneReference(MenuScene);
-            //var loadSys = new ServerProcessLevelChangeRequestSystem();
-            //loadSys.LoadNewLevel(serverWorld, targetScene, priorScene);
+            Debug.LogWarning("running game startup");
 
-            //var ecb = new EntityCommandBuffer(Allocator.Temp);
-            //var sceneEntity = ecb.CreateEntity();
-            //ecb.AddComponent(sceneEntity, new SceneLoader { SceneReference = targetScene });
+            setUI(uiModes.inGame);
+            SteamManager.currentLobby.SetJoinable(false);
+        
+            serverWorld.EntityManager.CreateEntity(typeof(StartTheGame));
+     
+            //SystemState systemState = new SystemState();
+            ShouldStartGame = true;
 
 
-
-
-            //DestroyLocalSimulationWorld();
-            //var sys = new ServerProcessLevelChangeRequestSystem();
-            //FixedString64Bytes priorScene = "MainMenu";
-            //sys.LoadNewLevel(defaultScene, serverWorld, priorScene);
-            //SceneManager.LoadScene(defaultScene);
-            // StartServer();
-            // StartClient();
-    
         }
    
 
