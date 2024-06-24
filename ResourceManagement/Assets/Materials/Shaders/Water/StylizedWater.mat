@@ -42,7 +42,7 @@ Material:
     - _FoamAmount: 0.65
     - _FoamCutoff: 0.99
     - _FoamScale: -40.95
-    - _FoamSpeed: 0.7
+    - _FoamSpeed: -0.7
     - _QueueControl: 0
     - _QueueOffset: 0
     - _RefractionScale: 0.03
