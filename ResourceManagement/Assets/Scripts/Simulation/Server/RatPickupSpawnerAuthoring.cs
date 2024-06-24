@@ -6,7 +6,7 @@ using UnityEngine.Serialization;
 namespace Simulation.Server
 {
     // TODO: Add some variance to spawn cooldown?
-    public struct RatPickupSpawner : IComponentData
+    public struct RatPickupSpawner : IComponentData 
     {
         public NetworkTick TickLastSpawned;
         public float SpawnRadius;

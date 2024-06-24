@@ -120,6 +120,7 @@ namespace NetCode
 
         private void OnStartClicked()
         {
+            
             if (SteamClient.IsValid)
             {
                 setUI(uiModes.chooseMode);

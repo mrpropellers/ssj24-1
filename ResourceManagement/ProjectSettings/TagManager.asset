@@ -15,9 +15,8 @@ TagManager:
   - Projectiles
   - CharacterInteractions
   - LightPassthroughGeo
-  - 
-  - 
-  - 
+  - NavigationBlocker
+  - NoCollision
   - 
   - 
   - 

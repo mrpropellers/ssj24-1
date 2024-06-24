@@ -15,7 +15,8 @@ namespace Presentation
         {
             if (!presentation.TryGetComponent<TransformSetter>(out var tfSetter))
             {
-                Debug.LogWarning($"{presentation} has not {nameof(TransformSetter)}, adding one now (you should fix the prefab tho)");
+                Debug.LogWarning(
+                    $"{presentation} has not {nameof(TransformSetter)}, adding one now (you should fix the prefab tho)");
                 tfSetter = presentation.AddComponent<TransformSetter>();
             }
             var link = new TransformLink()
@@ -73,8 +74,9 @@ namespace Presentation
                     Debug.LogError("Failed to find the InputAdapter on the player presentation");
                 }
                 AddPresentationLinks(ref commandBuffer, playerComponent.ControlledCharacter, tf, playerPresentation);
-                PresentationInstantiator.PlayerCamera.Follow = playerPresentation.transform;
-                PresentationInstantiator.PlayerCamera.LookAt = playerPresentation.transform;
+                PresentationInstantiator.PlayerVirtualCamera.Follow = playerPresentation.transform;
+                PresentationInstantiator.PlayerVirtualCamera.LookAt = playerPresentation.transform;
+                PresentationInstantiator.PlayerCameraRig.follow = playerPresentation.transform;
             }
 
             // Initialize any non-local characters

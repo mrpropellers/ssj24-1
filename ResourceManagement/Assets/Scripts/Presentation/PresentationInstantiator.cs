@@ -1,6 +1,8 @@
 using System;
 using Cinemachine;
 using UnityEngine;
+using QBitDigital.BunnyKnight;
+using UnityEngine.Serialization;
 
 namespace Presentation 
 {
@@ -14,10 +16,14 @@ namespace Presentation
         GameObject RatPickupPrefab;
         [SerializeField]
         GameObject RatProjectilePrefab;
+        // (currently not using this but we set it up anyway)
         [SerializeField]
         CinemachineVirtualCamera PlayerVCam;
+        [SerializeField]
+        CameraController PlayerQBitCam;
 
-        public static CinemachineVirtualCamera PlayerCamera => _instance.PlayerVCam;
+        public static CinemachineVirtualCamera PlayerVirtualCamera => _instance.PlayerVCam;
+        public static CameraController PlayerCameraRig => _instance.PlayerQBitCam;
 
         void Start()
         {
