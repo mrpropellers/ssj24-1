@@ -20,7 +20,7 @@ namespace NetCode
         
         private enum uiModes { loading, startOfGame, noSteamClient, chooseMode, setupHost, Host, findLobby, inLobby, noLobbies }
         private uiModes uiMode = uiModes.chooseMode;
-
+ 
         //create all ui elements
         #region 
         public VisualElement uiDoc;
@@ -59,7 +59,7 @@ namespace NetCode
         public bool IsInLobby { get; private set; }
         public static bool ShouldInitializeWorlds => Instance.IsInLobby && !Instance.WorldsAreInitialized;
         public bool HasCleanedUpLocalWorld { get; private set; }
-
+        private int currentLobbyMemberCount = 0;
         // [SerializeField]
         // SubScene GameplayScene;
         [SerializeField] private string defaultTitle = "Welcome to Ratking";
@@ -79,6 +79,7 @@ namespace NetCode
             //DontDestroyOnLoad(this);
             Instance = this;
             uiDoc = GetComponent<UIDocument>().rootVisualElement;
+            //SteamMatchmaking.OnLobbyDataChanged<SteamManager.currentLobby> += () => { OnMemberJoinedLobby(); };
         }
 
         private void Start()
@@ -107,6 +108,10 @@ namespace NetCode
 
         void Update()
         {
+            if (IsLobbyHost) //if we are hosting
+            {
+                updateLobbyMembers();
+            }
             if (HasCleanedUpLocalWorld || !WorldsAreInitialized)
                 return;
             
@@ -124,6 +129,10 @@ namespace NetCode
                 _errorMessage.text = "Unable to connect to Steam. Please exit the game, make sure you are connected to the internet, your steam client is running and then restart. Thank you!";
                 setUI(uiModes.noSteamClient);
             }
+        }
+        private void updateLobbyMembers()
+        {
+            if(currentLobbyMemberCount != SteamManager.currentLobby.MemberCount) { }
         }
 
         private void OnExitClicked()
@@ -187,12 +196,21 @@ namespace NetCode
             setUI(uiModes.Host);
             IsLobbyHost = true;
             IsInLobby = true;
-
+            //activate callback function to update member list as people join/leave lobby
+            var thelobby = SteamManager.currentLobby;
+            SteamMatchmaking.OnLobbyDataChanged += (thelobby) => { OnLobbyChanges(thelobby); };
+      
             // (Devin) HostSceneLoaderSystem should handle this now
             //DestroyLocalSimulationWorld();
             //StartServer();
             //GameplayScene.enabled = true;
             //StartClient();
+        }
+
+        private void OnLobbyChanges(Lobby lobby)
+        {
+            setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
+            //setUI(uiMode);
         }
         private void OnCancelLobby()
         {
