@@ -457,6 +457,7 @@ GameObject:
   - component: {fileID: 1598922598}
   - component: {fileID: 1598922597}
   - component: {fileID: 1598922600}
+  - component: {fileID: 1598922601}
   m_Layer: 5
   m_Name: MainMenuUI
   m_TagString: Untagged
@@ -535,10 +536,92 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultTitle: Welcome to Ratking
   steamManagerObject: {fileID: 1901159138}
-  defaultScene: DevinCharacterScene
+  defaultScene:
+    utf8LengthInBytes: 19
+    bytes:
+      offset0000:
+        byte0000: 68
+        byte0001: 101
+        byte0002: 118
+        byte0003: 105
+        byte0004: 110
+        byte0005: 67
+        byte0006: 104
+        byte0007: 97
+        byte0008: 114
+        byte0009: 97
+        byte0010: 99
+        byte0011: 116
+        byte0012: 101
+        byte0013: 114
+        byte0014: 83
+        byte0015: 99
+      offset0016:
+        byte0000: 101
+        byte0001: 110
+        byte0002: 101
+        byte0003: 0
+        byte0004: 0
+        byte0005: 0
+        byte0006: 0
+        byte0007: 0
+        byte0008: 0
+        byte0009: 0
+        byte0010: 0
+        byte0011: 0
+        byte0012: 0
+        byte0013: 0
+        byte0014: 0
+        byte0015: 0
+      offset0032:
+        byte0000: 0
+        byte0001: 0
+        byte0002: 0
+        byte0003: 0
+        byte0004: 0
+        byte0005: 0
+        byte0006: 0
+        byte0007: 0
+        byte0008: 0
+        byte0009: 0
+        byte0010: 0
+        byte0011: 0
+        byte0012: 0
+        byte0013: 0
+        byte0014: 0
+        byte0015: 0
+      byte0048: 0
+      byte0049: 0
+      byte0050: 0
+      byte0051: 0
+      byte0052: 0
+      byte0053: 0
+      byte0054: 0
+      byte0055: 0
+      byte0056: 0
+      byte0057: 0
+      byte0058: 0
+      byte0059: 0
+      byte0060: 0
+      byte0061: 0
   ratKingPass: abc123throwthemrats
   defaultPort: 7979
   ratKingIPManager: {fileID: 1712469596}
+  MenuScene: {fileID: 102900000, guid: 5de6cf2cf5a1c7f44b3896b4ac553160, type: 3}
+  GameScene: {fileID: 102900000, guid: f5c96e8414c003e47aff5e5b72d14e8f, type: 3}
+--- !u!114 &1598922601
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1598922596}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0e752ca1ace3eb4b91b362a3be58f6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Scene: {fileID: 102900000, guid: f5c96e8414c003e47aff5e5b72d14e8f, type: 3}
 --- !u!1 &1712469596
 GameObject:
   m_ObjectHideFlags: 0
@@ -676,6 +759,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxGamePlayers: 10
   defaultScene: DevinCharacterScene
+--- !u!1 &2090067838
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2090067839}
+  m_Layer: 0
+  m_Name: LevelController
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2090067839
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2090067838}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -687,3 +801,4 @@ SceneRoots:
   - {fileID: 1818087720}
   - {fileID: 1901159139}
   - {fileID: 1712469598}
+  - {fileID: 2090067839}

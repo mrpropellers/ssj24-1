@@ -14,6 +14,11 @@ using System.Linq;
 using Unity.VisualScripting;
 using System.Threading.Tasks;
 using System.Net;
+using Unity.Collections;
+using Unity.Entities.Serialization;
+using UnityEditor;
+using Unity.Scenes;
+using Unity.Entities.UniversalDelegates;
 //using Simulation;
 //using UnityEngine.UI;
 
@@ -21,13 +26,14 @@ namespace NetCode
 {
     public class ClientConnectionManager : MonoBehaviour
     {
-        private enum uiModes { chooseMode, setupHost, Host, findLobby, inLobby, noLobbies }
+        private enum uiModes { loading, startOfGame, noSteamClient, chooseMode, setupHost, Host, findLobby, inLobby, noLobbies }
         private uiModes uiMode = uiModes.chooseMode;
 
+        //create all ui elements
+        #region 
         private VisualElement uiDoc;
-        private TextField _addressField => uiDoc.Q<TextField>("_addressField");
-        private TextField _portField => uiDoc.Q<TextField>("_portField");
-        private DropdownField _connectionModeDropdown => uiDoc.Q<DropdownField>("_connectionModeDropdown");
+        private TextField _lobbyTitleField => uiDoc.Q<TextField>("_lobbyTitleField");
+        private Button _startButton => uiDoc.Q<Button>("_start");
         private Button _setupHostButton => uiDoc.Q<Button>("_setupHost");
         private Button _startGameButton => uiDoc.Q<Button>("_startGame");
         private Button _findLobbyButton => uiDoc.Q<Button>("_findLobby");
@@ -36,28 +42,34 @@ namespace NetCode
         private Button _cancelLobbyButton => uiDoc.Q<Button>("_cancelLobby");
         private Button _leaveLobbyButton => uiDoc.Q<Button>("_leaveLobby");
         private Button _cancelButton => uiDoc.Q<Button>("_cancel");
+        private Button _exitButton => uiDoc.Q<Button>("_exitGame");
+        private Button _refreshLobbiesButton => uiDoc.Q<Button>("_refreshLobbies");
 
-        private Button _findRatKingLobbyButton => uiDoc.Q<Button>("_findRatKingLobby");
         private Label _noLobbiesLabel => uiDoc.Q<Label>("_noLobbies");
 
         private Label _menuTitle => uiDoc.Q<Label>("menu__title");
-        private RadioButtonGroup _lobbyRadioButtonGroup => uiDoc.Q<RadioButtonGroup>("_lobbyRadioButtonGroup");
+        private Label _errorMessage => uiDoc.Q<Label>("_errorMessage");
+        private Label _subheader => uiDoc.Q<Label>("_subheader");
 
         private ListView _lobbiesList => uiDoc.Q<ListView>("_lobbyList");
         private ListView _lobbyMembers => uiDoc.Q<ListView>("_lobbyMembers");
 
-        public List<Friend> membersInLobby = new List<Friend>();
+        #endregion
+        //ui elements created!
 
+        public List<Friend> membersInLobby = new List<Friend>();
+        private World serverWorld;
         private Lobby targetLobby;
         private string melon;
 
-        private string Address => _addressField.text;
         [SerializeField] private string defaultTitle = "Welcome to Ratking";
         [SerializeField] GameObject steamManagerObject;
-        [SerializeField] private string defaultScene = "DevinCharacterScene";
+        [SerializeField] private FixedString64Bytes defaultScene = "DevinCharacterScene";
         [SerializeField] private string ratKingPass = "abc123throwthemrats";
         [SerializeField] private ushort defaultPort = 7979;
         [SerializeField] GameObject ratKingIPManager;
+        [SerializeField] private SceneAsset MenuScene;
+        [SerializeField] private SceneAsset GameScene;
         private SteamManager SteamManager { get; set; }
         private RatKingIPManager RatKingIPManager { get; set; }
         private ushort Port => defaultPort; //ushort.Parse(defaultPort);
@@ -75,85 +87,49 @@ namespace NetCode
 
         private void OnEnable()
         {
-            _findLobbyButton.clicked += () => {
-                OnFindLobby();
-            };
-            _findRatKingLobbyButton.clicked += () =>
-            {
-                OnFindRatKingLobby();
-            };
-            _setupHostButton.clicked += () => {
-                Debug.Log("Setup host clicked");
-                OnSetupHost();
-            };
-            _startGameButton.clicked += () => {
-                OnStartGame();
-            };
-            _hostLobbyButton.clicked += () => {
-                OnHostLobby();
-            };
-            _joinLobbyButton.clicked += () => {
-                OnJoinLobby();
-            };
-            _cancelLobbyButton.clicked += () =>
-            {
-                OnCancelLobby();
-            };
-            _leaveLobbyButton.clicked += () =>
-            {
-                OnLeaveLobby();
-            };
-            _cancelButton.clicked += () =>
-            {
-                OnCancelButton();
-            };
+            _refreshLobbiesButton.clicked += () => { OnFindLobby(); }; //note that this is the same logic as findLobbies, intentional reuse
+            _startButton.clicked += () => { OnStartClicked(); };
+            _exitButton.clicked += () => { OnExitClicked(); };
+            _findLobbyButton.clicked += () => { OnFindLobby(); };
+            _setupHostButton.clicked += () => { OnSetupHost(); };
+            _startGameButton.clicked += () => { OnStartGame(); };
+            _hostLobbyButton.clicked += () => { OnHostLobby(); };
+            _joinLobbyButton.clicked += () => { OnJoinLobby(); };
+            _cancelLobbyButton.clicked += () => { OnCancelLobby(); };
+            _leaveLobbyButton.clicked += () => { OnLeaveLobby(); };
+            _cancelButton.clicked += () => { OnCancelButton(); };
             //_lobbiesList.RegisterCallback<ChangeEvent<bool>>((evt) => { OnLobbyChosen(evt); });
             //callbacks for when lobbies close or open?
 
         }
 
-        private void OnDisable()
+        private void OnStartClicked()
         {
-            //_connectionModeDropdown.onValueChanged.RemoveAllListeners();
-            //_connectionButton.onClick.RemoveAllListeners();
+            if (SteamClient.IsValid)
+            {
+                setUI(uiModes.chooseMode);
+            } else
+            {
+                _errorMessage.text = "Unable to connect to Steam. Please exit the game, make sure you are connected to the internet, your steam client is running and then restart. Thank you!";
+                setUI(uiModes.noSteamClient);
+            }
         }
 
-        private void OnUpdate()
+        private void OnExitClicked()
         {
-
+            Application.Quit();
         }
+
         async private void OnFindLobby()
         {
-            Debug.Log("Find Lobby Selected");
-            await SteamManager.RefreshMultiplayerLobbies();
-            var currentSteamLobbies = SteamManager.activeLobbies;
-            Debug.Log($"Games available count: {currentSteamLobbies.Count}");
-
-            if (currentSteamLobbies.Count > 0)
-            {
-                setFindLobbyList(currentSteamLobbies);
-                setUI(uiModes.findLobby);
-
-            }
-            else
-            {
-                Debug.Log("No current lobbies available");
-                setUI(uiModes.noLobbies);
-            }
-        }
-
-        async private void OnFindRatKingLobby()
-        {
-            Debug.Log("Find RK Lobby Selected");
             await GetRatKingLobbies();
             var currentSteamLobbies = SteamManager.activeLobbies;
             Debug.Log($"Rat King available count: {currentSteamLobbies.Count}");
 
             if (currentSteamLobbies.Count > 0)
             {
-                setFindLobbyList(currentSteamLobbies);
+                createLobbyList(currentSteamLobbies);
                 setUI(uiModes.findLobby);
-
             }
             else
             {
@@ -162,18 +138,87 @@ namespace NetCode
             }
         }
 
-        private void OnLobbyChosen(ChangeEvent<bool> clickEvent)
-        {
-            Debug.Log("Change Event called");
-            Debug.Log(clickEvent);
-            Debug.Log(clickEvent.newValue);
-            //Debug.Log(chosenLobby.Id);
-            //targetLobby = chosenLobby;
-        }
-
         private void OnCancelButton()
         {
             setUI(uiModes.chooseMode);
+        }
+
+        private void OnSetupHost()
+        {
+            setUI(uiModes.setupHost);
+        }
+
+        async private void OnHostLobby()
+        {
+            setUI(uiModes.loading);
+            var createLobby = false;
+            try
+            {
+                createLobby = await SteamManager.CreateLobby();
+            }
+            catch (Exception exception)
+            {
+                Debug.Log("UI failed to create lobby");
+                Debug.Log(exception.ToString());
+            }
+            if (createLobby)
+            {
+                Debug.Log($"Lobby created: {SteamManager.currentLobby.Id}");
+                Debug.Log(SteamManager.currentLobby.ToString());
+                Debug.Log($"melon: {RatKingIPManager.myAddressGlobal}");
+                SteamManager.currentLobby.SetData("ratMakerId", ratKingPass);
+                SteamManager.currentLobby.SetData("mymelon", RatKingIPManager.myAddressLocal);
+                SteamManager.currentLobby.SetData("lobbyName", _lobbyTitleField.text);
+                melon = RatKingIPManager.myAddressLocal;
+                setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
+                setUI(uiModes.Host);
+                DestroyLocalSimulationWorld();
+                StartServer();
+                StartClient();
+
+            }
+        }
+        private void OnCancelLobby()
+        {
+
+            SteamManager.currentLobby.Leave();
+            setUI(uiModes.chooseMode);
+        }
+
+        async private void OnJoinLobby()
+        {
+
+            RoomEnter joinedLobbySuccess = await SteamManager.activeLobbies[_lobbiesList.selectedIndex].Join();
+
+            if (joinedLobbySuccess == RoomEnter.Success)
+            {
+                SteamManager.currentLobby = SteamManager.activeLobbies[_lobbiesList.selectedIndex];
+                Debug.Log($"Lobby entered! Current Lobby {SteamManager.currentLobby.Id}");
+                setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
+                Debug.Log($"ip is {SteamManager.currentLobby.GetData("mymelon")}");
+                melon = SteamManager.currentLobby.GetData("mymelon");
+                setUI(uiModes.inLobby);
+                StartClient();
+            }
+            else
+            {
+                Debug.Log("Failed to enter lobby");
+            }
+
+        }
+
+        private void OnLeaveLobby()
+        {
+            SteamManager.currentLobby.Leave();
+            setUI(uiModes.findLobby);
+        }
+        private void setLobbyMemberList(List<Friend> members)
+        {
+
+            //private ListView _lobbyMembers = uiDoc.Q<ListView>("_lobbyMembers");
+            //public List<Friend> membersInLobby = new List<Friend>();
+            _lobbyMembers.Clear();
+            _lobbyMembers.itemsSource = members;
         }
 
         private async Task<bool> GetRatKingLobbies()
@@ -201,151 +246,53 @@ namespace NetCode
             }
         }
 
-        async private void OnSetupHost()
-        {
-            Debug.Log("Host Selected");
-            setUI(uiModes.setupHost);
-        }
-
-        async private void OnHostLobby()
-        {
-            var createLobby = false;
-            try
-            {
-                createLobby = await SteamManager.CreateLobby();
-            }
-            catch (Exception exception)
-            {
-                Debug.Log("UI failed to create lobby");
-                Debug.Log(exception.ToString());
-            }
-            if (createLobby)
-            {
-                Debug.Log($"Lobby created: {SteamManager.currentLobby.Id}");
-                Debug.Log(SteamManager.currentLobby.ToString());
-                Debug.Log($"melon: {RatKingIPManager.myAddressGlobal}");
-                SteamManager.currentLobby.SetData("ratMakerId", ratKingPass);
-                SteamManager.currentLobby.SetData("mymelon", RatKingIPManager.myAddressGlobal);
-                melon = RatKingIPManager.myAddressGlobal;
-                setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
-                setUI(uiModes.Host);
-
-            }
-        }
-        private void OnCancelLobby()
-        {
-            SteamManager.currentLobby.Leave();
-            setUI(uiModes.chooseMode);
-        }
-
-        private string speakFriend()
-        {
-            //IPHostEntry melon = Dns.GetHostEntry(Dns.GetHostName());
-            return RatKingIPManager.myAddressGlobal;
-        }
-
-        async private void OnJoinLobby()
-        {
-
-            RoomEnter joinedLobbySuccess = await SteamManager.activeLobbies[_lobbiesList.selectedIndex].Join();
-
-            if (joinedLobbySuccess == RoomEnter.Success)
-            {
-                SteamManager.currentLobby = SteamManager.activeLobbies[_lobbiesList.selectedIndex];
-                Debug.Log($"Lobby entered! Current Lobby {SteamManager.currentLobby.Id}");
-                setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
-                Debug.Log($"melon is {SteamManager.currentLobby.GetData("mymelon")}");
-                melon = SteamManager.currentLobby.GetData("mymelon");
-                setUI(uiModes.inLobby);
-            }
-            else
-            {
-                Debug.Log("Failed to enter lobby");
-            }
-
-        }
-
-        private void OnLeaveLobby()
-        {
-            SteamManager.currentLobby.Leave();
-            setUI(uiModes.findLobby);
-        }
-        private void setLobbyMemberList(List<Friend> members)
-        {
-
-            //private ListView _lobbyMembers = uiDoc.Q<ListView>("_lobbyMembers");
-            //public List<Friend> membersInLobby = new List<Friend>();
-            _lobbyMembers.Clear();
-            _lobbyMembers.itemsSource = members;
-        }
-
-        private void setFindLobbyList(List<Lobby> lobbies)
+        private void createLobbyList(List<Lobby> lobbies)
         {
             var displayLobbiesList = new List<String> { };
             _lobbiesList.Clear();
             foreach (var lobby in lobbies)
             {
-                if (lobby.Owner.Name.Length > 0)
-                {
-                    displayLobbiesList.Add($"{lobby.Owner.Name}'s lobby of {lobby.MemberCount} players.");
-                }
-                else
-                {
-                    displayLobbiesList.Add($"Unknown's lobby of {lobby.MemberCount} players.");
-                }
-
+                var lobbyTitle = lobby.GetData("lobbyName");
+                displayLobbiesList.Add($"{lobbyTitle}: {lobby.MemberCount} players.");
                 if (displayLobbiesList.Count > 5) { break; };
-                //Debug.Log($"{lobby.Owner.Name}'s lobby of {lobby.MemberCount} players.");
-
             }
             _lobbiesList.itemsSource = displayLobbiesList;
         }
 
-        private void setLobbyList(List<Lobby> lobbies)
-        {
-            var displayLobbiesList = new List<String> { };
-            _lobbyRadioButtonGroup.Clear();
-
-            foreach (var lobby in lobbies)
-            {
-                if (lobby.Owner.Name.Length > 0)
-                {
-                    displayLobbiesList.Add($"{lobby.Owner.Name}'s lobby of {lobby.MemberCount} players.");
-                }
-                else
-                {
-                    displayLobbiesList.Add($"Unknown's lobby of {lobby.MemberCount} players.");
-                }
-
-                if (displayLobbiesList.Count > 5) { break; };
-                //Debug.Log($"{lobby.Owner.Name}'s lobby of {lobby.MemberCount} players.");
-
-            }
-            _lobbyRadioButtonGroup.choices = displayLobbiesList;
-        }
-
         private void setUI(uiModes uiMode)
         {
+            //setUI clears all UI elements, chooses which to reveal and sets menu titles. All other logic of contents of elements is handled in the button callback functions.
             clearUI();
             switch (uiMode)
             {
+                case uiModes.loading:
+                    setMenuTitle("One moment please...");
+                    break;
+                case uiModes.startOfGame:
+                    setMenuTitle(defaultTitle);
+                    showElement(_startButton);
+                    showElement(_exitButton);
+                    break;
+                case uiModes.noSteamClient:
+                    setMenuTitle(defaultTitle);
+                    showElement(_errorMessage);
+                    showElement(_exitButton);
+                    break;
                 case uiModes.chooseMode:
-                    Debug.Log("Choose Mode View");
                     setMenuTitle(defaultTitle);
                     showElement(_setupHostButton);
                     showElement(_findLobbyButton);
-                    showElement(_findRatKingLobbyButton);
+                    showElement(_exitButton);
                     break;
                 case uiModes.setupHost:
-                    Debug.Log("Host Set Up View");
-                    setMenuTitle("Set host settings");
-                    showElement(_addressField);
-                    showElement(_portField);
+                    setMenuTitle("Set Up Host");
+                    setSubheader("Please choose a public name for your game lobby. Note: hosting a game will reveal your IP address to people who may be querying the Steam matchmaking API.");
+                    showElement(_subheader);
+                    showElement(_lobbyTitleField);
                     showElement(_hostLobbyButton);
                     showElement(_cancelButton);
                     break;
                 case uiModes.Host:
-                    Debug.Log("Host View");
                     setMenuTitle("Your Lobby");
                     showElement(_cancelLobbyButton);
                     showElement(_lobbyMembers);
@@ -359,17 +306,18 @@ namespace NetCode
                     break;
                 case uiModes.noLobbies:
                     setMenuTitle("Awaiting Lobbies");
-                    showElement(_noLobbiesLabel);
+                    setSubheader("No lobbies are available. Please wait a few moments and click refresh!");
+                    showElement(_subheader);
                     showElement(_joinLobbyButton);
                     showElement(_cancelButton);
                     break;
                 case uiModes.inLobby:
-                    setMenuTitle("In Lobby");
+                    setMenuTitle($"In Lobby: {SteamManager.currentLobby.GetData("lobbyName")}");
                     showElement(_lobbyMembers);
                     showElement(_leaveLobbyButton);
                     break;
                 default:
-                    setUI(uiModes.chooseMode);
+                    setUI(uiModes.startOfGame);
                     break;
             }
         }
@@ -377,8 +325,8 @@ namespace NetCode
         private void clearUI()
         {
             //got to be a way to just iterate over all elements... but brute forcing will do for now.
-            hideElement(_addressField);
-            hideElement(_portField);
+            hideElement(_startButton);
+            hideElement(_lobbyTitleField);
             hideElement(_findLobbyButton);
             hideElement(_setupHostButton);
             hideElement(_startGameButton);
@@ -388,13 +336,23 @@ namespace NetCode
             hideElement(_lobbiesList);
             hideElement(_lobbyMembers);
             hideElement(_leaveLobbyButton);
-            hideElement(_noLobbiesLabel);
             hideElement(_cancelButton);
-            hideElement(_findRatKingLobbyButton);
+            hideElement(_exitButton);
+            hideElement(_errorMessage);
+            hideElement(_subheader);
         }
-        private void setMenuTitle(string headerText)
+        private void setMenuTitle(string text)
         {
-            _menuTitle.text = headerText;
+            _menuTitle.text = text;
+        }
+        private void setErrorMessage(string text)
+        {
+            _errorMessage.text = text;
+        }
+
+        private void setSubheader(string text)
+        {
+            _subheader.text = text;
         }
 
         private void hideElement(VisualElement element)
@@ -409,11 +367,47 @@ namespace NetCode
 
         private void OnStartGame()
         {
-            DestroyLocalSimulationWorld();
-            SceneManager.LoadScene(defaultScene);
-            StartServer();
+            //create a new entity type of sceneloader
+            var targetScene = new EntitySceneReference(GameScene);
+            var loadTest = SceneSystem.LoadSceneAsync(serverWorld.Unmanaged, targetScene);
+            //I need to pass loadTest into a system?
+            FixedString64Bytes shortName = GameScene.name;
+            
+            serverWorld.EntityManager.AddComponent(loadTest, typeof(SceneLoaderData));
+            serverWorld.EntityManager.SetComponentData<SceneLoaderData>(loadTest, new SceneLoaderData
+            {
+                LoadingEntity = loadTest,
+                SceneName = shortName
+            });
+
+            Debug.Log("LOAD TEST");
+            //Debug.Log(sceneCheck);
+            
+            //Debug.Log(loadTest.GetHashCode());
+            
+         
+            //SceneManager.SetActiveScene(SceneManager.GetSceneByName(GameScene.name));
+            //var priorScene = new EntitySceneReference(MenuScene);
+            //var loadSys = new ServerProcessLevelChangeRequestSystem();
+            //loadSys.LoadNewLevel(serverWorld, targetScene, priorScene);
+
+            //var ecb = new EntityCommandBuffer(Allocator.Temp);
+            //var sceneEntity = ecb.CreateEntity();
+            //ecb.AddComponent(sceneEntity, new SceneLoader { SceneReference = targetScene });
+
+
+
+
+            //DestroyLocalSimulationWorld();
+            //var sys = new ServerProcessLevelChangeRequestSystem();
+            //FixedString64Bytes priorScene = "MainMenu";
+            //sys.LoadNewLevel(defaultScene, serverWorld, priorScene);
+            //SceneManager.LoadScene(defaultScene);
+            //StartServer();
             StartClient();
+    
         }
+   
 
         private static void DestroyLocalSimulationWorld()
         {
@@ -427,10 +421,13 @@ namespace NetCode
             }
         }
 
+       
+
+
         private void StartServer()
         {
             Debug.Log("Starting server");
-            var serverWorld = ClientServerBootstrap.CreateServerWorld("Ratking Server World");
+            serverWorld = ClientServerBootstrap.CreateServerWorld("Ratking Server World");
             var serverEndpoint = NetworkEndpoint.AnyIpv4.WithPort(Port);
             {
                 using var networkDriverQuery = serverWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
