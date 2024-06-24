@@ -4,7 +4,9 @@ using UnityEngine;
 
 namespace NetCode
 {
-    [UnityEngine.Scripting.Preserve]
+    /*
+    
+     [UnityEngine.Scripting.Preserve]
     public class NetworkBootstrap : ClientServerBootstrap
     {
         public override bool Initialize(string defaultWorldName)
@@ -13,4 +15,5 @@ namespace NetCode
             return base.Initialize(defaultWorldName);
         }
     }
+    */
 }
