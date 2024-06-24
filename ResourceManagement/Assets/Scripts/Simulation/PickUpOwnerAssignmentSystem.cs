@@ -15,9 +15,6 @@ namespace Simulation
     //     
     // }
 
-    // >>> TODO | P0 | Implement cauldron scoring
-    //  Need to build a set of classes/logic similar to this to handle when rat projectiles hit cauldrons, then
-    //  update the appropriate scoring systems and destroy the projectiles
     [BurstCompile]
     public struct PickUpJob : ITriggerEventsJob
     {
