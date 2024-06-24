@@ -168,9 +168,6 @@ namespace Simulation
             {
                 if (tick.TicksSince(pc.ValueRO.TickStarted) < follower.ValueRO.ToProjectileTicks)
                     continue;
-                // TODO: Figure out best way to request the Entity be destroyed on server?
-                // ecb.SetEnabled(entity, false);
-                // tfLink.Root.SetActive(false);
                 Debug.Log("converting to projectile!");
                 ecb.DestroyEntity(entity);
                 var projectile = ecb.Instantiate(game.RatProjectileSimulation);
@@ -182,7 +179,6 @@ namespace Simulation
                 };
                 ecb.SetComponent(projectile, targetTf);
                 ecb.SetComponent(projectile, new Projectile() { InstigatorNetworkId = pc.ValueRO.OwnerId });
-                //ecb.SetComponent(projectile, new GhostOwner() {NetworkId = pc.ValueRO.OwnerId});
                 var direction = targetTf.TransformDirection(new float3(0f, 0f, 1f));
                 ecb.SetComponent(projectile, new PhysicsVelocity()
                 {
