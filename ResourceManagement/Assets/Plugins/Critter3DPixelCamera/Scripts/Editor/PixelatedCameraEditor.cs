@@ -45,18 +45,18 @@ namespace Critter3DPixelCamera
 
             EditorGUILayout.PropertyField(resolutionSynchronization);
 
-            switch ((ResolutionSyncMode)resolutionSynchronization.enumValueIndex)
-            {
-                case ResolutionSyncMode.Manual:
-                    pixelatedCamera.pixelResolution = EditorGUILayout.Vector2IntField("Pixel Resolution", pixelatedCamera.pixelResolution);
-                    break;
-                case ResolutionSyncMode.SyncHeightWithWidth:
-                    pixelatedCamera.pixelResolution = new Vector2Int(EditorGUILayout.IntField("Pixel Resolution Width", pixelatedCamera.pixelResolution.x), pixelatedCamera.pixelResolution.y);
-                    break;
-                case ResolutionSyncMode.SyncWidthWithHeight:
-                    pixelatedCamera.pixelResolution = new Vector2Int(pixelatedCamera.pixelResolution.x, EditorGUILayout.IntField("Pixel Resolution Height", pixelatedCamera.pixelResolution.y));
-                    break;
-            }
+            // switch ((ResolutionSyncMode)resolutionSynchronization.enumValueIndex)
+            // {
+            //     case ResolutionSyncMode.Manual:
+            //         pixelatedCamera.pixelResolution = EditorGUILayout.Vector2IntField("Pixel Resolution", pixelatedCamera.pixelResolution);
+            //         break;
+            //     case ResolutionSyncMode.SyncHeightWithWidth:
+            //         pixelatedCamera.pixelResolution = new Vector2Int(EditorGUILayout.IntField("Pixel Resolution Width", pixelatedCamera.pixelResolution.x), pixelatedCamera.pixelResolution.y);
+            //         break;
+            //     case ResolutionSyncMode.SyncWidthWithHeight:
+            //         pixelatedCamera.pixelResolution = new Vector2Int(pixelatedCamera.pixelResolution.x, EditorGUILayout.IntField("Pixel Resolution Height", pixelatedCamera.pixelResolution.y));
+            //         break;
+            // }
 
             serializedObject.ApplyModifiedProperties();
         }
