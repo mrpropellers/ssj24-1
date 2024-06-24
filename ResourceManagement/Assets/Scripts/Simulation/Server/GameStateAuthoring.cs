@@ -9,10 +9,10 @@ namespace Simulation.Server
         public int Score;
     }
 
-    public struct PendingRatScore : IBufferElementData
-    {
-        
-    }
+    // public struct PendingRatScore : IBufferElementData
+    // {
+    //    
+    // }
     
     public struct GameState : IComponentData
     {

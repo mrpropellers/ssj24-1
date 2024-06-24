@@ -1,8 +1,5 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro;
-using UnityEngine.SceneManagement;
 using Unity.Entities;
 using Unity.NetCode;
 using Unity.Networking.Transport;
@@ -11,27 +8,22 @@ using System;
 using Steamworks.Data;
 using Steamworks;
 using System.Linq;
-using Unity.VisualScripting;
 using System.Threading.Tasks;
-using System.Net;
-using Unity.Collections;
 using Unity.Entities.Serialization;
-using UnityEditor;
 using Unity.Scenes;
-using Unity.Entities.UniversalDelegates;
-//using Simulation;
-//using UnityEngine.UI;
 
 namespace NetCode
 {
     public class ClientConnectionManager : MonoBehaviour
     {
+        public static ClientConnectionManager Instance { get; private set; }
+        
         private enum uiModes { loading, startOfGame, noSteamClient, chooseMode, setupHost, Host, findLobby, inLobby, noLobbies }
         private uiModes uiMode = uiModes.chooseMode;
 
         //create all ui elements
         #region 
-        private VisualElement uiDoc;
+        public VisualElement uiDoc;
         private TextField _lobbyTitleField => uiDoc.Q<TextField>("_lobbyTitleField");
         private Button _startButton => uiDoc.Q<Button>("_start");
         private Button _setupHostButton => uiDoc.Q<Button>("_setupHost");
@@ -58,24 +50,34 @@ namespace NetCode
         //ui elements created!
 
         public List<Friend> membersInLobby = new List<Friend>();
-        private World serverWorld;
+        public bool WorldsAreInitialized { get; private set; }
+        public World serverWorld { get; private set; }
+        public World clientWorld { get; private set; }
         private Lobby targetLobby;
         private string melon;
+        public bool IsLobbyHost { get; private set; }
+        public bool IsInLobby { get; private set; }
+        public static bool ShouldInitializeWorlds => Instance.IsInLobby && !Instance.WorldsAreInitialized;
+        public bool HasCleanedUpLocalWorld { get; private set; }
 
+        // [SerializeField]
+        // SubScene GameplayScene;
         [SerializeField] private string defaultTitle = "Welcome to Ratking";
         [SerializeField] GameObject steamManagerObject;
-        [SerializeField] private FixedString64Bytes defaultScene = "DevinCharacterScene";
+        //[SerializeField] private FixedString64Bytes defaultScene = "DevinCharacterScene";
         [SerializeField] private string ratKingPass = "abc123throwthemrats";
         [SerializeField] private ushort defaultPort = 7979;
         [SerializeField] GameObject ratKingIPManager;
-        [SerializeField] private SceneAsset MenuScene;
-        [SerializeField] private SceneAsset GameScene;
+        //[SerializeField] private SceneAsset MenuScene;
+        //[SerializeField] private SceneAsset GameScene;
         private SteamManager SteamManager { get; set; }
         private RatKingIPManager RatKingIPManager { get; set; }
         private ushort Port => defaultPort; //ushort.Parse(defaultPort);
 
         private void Awake()
         {
+            //DontDestroyOnLoad(this);
+            Instance = this;
             uiDoc = GetComponent<UIDocument>().rootVisualElement;
         }
 
@@ -101,6 +103,15 @@ namespace NetCode
             //_lobbiesList.RegisterCallback<ChangeEvent<bool>>((evt) => { OnLobbyChosen(evt); });
             //callbacks for when lobbies close or open?
 
+        }
+
+        void Update()
+        {
+            if (HasCleanedUpLocalWorld || !WorldsAreInitialized)
+                return;
+            
+            // (Devin) I think we actually just want to leave it there so we can cleanly exit a game?
+            //DestroyLocalSimulationWorld();
         }
 
         private void OnStartClicked()
@@ -161,22 +172,27 @@ namespace NetCode
                 Debug.Log("UI failed to create lobby");
                 Debug.Log(exception.ToString());
             }
-            if (createLobby)
-            {
-                Debug.Log($"Lobby created: {SteamManager.currentLobby.Id}");
-                Debug.Log(SteamManager.currentLobby.ToString());
-                Debug.Log($"melon: {RatKingIPManager.myAddressGlobal}");
-                SteamManager.currentLobby.SetData("ratMakerId", ratKingPass);
-                SteamManager.currentLobby.SetData("mymelon", RatKingIPManager.myAddressLocal);
-                SteamManager.currentLobby.SetData("lobbyName", _lobbyTitleField.text);
-                melon = RatKingIPManager.myAddressLocal;
-                setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
-                setUI(uiModes.Host);
-                DestroyLocalSimulationWorld();
-                StartServer();
-                StartClient();
 
-            }
+            if (!createLobby)
+                return;
+            
+            Debug.Log($"Lobby created: {SteamManager.currentLobby.Id}");
+            Debug.Log(SteamManager.currentLobby.ToString());
+            Debug.Log($"melon: {RatKingIPManager.myAddressGlobal}");
+            SteamManager.currentLobby.SetData("ratMakerId", ratKingPass);
+            SteamManager.currentLobby.SetData("mymelon", RatKingIPManager.myAddressLocal);
+            SteamManager.currentLobby.SetData("lobbyName", _lobbyTitleField.text);
+            melon = RatKingIPManager.myAddressLocal;
+            setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
+            setUI(uiModes.Host);
+            IsLobbyHost = true;
+            IsInLobby = true;
+
+            // (Devin) HostSceneLoaderSystem should handle this now
+            //DestroyLocalSimulationWorld();
+            //StartServer();
+            //GameplayScene.enabled = true;
+            //StartClient();
         }
         private void OnCancelLobby()
         {
@@ -198,7 +214,7 @@ namespace NetCode
                 Debug.Log($"ip is {SteamManager.currentLobby.GetData("mymelon")}");
                 melon = SteamManager.currentLobby.GetData("mymelon");
                 setUI(uiModes.inLobby);
-                StartClient();
+                IsInLobby = true;
             }
             else
             {
@@ -368,19 +384,19 @@ namespace NetCode
         private void OnStartGame()
         {
             //create a new entity type of sceneloader
-            var targetScene = new EntitySceneReference(GameScene);
-            var loadTest = SceneSystem.LoadSceneAsync(serverWorld.Unmanaged, targetScene);
-            //I need to pass loadTest into a system?
-            FixedString64Bytes shortName = GameScene.name;
-            
-            serverWorld.EntityManager.AddComponent(loadTest, typeof(SceneLoaderData));
-            serverWorld.EntityManager.SetComponentData<SceneLoaderData>(loadTest, new SceneLoaderData
-            {
-                LoadingEntity = loadTest,
-                SceneName = shortName
-            });
+            // var targetScene = new EntitySceneReference(GameScene);
+            // var loadTest = SceneSystem.LoadSceneAsync(serverWorld.Unmanaged, targetScene);
+            // //I need to pass loadTest into a system?
+            // FixedString64Bytes shortName = GameScene.name;
+            // 
+            // serverWorld.EntityManager.AddComponent(loadTest, typeof(SceneLoaderData));
+            // serverWorld.EntityManager.SetComponentData<SceneLoaderData>(loadTest, new SceneLoaderData
+            // {
+            //     LoadingEntity = loadTest,
+            //     SceneName = shortName
+            // });
 
-            Debug.Log("LOAD TEST");
+            Debug.LogWarning("NOTHING HERE RIGHT NOW");
             //Debug.Log(sceneCheck);
             
             //Debug.Log(loadTest.GetHashCode());
@@ -403,8 +419,8 @@ namespace NetCode
             //FixedString64Bytes priorScene = "MainMenu";
             //sys.LoadNewLevel(defaultScene, serverWorld, priorScene);
             //SceneManager.LoadScene(defaultScene);
-            //StartServer();
-            StartClient();
+            // StartServer();
+            // StartClient();
     
         }
    
@@ -415,15 +431,33 @@ namespace NetCode
             {
                 if (world.Flags == WorldFlags.Game)
                 {
+                    Debug.Log($"Disposing of local world: {world.Name}");
                     world.Dispose();
                     break;
                 }
             }
         }
 
-       
+        public static void InitializeWorlds(EntitySceneReference gameScene)
+        {
+            if (Instance.WorldsAreInitialized)
+            {
+                Debug.LogError("Attempted to initialize server/client worlds twice! That's no good!!");
+                return;
+            }
 
-
+            if (Instance.IsLobbyHost)
+            {
+                Instance.StartServer();
+                SceneSystem.LoadSceneAsync(Instance.serverWorld.Unmanaged, gameScene);
+            }
+            
+            Instance.StartClient();
+            SceneSystem.LoadSceneAsync(Instance.clientWorld.Unmanaged, gameScene);
+            
+            Instance.WorldsAreInitialized = true;
+        }
+        
         private void StartServer()
         {
             Debug.Log("Starting server");
@@ -437,13 +471,12 @@ namespace NetCode
 
         private void StartClient()
         {
-            var clientWorld = ClientServerBootstrap.CreateClientWorld("Ratking Client World");
+            clientWorld = ClientServerBootstrap.CreateClientWorld("Ratking Client World");
             var connectionEndpoint = NetworkEndpoint.Parse(melon, Port);
             {
                 using var networkDriverQuery = clientWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
-                networkDriverQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Connect(clientWorld.EntityManager, connectionEndpoint);
+                networkDriverQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Connect(clientWorld.EntityManager, connectionEndpoint); 
             }
-
             World.DefaultGameObjectInjectionWorld = clientWorld;
         }
     }

@@ -6,8 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/MainMenu.unity
-    guid: 5de6cf2cf5a1c7f44b3896b4ac553160
+    path: Assets/Scenes/Main.unity
+    guid: 5f430ac8b877a04438a2af7bba0924ec
   - enabled: 1
     path: Assets/Scenes/DevinCharacterScene.unity
     guid: f5c96e8414c003e47aff5e5b72d14e8f

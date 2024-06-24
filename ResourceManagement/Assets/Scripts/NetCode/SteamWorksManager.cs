@@ -16,7 +16,7 @@ namespace NetCode
         public static SteamManager Instance;
         private static uint gameAppId = 480;
         [SerializeField] private int maxGamePlayers = 10;
-        [SerializeField] private string defaultScene = "DevinCharacterScene";
+        //[SerializeField] private string defaultScene = "DevinCharacterScene";
 
         public string PlayerName { get; set; }
         public SteamId PlayerSteamId { get; set; }

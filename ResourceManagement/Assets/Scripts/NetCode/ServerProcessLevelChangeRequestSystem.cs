@@ -12,8 +12,8 @@ namespace NetCode
 {
     public struct LoadLevelRpc : IRpcCommand
     {
-        public EntitySceneReference newLevel;
-        public EntitySceneReference oldLevel;
+        // public EntitySceneReference newLevel;
+        // public EntitySceneReference oldLevel;
     }
 
 
@@ -23,31 +23,33 @@ namespace NetCode
         protected override void OnCreate()
         {
             RequireForUpdate<NetworkId>();
+            RequireForUpdate<GameplaySceneReference>();
         }
 
         protected override void OnUpdate()
         {
+            var sceneReference = SystemAPI.GetSingleton<GameplaySceneReference>();
             //var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (levelRequest, rpcEntity) in
+            foreach (var (_, rpcEntity) in
             SystemAPI.Query<LoadLevelRpc>().WithAll<ReceiveRpcCommandRequest>().WithEntityAccess())
             {
-                EntityManager.DestroyEntity(rpcEntity);
-                var loadScene = SceneSystem.LoadSceneAsync(World.Unmanaged, levelRequest.newLevel);
+                SceneSystem.LoadSceneAsync(World.Unmanaged, sceneReference.Value);
                 
                 //SceneSystem.UnloadScene(World.DefaultGameObjectInjectionWorld.Unmanaged, levelToLoad.oldLevelName.ToString());
+                EntityManager.DestroyEntity(rpcEntity);
             }
         }
 
-        public void LoadNewLevel(World targetWorld, EntitySceneReference newLevelName, EntitySceneReference priorScene)
-        {
-            var entity = targetWorld.Unmanaged.EntityManager.CreateEntity(typeof(LoadLevelRpc), typeof(SendRpcCommandRequest));
-            targetWorld.Unmanaged.EntityManager.SetComponentData(entity, new LoadLevelRpc
-            {
-                newLevel = newLevelName,
-                oldLevel = priorScene
-            });
-            
-        }
+        // public void LoadNewLevel(World targetWorld, EntitySceneReference newLevelName, EntitySceneReference priorScene)
+        // {
+        //     var entity = targetWorld.Unmanaged.EntityManager.CreateEntity(typeof(LoadLevelRpc), typeof(SendRpcCommandRequest));
+        //     targetWorld.Unmanaged.EntityManager.SetComponentData(entity, new LoadLevelRpc
+        //     {
+        //         // newLevel = newLevelName,
+        //         // oldLevel = priorScene
+        //     });
+        //     
+        // }
         
     }
     
