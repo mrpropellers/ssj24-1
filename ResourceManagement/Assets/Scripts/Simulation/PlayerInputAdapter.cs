@@ -27,6 +27,8 @@ namespace Simulation
             _mainCamera = Camera.main;
             _move = _playerInput.actions.FindAction("Move", true);
             _throw = _playerInput.actions.FindAction("Throw", true);
+            // Preston TODO: Add a menu button:
+            //_menu = _playerInput.actions.FindAction("Pause", true);
             _throw.started += (_) => _throwWasPressed = true;
         }
 

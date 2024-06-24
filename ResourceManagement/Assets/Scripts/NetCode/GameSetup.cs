@@ -3,7 +3,9 @@ using Simulation;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
 using Unity.NetCode;
+using Unity.Transforms;
 using UnityEngine;
 
 namespace NetCode
@@ -108,6 +110,12 @@ namespace NetCode
                 // Spawn character, player, and camera ghost prefabs
                 Entity characterEntity = ecb.Instantiate(gameSetup.CharacterSimulation);
                 Entity playerEntity = ecb.Instantiate(gameSetup.Player);
+                ecb.SetComponent(characterEntity, new LocalTransform()
+                {
+                    Position = new float3(5f, 0f, 5f),
+                    Rotation = quaternion.identity,
+                    Scale = 1f
+                });
                 //Entity cameraEntity = ecb.Instantiate(gameSetup.CameraPrefab);
                     
                 // Add spawned prefabs to the connection entity's linked entities, so they get destroyed along with it

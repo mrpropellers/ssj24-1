@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 827025068016921180}
   - component: {fileID: 3453634279400771905}
+  - component: {fileID: 5222577314457579607}
   m_Layer: 0
   m_Name: GameSetup
   m_TagString: Untagged
@@ -48,3 +49,16 @@ MonoBehaviour:
     type: 3}
   CharacterPrefab: {fileID: 1692896102597148395, guid: 5fbcc801dea8fd640a004697d22ed448,
     type: 3}
+  RatProjectilePrefab: {fileID: 0}
+--- !u!114 &5222577314457579607
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2043104051995630676}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c16549610bfe4458aa9389201d072bb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

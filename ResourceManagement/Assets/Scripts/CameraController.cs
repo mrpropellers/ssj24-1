@@ -6,7 +6,7 @@ namespace QBitDigital.BunnyKnight
     {
         public static CameraController Instance;
 
-        [SerializeField] Transform follow;
+        [SerializeField] public Transform follow;
         [SerializeField] float verticalFollowOffset = 0.25f;
         [SerializeField] float followSpeed = 10f;
 
