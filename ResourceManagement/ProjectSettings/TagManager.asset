@@ -14,6 +14,7 @@ TagManager:
   - PickUps
   - Projectiles
   - CharacterInteractions
+  - LightPassthroughGeo
   - 
   - 
   - 

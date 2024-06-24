@@ -42,7 +42,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Pattern:
-        m_Texture: {fileID: 2800000, guid: 7ca9cdefeaf75ee4d8d608521679e434, type: 3}
+        m_Texture: {fileID: 2800000, guid: a54e775e0c5b04c46a3476ba441df5b4, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Primary:
