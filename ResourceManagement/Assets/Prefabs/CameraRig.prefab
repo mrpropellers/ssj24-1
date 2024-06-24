@@ -63,7 +63,7 @@ Transform:
   m_GameObject: {fileID: 2524762113422631170}
   serializedVersion: 2
   m_LocalRotation: {x: 0.23911765, y: 0.3696438, z: -0.09904577, w: 0.89239913}
-  m_LocalPosition: {x: -62.613125, y: 51.091846, z: -62.58726}
+  m_LocalPosition: {x: -30.6158, y: 25.012968, z: -30.626423}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -101,16 +101,16 @@ Camera:
     width: 1
     height: 1
   near clip plane: 0.3
-  far clip plane: 1000
+  far clip plane: 200
   field of view: 60
   orthographic: 1
-  orthographic size: 6.5
+  orthographic size: 8
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 8400000, guid: 5729c1b0cdf01b0408a9bd6bce84edb5, type: 2}
+  m_TargetTexture: {fileID: 8400000, guid: a0b90c8d4141935419c4cb6a08d50b11, type: 2}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -158,12 +158,12 @@ MonoBehaviour:
   m_RequiresColorTexture: 0
   m_Version: 2
   m_TaaSettings:
-    quality: 3
-    frameInfluence: 0.1
-    jitterScale: 1
-    mipBias: 0
-    varianceClampScale: 0.9
-    contrastAdaptiveSharpening: 0
+    m_Quality: 3
+    m_FrameInfluence: 0.1
+    m_JitterScale: 1
+    m_MipBias: 0
+    m_VarianceClampScale: 0.9
+    m_ContrastAdaptiveSharpening: 0
 --- !u!114 &3864327497465020961
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -180,13 +180,13 @@ MonoBehaviour:
   pixelPerfect: 1
   subPixelCamera: 1
   resolutionSynchronization: 0
-  pixelResolution: {x: 640, y: 180}
+  pixelResolution: {x: 640, y: 400}
   targetMode: 0
   targetTransform: {fileID: 5159850765812276329}
   targetPosition: {x: 0, y: 0, z: 0}
-  distanceFromTarget: 102.2
+  distanceFromTarget: 50
   rawZoom: 1
-  enhanceZoom: 6.5
+  enhanceZoom: 8
   _canvasMaterial: {fileID: 0}
 --- !u!114 &2095244469616769467
 MonoBehaviour:
@@ -263,12 +263,12 @@ PrefabInstance:
     - target: {fileID: 1646758987721154297, guid: d7ead90d1c40cc64b98706ac58747cb3,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 17.881334
+      value: 17.797724
       objectReference: {fileID: 0}
     - target: {fileID: 1646758987721154297, guid: d7ead90d1c40cc64b98706ac58747cb3,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 10.111111
+      value: 10.025
       objectReference: {fileID: 0}
     - target: {fileID: 1646758987721154299, guid: d7ead90d1c40cc64b98706ac58747cb3,
         type: 3}
