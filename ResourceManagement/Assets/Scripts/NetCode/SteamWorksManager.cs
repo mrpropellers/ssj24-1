@@ -114,22 +114,22 @@ namespace NetCode
 
         void Start()
         {
-            SteamMatchmaking.OnLobbyGameCreated += OnLobbyGameCreatedCallback;
-            SteamMatchmaking.OnLobbyCreated += OnLobbyCreatedCallback;
-            SteamMatchmaking.OnLobbyEntered += OnLobbyEnteredCallback;
-            SteamMatchmaking.OnLobbyMemberJoined += OnLobbyMemberJoinedCallback;
-            SteamMatchmaking.OnLobbyMemberDisconnected += OnLobbyMemberDisconnectedCallback;
-            SteamMatchmaking.OnLobbyMemberLeave += OnLobbyMemberLeaveCallback;
-            SteamFriends.OnGameLobbyJoinRequested += OnGameLobbyJoinRequestedCallback;
-            SceneManager.sceneLoaded += OnSceneLoaded;
+            //SteamMatchmaking.OnLobbyGameCreated += OnLobbyGameCreatedCallback;
+            //SteamMatchmaking.OnLobbyCreated += OnLobbyCreatedCallback;
+            //SteamMatchmaking.OnLobbyEntered += OnLobbyEnteredCallback;
+            //SteamMatchmaking.OnLobbyMemberJoined += OnLobbyMemberJoinedCallback;
+            //SteamMatchmaking.OnLobbyMemberDisconnected += OnLobbyMemberDisconnectedCallback;
+            //SteamMatchmaking.OnLobbyMemberLeave += OnLobbyMemberLeaveCallback;
+            //SteamFriends.OnGameLobbyJoinRequested += OnGameLobbyJoinRequestedCallback;
+            //SceneManager.sceneLoaded += OnSceneLoaded;
 
-            UpdateRichPresenceStatus(SceneManager.GetActiveScene().name);
+           // UpdateRichPresenceStatus(SceneManager.GetActiveScene().name);
         }
 
         // Update is called once per frame
         void OnUpdate()
         {
-            SteamClient.RunCallbacks();
+            //SteamClient.RunCallbacks();
         }
 
         void OnDisable()
@@ -166,7 +166,7 @@ namespace NetCode
                 SteamClient.Shutdown();
             }
         }
-
+        /*
         void OnLobbyMemberDisconnectedCallback(Lobby lobby, Friend friend)
         {
             OtherLobbyMemberLeft(friend);
@@ -301,7 +301,7 @@ namespace NetCode
                 return true;
             }
         }
-
+         */
         public void leaveLobby()
         {
             try
@@ -321,7 +321,7 @@ namespace NetCode
                 Debug.Log("Error closing P2P session with opponent");
             }
         }
-
+       
         public async Task<bool> CreateLobby() //CreateLobby(int lobbyParameters) Preston remove this bc I'm not sure what other parameters we have besides max players? Perhaps the IP address and port will need to be passed here.
         {
             try
