@@ -1,3 +1,4 @@
+using Presentation;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -27,7 +28,7 @@ namespace Simulation
             var deltaTime = SystemAPI.Time.DeltaTime;
             //var ecb = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (tf, pickUp, follower) in SystemAPI
-                         .Query<RefRW<LocalTransform>, RefRO<Ownership>, RefRO<Follower>>()
+                         .Query<RefRW<LocalTransform>, RefRO<Ownership>, RefRW<Follower>>()
                          .WithNone<ConvertToProjectile, NeedsOwnerAssignment>())
             {
                 if (!pickUp.ValueRO.HasConfiguredOwner)
@@ -44,15 +45,49 @@ namespace Simulation
                 travelVector.y = 0f;
                 tf.ValueRW.Rotation = quaternion.LookRotation(travelVector, up);
                 if (currentDistance < goalDistance)
+                {
+                    follower.ValueRW.CurrentSpeed = 0f;
                     continue;
+                }
                 tf.ValueRW.Position += travelVector;
+                follower.ValueRW.CurrentSpeed = follower.ValueRO.Speed;
 
-                // TODO: Figure out how to do this with velocities so the rats can collide with each other
+                // TODO: Figure out how to do this with physics velocities so the rats can collide with each other
                 //velocity.ValueRW.Linear = travelVector;
             }
         }
 
         [BurstCompile]
         public void OnDestroy(ref SystemState state) { }
+    }
+
+    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    public partial struct FollowerAnimationSystem : ISystem
+    {
+        static readonly int k_Speed = Animator.StringToHash("Speed");
+        static readonly int k_RollUp = Animator.StringToHash("RollUp");
+
+        public void OnCreate(ref SystemState state)
+        {
+            
+        }
+
+        public void OnUpdate(ref SystemState state)
+        {
+            foreach (var (animatorLink, follower) in SystemAPI
+                         .Query<AnimatorLink, RefRO<Follower>>()
+                         .WithNone<ConvertToProjectile, NeedsOwnerAssignment>())
+            {
+                animatorLink.Animator.SetFloat(k_Speed, follower.ValueRO.CurrentSpeed / follower.ValueRO.Speed);
+            }
+            // (In theory this is being done in the FollowerThrowingSystem)
+            // foreach (var (animatorLink, follower) in SystemAPI
+            //              .Query<AnimatorLink, RefRO<Follower>>()
+            //              .WithNone<NeedsOwnerAssignment>()
+            //              .WithAll<ConvertToProjectile>())
+            // {
+            //     animatorLink.Animator.SetBool(k_RollUp, true);
+            // }
+        }
     }
 }

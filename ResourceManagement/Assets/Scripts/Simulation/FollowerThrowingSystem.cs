@@ -182,7 +182,8 @@ namespace Simulation
                 var direction = targetTf.TransformDirection(new float3(0f, 0f, 1f));
                 ecb.SetComponent(projectile, new PhysicsVelocity()
                 {
-                    Linear = follower.ValueRO.ProjectileSpeed * direction
+                    Linear = follower.ValueRO.ProjectileSpeed * direction,
+                    Angular = new float3(15f, 0f, 0f)
                 });
             }
             ecb.Playback(state.EntityManager);
@@ -196,13 +197,16 @@ namespace Presentation
     [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial struct DisableSmoothingOnProjectilesSystem : ISystem
     {
+        static readonly int k_RollUp = Animator.StringToHash("RollUp");
+
         public void OnUpdate(ref SystemState state)
         {
-            foreach (var tfLink in SystemAPI
-                         .Query<TransformLink>()
+            foreach (var (tfLink, animatorLink) in SystemAPI
+                         .Query<TransformLink, AnimatorLink>()
                          .WithAll<Simulation.Follower, Simulation.ConvertToProjectile>())
             {
                 tfLink.TransformSetter.ApplySmoothing = false;
+                animatorLink.Animator.SetBool(k_RollUp, true);
             }
         }
     }

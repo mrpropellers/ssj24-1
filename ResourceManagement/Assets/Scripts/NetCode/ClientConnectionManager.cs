@@ -181,9 +181,9 @@ namespace NetCode
             Debug.Log(SteamManager.currentLobby.ToString());
             Debug.Log($"melon: {RatKingIPManager.myAddressGlobal}");
             SteamManager.currentLobby.SetData("ratMakerId", ratKingPass);
-            SteamManager.currentLobby.SetData("mymelon", RatKingIPManager.myAddressLocal);
+            SteamManager.currentLobby.SetData("mymelon", RatKingIPManager.myAddressGlobal);
             SteamManager.currentLobby.SetData("lobbyName", _lobbyTitleField.text);
-            melon = RatKingIPManager.myAddressLocal;
+            melon = RatKingIPManager.myAddressGlobal;
             setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
             setUI(uiModes.Host);
             IsLobbyHost = true;
@@ -212,7 +212,8 @@ namespace NetCode
                 SteamManager.currentLobby = SteamManager.activeLobbies[_lobbiesList.selectedIndex];
                 Debug.Log($"Lobby entered! Current Lobby {SteamManager.currentLobby.Id}");
                 setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
-                Debug.Log($"ip is {SteamManager.currentLobby.GetData("mymelon")}");
+                Debug.
+                    Log($"ip is {SteamManager.currentLobby.GetData("mymelon")}");
                 melon = SteamManager.currentLobby.GetData("mymelon");
                 setUI(uiModes.inLobby);
                 IsInLobby = true;

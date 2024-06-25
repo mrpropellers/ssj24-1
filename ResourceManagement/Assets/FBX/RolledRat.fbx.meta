@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 0ba30175a2e5a4c48bddaa302d56a8d7
+guid: e802cec157082df43bd04bcbe7cfe3b2
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -36,7 +36,7 @@ ModelImporter:
       name: Rat Armature|BallAnim
       takeName: Rat Armature|BallAnim
       internalID: -4279852965962037064
-      firstFrame: 0
+      firstFrame: 39.3
       lastFrame: 40
       wrapMode: 0
       orientationOffsetY: 0

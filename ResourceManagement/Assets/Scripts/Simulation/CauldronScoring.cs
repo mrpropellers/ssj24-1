@@ -8,6 +8,7 @@ using Unity.NetCode;
 using Unity.Physics;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.PlayerLoop;
 
 namespace Simulation
 {
@@ -172,8 +173,8 @@ namespace Simulation
         }
     }
 
-    [UpdateAfter(typeof(BroadcastScoreEventsSystem)), UpdateAfter(typeof(UpdateScoreSystem))]
-    public partial struct CleanUpPendingScores : ISystem
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    public partial struct CleanUpLastFrameScores : ISystem
     {
         public void OnCreate(ref SystemState state)
         {
@@ -185,7 +186,7 @@ namespace Simulation
             var pendingScores = SystemAPI.GetSingletonBuffer<PendingRatScored>();
             if (pendingScores.Length > 0)
             {
-                Debug.Log("clearing the rat score buffer");
+                Debug.Log($"Clearing {pendingScores.Length} entires from the rat score buffer");
             }
             pendingScores.Clear();
         }

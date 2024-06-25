@@ -10,7 +10,6 @@ GameObject:
   m_Component:
   - component: {fileID: 3235357709212673441}
   - component: {fileID: 5900198563995106714}
-  - component: {fileID: 3031494924469975622}
   m_Layer: 0
   m_Name: RatPickupVis
   m_TagString: Untagged
@@ -50,27 +49,6 @@ MonoBehaviour:
   ApplySmoothing: 1
   LinearSmoothingTime: 0.2
   AngularSmoothingTime: 0.1
---- !u!95 &3031494924469975622
-Animator:
-  serializedVersion: 5
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 96712748957043641}
-  m_Enabled: 1
-  m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 0}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 0
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &6892438221570678661
 GameObject:
   m_ObjectHideFlags: 0
@@ -189,17 +167,17 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 0ba30175a2e5a4c48bddaa302d56a8d7,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.47851
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0ba30175a2e5a4c48bddaa302d56a8d7,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.47851
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0ba30175a2e5a4c48bddaa302d56a8d7,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.47851
+      value: 0.7
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 0ba30175a2e5a4c48bddaa302d56a8d7,
         type: 3}
@@ -251,6 +229,11 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: 0ba30175a2e5a4c48bddaa302d56a8d7,
+        type: 3}
+      propertyPath: m_ConstrainProportionsScale
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 0ba30175a2e5a4c48bddaa302d56a8d7,
         type: 3}
       propertyPath: m_Name
@@ -259,8 +242,39 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 0ba30175a2e5a4c48bddaa302d56a8d7,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6537705000630583898}
   m_SourcePrefab: {fileID: 100100000, guid: 0ba30175a2e5a4c48bddaa302d56a8d7, type: 3}
+--- !u!1 &236733369556139273 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 0ba30175a2e5a4c48bddaa302d56a8d7,
+    type: 3}
+  m_PrefabInstance: {fileID: 1119252737000915032}
+  m_PrefabAsset: {fileID: 0}
+--- !u!95 &6537705000630583898
+Animator:
+  serializedVersion: 5
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 236733369556139273}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 9100000, guid: 58c553127e4a69442b338d9dbee9d904, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!4 &577264574029342643 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 0ba30175a2e5a4c48bddaa302d56a8d7,

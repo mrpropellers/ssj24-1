@@ -1,12 +1,16 @@
 using Unity.Entities;
+using Unity.NetCode;
 using UnityEngine;
 
 namespace Simulation
 {
+    [GhostComponent]
     public struct Follower : IComponentData
     {
         public float GoalDistance;
         public float Speed;
+        [GhostField]
+        public float CurrentSpeed;
         public float ProjectileSpeed;
         public int ToProjectileTicks;
         public int OwnerQueueRank;

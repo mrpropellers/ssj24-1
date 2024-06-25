@@ -25,7 +25,8 @@ namespace Presentation
                 TransformSetter = tfSetter
             };
             commandBuffer.AddComponent(entity, link);
-            if (presentation.TryGetComponent(out Animator animator))
+            var animator = presentation.GetComponentInChildren<Animator>();
+            if (animator != null)
             {
                 commandBuffer.AddComponent(entity, new AnimatorLink()
                 {
