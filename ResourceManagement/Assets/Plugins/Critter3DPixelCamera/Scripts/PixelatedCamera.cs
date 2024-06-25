@@ -58,7 +58,9 @@ namespace Critter3DPixelCamera
 		// ---------------------- Unity Lifecycle Methods ----------------------
 
 		void Awake()
-		{
+		{ 
+			pixelResolution = new Vector2Int(1422, 800);
+
 			if ((_camAdjuster = FindObjectOfType<CameraAdjuster>()) == null)
 			{
 				Debug.LogError("ERROR: PixelatedCamera did not find CameraAdjuster in scene! Remember to add the prefab to the scene so this works, and check out the documentation for step-by-step guide.");
