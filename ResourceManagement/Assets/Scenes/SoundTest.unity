@@ -869,6 +869,57 @@ MonoBehaviour:
   ratKingPass: abc123throwthemrats
   defaultPort: 7979
   ratKingIPManager: {fileID: 1712469596}
+--- !u!1 &1631235283
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1631235285}
+  - component: {fileID: 1631235284}
+  m_Layer: 0
+  m_Name: GameplayEvents
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1631235284
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1631235283}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3c5e619ab8c34ab590773b2e48097d20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  scoreRatSfx: {fileID: 1016405033951592564, guid: 90665c6b75f2b604ba580819e41a3887,
+    type: 3}
+  ratPickupSfx: {fileID: 5444555995763866647, guid: a00db7a6dd0ce1d4a8ae1d3be1bb80b6,
+    type: 3}
+  ratThrowSfx: {fileID: 199318160756744346, guid: a6d8bc430b5bf2944b263e98d95ce0eb,
+    type: 3}
+  testEvents: 0
+--- !u!4 &1631235285
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1631235283}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1712469596
 GameObject:
   m_ObjectHideFlags: 0
@@ -1401,3 +1452,4 @@ SceneRoots:
   - {fileID: 521222445}
   - {fileID: 548902406}
   - {fileID: 1485884246}
+  - {fileID: 1631235285}
