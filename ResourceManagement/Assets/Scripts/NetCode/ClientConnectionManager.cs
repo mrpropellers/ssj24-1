@@ -11,6 +11,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Unity.Entities.Serialization;
 using Unity.Scenes;
+using Simulation;
+using UnityEditor.PackageManager;
 
 namespace NetCode
 {
@@ -55,10 +57,13 @@ namespace NetCode
         public World clientWorld { get; private set; }
         private Lobby targetLobby;
         private string melon;
+        
         public bool IsLobbyHost { get; private set; }
         public bool IsInLobby { get; private set; }
+        
         public static bool ShouldInitializeWorlds => Instance.IsInLobby && !Instance.WorldsAreInitialized;
         public bool HasCleanedUpLocalWorld { get; private set; }
+        public bool ShouldStartGame { get; private set; }
         private int currentLobbyMemberCount = 0;
         // [SerializeField]
         // SubScene GameplayScene;
@@ -129,6 +134,11 @@ namespace NetCode
                 _errorMessage.text = "Unable to connect to Steam. Please exit the game, make sure you are connected to the internet, your steam client is running and then restart. Thank you!";
                 setUI(uiModes.noSteamClient);
             }
+        }
+
+        public void goToMenu()
+        {
+            setUI(uiModes.pauseMenu);
         }
 
         private void OnExitClicked()
@@ -360,6 +370,7 @@ namespace NetCode
                     break;
                 case uiModes.pauseMenu:
                     setMenuTitle("PAUSE");
+                    showElement(_exitButton);
                     break;
                 default:
                     setUI(uiModes.startOfGame);
@@ -414,12 +425,17 @@ namespace NetCode
 
         private void OnStartGame()
         {
+            Debug.LogWarning("running game startup");
+
             setUI(uiModes.inGame);
             SteamManager.currentLobby.SetJoinable(false);
         
-            Debug.LogWarning("NOTHING HERE RIGHT NOW");
-           
-    
+            serverWorld.EntityManager.CreateEntity(typeof(StartTheGame));
+     
+            //SystemState systemState = new SystemState();
+            ShouldStartGame = true;
+
+
         }
    
 

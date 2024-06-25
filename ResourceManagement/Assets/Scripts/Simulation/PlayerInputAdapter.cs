@@ -1,3 +1,4 @@
+using NetCode;
 using System;
 using Unity.Entities;
 using UnityEngine;
@@ -15,9 +16,12 @@ namespace Simulation
     {
         PlayerInput _playerInput;
         Camera _mainCamera;
-        
+
+        ClientConnectionManager _connectionManager;
+
         InputAction _move;
         InputAction _throw;
+        InputAction _menu;
 
         bool _throwWasPressed;
 
@@ -27,9 +31,10 @@ namespace Simulation
             _mainCamera = Camera.main;
             _move = _playerInput.actions.FindAction("Move", true);
             _throw = _playerInput.actions.FindAction("Throw", true);
-            // Preston TODO: Add a menu button:
-            //_menu = _playerInput.actions.FindAction("Pause", true);
+            _menu = _playerInput.actions.FindAction("Pause", true);
             _throw.started += (_) => _throwWasPressed = true;
+
+            _menu.performed += (_) => goToMenu();
         }
 
         public Vector2 MoveVector => _move.ReadValue<Vector2>();
@@ -41,5 +46,10 @@ namespace Simulation
             _throwWasPressed = false;
             return wasPressed;
         }
+        public void goToMenu()
+        {
+            _connectionManager.goToMenu();
+        }
+
     }
 }
