@@ -3,6 +3,7 @@ using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
 using Unity.CharacterController;
+using Unity.NetCode;
 
 [Serializable]
 public struct ThirdPersonCharacterComponent : IComponentData
@@ -25,4 +26,11 @@ public struct ThirdPersonCharacterControl : IComponentData
     public float3 MoveVector;
     public bool Jump;
     public bool Throw;
+}
+
+[GhostComponent]
+public struct Score : IComponentData
+{
+    [GhostField]
+    public int Value;
 }

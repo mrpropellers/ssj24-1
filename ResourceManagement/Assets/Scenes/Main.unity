@@ -356,6 +356,37 @@ MonoBehaviour:
   m_DeselectOnBackgroundClick: 1
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
+--- !u!1 &1011792551
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1011792552}
+  m_Layer: 0
+  m_Name: GameplayEvents
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1011792552
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1011792551}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1395312728 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5080678332969971687, guid: 8bbabf155a2e8634aaf46ecd9c51202c,
@@ -430,11 +461,6 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: PresentationSetup
-      objectReference: {fileID: 0}
-    - target: {fileID: 7887841177730727637, guid: 3240ca85ad5baca4d895ccd39f488f4a,
-        type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7895604175301802331, guid: 3240ca85ad5baca4d895ccd39f488f4a,
         type: 3}
@@ -943,6 +969,7 @@ SceneRoots:
   - {fileID: 1901159139}
   - {fileID: 2053320312}
   - {fileID: 2090067839}
+  - {fileID: 1011792552}
   - {fileID: 309330713}
   - {fileID: 1399548214}
   - {fileID: 1817396843}
