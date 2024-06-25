@@ -10,6 +10,7 @@ namespace Simulation
     public struct Projectile : IComponentData
     {
         public int InstigatorNetworkId;
+        public bool HasScored;
     }
 
     public class ProjectileAuthoring : MonoBehaviour
