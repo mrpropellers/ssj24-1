@@ -55,7 +55,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _NoiseSpeed: 0.1
+    - _NoiseSpeed: 0.05
     m_Colors:
     - _Remap: {r: -0.12, g: 11.6, b: 0, a: 0}
   m_BuildTextureStacks: []
