@@ -397,6 +397,7 @@ namespace NetCode
             //     SceneName = shortName
             // });
 
+            GameObject.FindGameObjectWithTag("MusicManager").GetComponent<MusicManager>().PlayGameMusic();
             Debug.LogWarning("NOTHING HERE RIGHT NOW");
             //Debug.Log(sceneCheck);
             

@@ -210,6 +210,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5159850765812276329}
   - component: {fileID: 8479647848789957554}
+  - component: {fileID: 1267888124828090860}
   m_Layer: 0
   m_Name: CameraTarget
   m_TagString: Untagged
@@ -247,6 +248,19 @@ MonoBehaviour:
   follow: {fileID: 0}
   verticalFollowOffset: 0
   followSpeed: 5
+--- !u!114 &1267888124828090860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4789615867898908434}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86c6556701af9e04380698b89f691b6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attenuationObject: {fileID: 4789615867898908434}
 --- !u!1001 &848820383987728225
 PrefabInstance:
   m_ObjectHideFlags: 0

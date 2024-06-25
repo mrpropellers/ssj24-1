@@ -43,7 +43,7 @@ public class GuiPresentation : MonoBehaviour
         scoreboard.SetActive(true);
         for (int i = 0; i < 5; i++)
         {
-            TextMeshProUGUI scoreText = scoreboard.transform.Find($"{i}Score").GetComponent<TextMeshProUGUI>();
+            TextMeshProUGUI scoreText = scoreboard.transform.Find($"{i + 1}Score").GetComponent<TextMeshProUGUI>();
             scoreText.SetText("");
             if (i >= playerNames.Count || i >= playerScores.Count)
             {
