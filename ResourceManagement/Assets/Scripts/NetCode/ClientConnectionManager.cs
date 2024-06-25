@@ -11,8 +11,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Unity.Entities.Serialization;
 using Unity.Scenes;
-using Simulation;
-using UnityEditor.PackageManager;
 
 namespace NetCode
 {
@@ -225,6 +223,9 @@ namespace NetCode
         {
             serverWorld.Dispose();
             clientWorld.Dispose();
+            IsLobbyHost = false;
+            IsInLobby = false;
+            WorldsAreInitialized = false;
             SteamManager.currentLobby.SetData("melon", "000000000");
             SteamManager.currentLobby.Leave();
             
@@ -501,13 +502,14 @@ namespace NetCode
 
         private void StartClient()
         {
+            Debug.Log($"Attempting to start client and connect to {melon}:{Port}");
             clientWorld = ClientServerBootstrap.CreateClientWorld("Ratking Client World");
+            World.DefaultGameObjectInjectionWorld = clientWorld;
             var connectionEndpoint = NetworkEndpoint.Parse(melon, Port);
             {
                 using var networkDriverQuery = clientWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
                 networkDriverQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Connect(clientWorld.EntityManager, connectionEndpoint); 
             }
-            World.DefaultGameObjectInjectionWorld = clientWorld;
         }
     }
 }

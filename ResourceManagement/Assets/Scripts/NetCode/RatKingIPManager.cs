@@ -27,7 +27,7 @@ namespace NetCode
               //Get the global IP
             HttpWebRequest request = (HttpWebRequest)WebRequest.Create("https://api.ipify.org");
             request.Method = "GET";
-            request.Timeout = 1000; //time in ms
+            request.Timeout = 3000; //time in ms
             try
             {
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
@@ -45,7 +45,7 @@ namespace NetCode
             } //try
             catch (WebException ex)
             {
-                Debug.Log("Likely no internet connection: " + ex.Message);
+                Debug.Log($"Failed to get IP: {ex.Message} \n Will use local IP ({myAddressLocal})");
                 myAddressGlobal = myAddressLocal; // "127.0.0.1";
             } //catch
               //myAddressGlobal=new System.Net.WebClient().DownloadString("https://api.ipify.org"); //single-line solution for the global IP, but long time-out when there is no internet connection, so I prefer to do the method above where I can set a short time-out time
