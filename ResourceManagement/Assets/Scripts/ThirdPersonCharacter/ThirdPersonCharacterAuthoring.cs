@@ -54,6 +54,7 @@ public class ThirdPersonCharacterAuthoring : MonoBehaviour
                     * 60f),
             });
             AddBuffer<ThrowableFollowerElement>(entity);
+            AddComponent(entity, new Score() { Value = 0 });
 
             //AddBuffer<PendingPickUp>(entity);
         }
