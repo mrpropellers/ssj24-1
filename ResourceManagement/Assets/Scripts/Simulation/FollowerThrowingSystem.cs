@@ -76,9 +76,15 @@ namespace Simulation
                 var throwables =
                     state.EntityManager.GetBuffer<ThrowableFollowerElement>(throwingEntity);
 
-                if (throwables.Length < character.ValueRO.NumThrowableFollowers - 1)
+                if (throwables.Length != character.ValueRO.NumThrowableFollowers)
                 {
                     Debug.LogWarning("Attempting to throw a follower that's already been thrown?");
+                    continue;
+                }
+
+                if(throwables.length == 0)
+                {
+                    Debug.Log("No throwables to throw!")
                     continue;
                 }
                 
