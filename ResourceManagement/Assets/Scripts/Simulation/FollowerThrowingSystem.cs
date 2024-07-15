@@ -82,9 +82,9 @@ namespace Simulation
                     continue;
                 }
 
-                if(throwables.length == 0)
+                if(throwables.Length == 0)
                 {
-                    Debug.Log("No throwables to throw!")
+                    Debug.Log("No throwables to throw!");
                     continue;
                 }
                 

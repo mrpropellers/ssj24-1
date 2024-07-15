@@ -23,7 +23,7 @@ namespace Simulation.Server
                 .WithAll<RatPickupSpawner>()
                 .WithAll<LocalTransform>();
             state.RequireForUpdate<NetworkTime>();
-            state.RequireForUpdate<GameSetup>();
+            state.RequireForUpdate<GameState>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
             s_Rand = new Random(1);
         }
@@ -32,8 +32,8 @@ namespace Simulation.Server
         //[BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            var gameSetup = SystemAPI.GetSingleton<GameSetup>();
-            if (!gameSetup.IsGameplayUnderway)
+            var gameState = SystemAPI.GetSingleton<GameState>();
+            if (!gameState.IsGameplayUnderway)
                 return;
             
             if (!hasUpdated)

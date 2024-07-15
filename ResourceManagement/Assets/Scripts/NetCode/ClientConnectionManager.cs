@@ -9,8 +9,11 @@ using Steamworks.Data;
 using Steamworks;
 using System.Linq;
 using System.Threading.Tasks;
+using Simulation;
 using Unity.Entities.Serialization;
 using Unity.Scenes;
+using UnityEngine.Serialization;
+using ConnectionState = Unity.NetCode.ConnectionState;
 
 namespace NetCode
 {
@@ -51,17 +54,19 @@ namespace NetCode
 
         public List<Friend> membersInLobby = new List<Friend>();
         public bool WorldsAreInitialized { get; private set; }
+        public bool HasAttemptedInitialization { get; private set; }
         public World serverWorld { get; private set; }
         public World clientWorld { get; private set; }
+        Entity _clientConnector;
         private Lobby targetLobby;
-        private string melon;
+        private string ipAddress;
         
         public bool IsLobbyHost { get; private set; }
         public bool IsInLobby { get; private set; }
         
-        public static bool ShouldInitializeWorlds => Instance.IsInLobby && !Instance.WorldsAreInitialized;
+        public static bool ShouldInitializeWorlds => Instance.IsInLobby 
+            && !Instance.WorldsAreInitialized && !Instance.HasAttemptedInitialization;
         public bool HasCleanedUpLocalWorld { get; private set; }
-        public bool ShouldStartGame { get; private set; }
         private int currentLobbyMemberCount = 0;
         // [SerializeField]
         // SubScene GameplayScene;
@@ -70,55 +75,98 @@ namespace NetCode
         //[SerializeField] private FixedString64Bytes defaultScene = "DevinCharacterScene";
         [SerializeField] private string ratKingPass = "abc123throwthemrats";
         [SerializeField] private ushort defaultPort = 7979;
-        [SerializeField] GameObject ratKingIPManager;
+        [FormerlySerializedAs("UseLocalIp")]
+        public bool ForceLocalIP;
         //[SerializeField] private SceneAsset MenuScene;
         //[SerializeField] private SceneAsset GameScene;
         private SteamManager SteamManager { get; set; }
-        private RatKingIPManager RatKingIPManager { get; set; }
+        IPFetcher m_IpFetcher { get; set; }
         private ushort Port => defaultPort; //ushort.Parse(defaultPort);
+
+        NetworkStreamConnection ClientNetworkStream => WorldsAreInitialized
+            ? clientWorld.EntityManager.GetComponentData<NetworkStreamConnection>(_clientConnector)
+            : default;
+
+        bool IsClientConnected => WorldsAreInitialized 
+            && ClientNetworkStream.CurrentState == ConnectionState.State.Connected;
 
         private void Awake()
         {
             //DontDestroyOnLoad(this);
             Instance = this;
             uiDoc = GetComponent<UIDocument>().rootVisualElement;
+
             //SteamMatchmaking.OnLobbyDataChanged<SteamManager.currentLobby> += () => { OnMemberJoinedLobby(); };
         }
 
         private void Start()
         {
             SteamManager = steamManagerObject.GetComponent<SteamManager>();
-            RatKingIPManager = ratKingIPManager.GetComponent<RatKingIPManager>();
+            m_IpFetcher = new IPFetcher();
+            HasAttemptedInitialization = false;
+            
         }
 
-        private void OnEnable()
+        void OnEnable()
         {
-            _refreshLobbiesButton.clicked += () => { OnFindLobby(); }; //note that this is the same logic as findLobbies, intentional reuse
-            _startButton.clicked += () => { OnStartClicked(); };
-            _exitButton.clicked += () => { OnExitClicked(); };
-            _findLobbyButton.clicked += () => { OnFindLobby(); };
-            _setupHostButton.clicked += () => { OnSetupHost(); };
-            _startGameButton.clicked += () => { OnStartGame(); };
-            _hostLobbyButton.clicked += () => { OnHostLobby(); };
-            _joinLobbyButton.clicked += () => { OnJoinLobby(); };
-            _cancelLobbyButton.clicked += () => { OnCancelLobby(); };
-            _leaveLobbyButton.clicked += () => { OnLeaveLobby(); };
-            _cancelButton.clicked += () => { OnCancelButton(); };
+            _refreshLobbiesButton.clicked += OnFindLobby; //note that this is the same logic as findLobbies, intentional reuse
+            _startButton.clicked += OnStartClicked;
+            _exitButton.clicked += OnExitClicked;
+            _findLobbyButton.clicked += OnFindLobby;
+            _setupHostButton.clicked += OnSetupHost;
+            _startGameButton.clicked += OnStartGame;
+            _hostLobbyButton.clicked += OnHostLobby;
+            _joinLobbyButton.clicked += OnJoinLobby;
+            _cancelLobbyButton.clicked += OnCancelLobby;
+            _leaveLobbyButton.clicked += OnLeaveLobby;
+            _cancelButton.clicked += OnCancelButton;
             SteamMatchmaking.OnLobbyMemberJoined += OnLobbyChanges;
             SteamMatchmaking.OnLobbyMemberDisconnected += OnLobbyChanges;
-            //_lobbiesList.RegisterCallback<ChangeEvent<bool>>((evt) => { OnLobbyChosen(evt); });
-            //callbacks for when lobbies close or open?
-
         }
 
+        void OnDisable()
+        {
+            _refreshLobbiesButton.clicked -= OnFindLobby; //note that this is the same logic as findLobbies, intentional reuse
+            _startButton.clicked -= OnStartClicked;
+            _exitButton.clicked -= OnExitClicked;
+            _findLobbyButton.clicked -= OnFindLobby;
+            _setupHostButton.clicked -= OnSetupHost;
+            _startGameButton.clicked -= OnStartGame;
+            _hostLobbyButton.clicked -= OnHostLobby;
+            _joinLobbyButton.clicked -= OnJoinLobby;
+            _cancelLobbyButton.clicked -= OnCancelLobby;
+            _leaveLobbyButton.clicked -= OnLeaveLobby;
+            _cancelButton.clicked -= OnCancelButton;
+            SteamMatchmaking.OnLobbyMemberJoined -= OnLobbyChanges;
+            SteamMatchmaking.OnLobbyMemberDisconnected -= OnLobbyChanges;
+        }
+
+        float m_LastReported = 0f;
+        float m_ReportPeriod = 2f;
+        bool m_ShouldReport = true;
         void Update()
         {
-           
-            if (HasCleanedUpLocalWorld || !WorldsAreInitialized)
+            if (!WorldsAreInitialized || !m_ShouldReport)
                 return;
-            
-            // (Devin) I think we actually just want to leave it there so we can cleanly exit a game?
-            //DestroyLocalSimulationWorld();
+
+            if (m_LastReported + m_ReportPeriod > Time.time)
+                return;
+
+            m_LastReported = Time.time;
+
+            if (IsClientConnected)
+            {
+                Debug.Log("Client is connected!");
+                m_ShouldReport = false;
+            }
+            else
+            {
+                // (7.14.24) TODO | P0 - NetCode | Time out client connection and kick player back to start
+                //  Right now the player can be stuck indefinitely trying to connect to the Server world of the host
+                //  without having any idea what's going on. We should put something on the screen while the player
+                //  is trying to connect, and allow them to cancel (or timeout) after a certain amount of time
+                Debug.LogWarning($"Current Client status: {ClientNetworkStream.CurrentState}");
+            }
         }
 
         private void OnStartClicked()
@@ -129,7 +177,8 @@ namespace NetCode
                 setUI(uiModes.chooseMode);
             } else
             {
-                _errorMessage.text = "Unable to connect to Steam. Please exit the game, make sure you are connected to the internet, your steam client is running and then restart. Thank you!";
+                _errorMessage.text = 
+                    "Unable to connect to Steam. \nPlease ensure you're connected to Steam and then restart the game.";
                 setUI(uiModes.noSteamClient);
             }
         }
@@ -172,6 +221,10 @@ namespace NetCode
         private void OnSetupHost()
         {
             setUI(uiModes.setupHost);
+            if (m_IpFetcher.ShouldFetchAddresses)
+            {
+                m_IpFetcher.FetchIPAddresses();
+            }
         }
 
         async private void OnHostLobby()
@@ -191,25 +244,22 @@ namespace NetCode
             if (!createLobby)
                 return;
             
-            Debug.Log($"Lobby created: {SteamManager.currentLobby.Id}");
-            Debug.Log(SteamManager.currentLobby.ToString());
-            Debug.Log($"melon: {RatKingIPManager.myAddressGlobal}");
+            await m_IpFetcher.FetchTask;
+            if (!m_IpFetcher.HasAddresses)
+            {
+                Debug.LogError("Something bad happened while waiting for IP Addresses...");
+            }
             SteamManager.currentLobby.SetData("ratMakerId", ratKingPass);
-            SteamManager.currentLobby.SetData("mymelon", RatKingIPManager.myAddressGlobal);
+            SteamManager.currentLobby.SetData("mymelon", m_IpFetcher.myAddressGlobal);
             SteamManager.currentLobby.SetData("lobbyName", _lobbyTitleField.text);
-            melon = RatKingIPManager.myAddressGlobal;
+            ipAddress = ForceLocalIP ? m_IpFetcher.myAddressLocal : m_IpFetcher.myAddressGlobal;
             setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
             setUI(uiModes.Host);
             IsLobbyHost = true;
             IsInLobby = true;
-            //activate callback function to update member list as people join/leave lobby
-
-
-            // (Devin) HostSceneLoaderSystem should handle this now
-            //DestroyLocalSimulationWorld();
-            //StartServer();
-            //GameplayScene.enabled = true;
-            //StartClient();
+            Debug.Log($"Lobby created: {SteamManager.currentLobby.Id}");
+            Debug.Log(SteamManager.currentLobby.ToString());
+            Debug.Log($"IP: {m_IpFetcher.myAddressGlobal}");
         }
 
         private void OnLobbyChanges(Lobby lobby, Friend friend)
@@ -243,7 +293,7 @@ namespace NetCode
                 setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
                 Debug.
                     Log($"ip is {SteamManager.currentLobby.GetData("mymelon")}");
-                melon = SteamManager.currentLobby.GetData("mymelon");
+                ipAddress = SteamManager.currentLobby.GetData("mymelon");
                 setUI(uiModes.inLobby);
                 IsInLobby = true;
             }
@@ -339,7 +389,7 @@ namespace NetCode
                     break;
                 case uiModes.setupHost:
                     setMenuTitle("Set Up Host");
-                    setSubheader("Please choose a public name for your game lobby. Note: hosting a game will reveal your IP address to people who may be querying the Steam matchmaking API.");
+                    setSubheader("Please choose a public name for your game lobby.");
                     showElement(_subheader);
                     showElement(_lobbyTitleField);
                     showElement(_hostLobbyButton);
@@ -441,18 +491,19 @@ namespace NetCode
             //     SceneName = shortName
             // });
 
-            GameObject.FindGameObjectWithTag("MusicManager").GetComponent<MusicManager>().PlayGameMusic();
             Debug.LogWarning("running game startup");
 
             setUI(uiModes.inGame);
-            SteamManager.currentLobby.SetJoinable(false);
+            //SteamManager.currentLobby.SetJoinable(false);
         
-            serverWorld.EntityManager.CreateEntity(typeof(StartTheGame));
-     
-            //SystemState systemState = new SystemState();
-            ShouldStartGame = true;
-
-
+            //serverWorld.EntityManager.CreateEntity(typeof(StartTheGame));
+            //serverWorld.EntityManager.CreateEntityQuery()
+            var gameStateQuery = serverWorld.EntityManager.CreateEntityQuery(new ComponentType[] 
+                { typeof(GameState) });
+            gameStateQuery.TryGetSingletonEntity<GameState>(out var gameStateEntity);
+            var gameState = serverWorld.EntityManager.GetComponentData<GameState>(gameStateEntity);
+            gameState.IsGameplayUnderway = true;
+            serverWorld.EntityManager.SetComponentData(gameStateEntity, gameState);
         }
    
 
@@ -476,39 +527,69 @@ namespace NetCode
                 Debug.LogError("Attempted to initialize server/client worlds twice! That's no good!!");
                 return;
             }
-
+            
+            Instance.HasAttemptedInitialization = true;
             if (Instance.IsLobbyHost)
             {
-                Instance.StartServer();
-                SceneSystem.LoadSceneAsync(Instance.serverWorld.Unmanaged, gameScene);
+                if (Instance.TryStartServer())
+                {
+                    Debug.Log("Server started. Loading Server World");
+                    SceneSystem.LoadSceneAsync(Instance.serverWorld.Unmanaged, gameScene);
+                }
+                else
+                {
+                    Debug.LogError("Failed to start Server. Aborting world initialization.");
+                    return;
+                }
             }
             
-            Instance.StartClient();
-            SceneSystem.LoadSceneAsync(Instance.clientWorld.Unmanaged, gameScene);
+            if (Instance.TryStartClient())
+            { 
+                Debug.Log("Client started. Loading Client world.");
+                SceneSystem.LoadSceneAsync(Instance.clientWorld.Unmanaged, gameScene);
+            }
+            else
+            {
+                Debug.LogError("Failed to start Client. Aborting world initialization.");
+                return;
+            }
             
             Instance.WorldsAreInitialized = true;
         }
         
-        private void StartServer()
+        private bool TryStartServer()
         {
             Debug.Log("Starting server");
             serverWorld = ClientServerBootstrap.CreateServerWorld("Ratking Server World");
             var serverEndpoint = NetworkEndpoint.AnyIpv4.WithPort(Port);
-            {
-                using var networkDriverQuery = serverWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
-                networkDriverQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Listen(serverEndpoint);
-            }
+            using var networkDriverQuery = serverWorld.EntityManager.CreateEntityQuery(
+                ComponentType.ReadWrite<NetworkStreamDriver>());
+            var succeeded = networkDriverQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Listen(serverEndpoint);
+            return succeeded;
         }
 
-        private void StartClient()
+        private bool TryStartClient()
         {
-            Debug.Log($"Attempting to start client and connect to {melon}:{Port}");
+            Debug.Log($"Attempting to start client and connect to {ipAddress}:{Port}");
             clientWorld = ClientServerBootstrap.CreateClientWorld("Ratking Client World");
             World.DefaultGameObjectInjectionWorld = clientWorld;
-            var connectionEndpoint = NetworkEndpoint.Parse(melon, Port);
+            // TODO | P1 - NetCode | Always use 127.0.0.1 if we're on the same machine as the Server
+            var connectionEndpoint = NetworkEndpoint.Parse(ipAddress, Port);
+            using var networkDriverQuery = clientWorld.EntityManager.CreateEntityQuery(
+                ComponentType.ReadWrite<NetworkStreamDriver>());
             {
-                using var networkDriverQuery = clientWorld.EntityManager.CreateEntityQuery(ComponentType.ReadWrite<NetworkStreamDriver>());
-                networkDriverQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Connect(clientWorld.EntityManager, connectionEndpoint); 
+                try
+                {
+                    _clientConnector = networkDriverQuery.GetSingletonRW<NetworkStreamDriver>().ValueRW.Connect(
+                        clientWorld.EntityManager, connectionEndpoint); 
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                    return false;
+                }
+
+                return true;
             }
         }
     }

@@ -1,6 +1,7 @@
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.NetCode;
 using UnityEngine;
 
 namespace Simulation
@@ -13,8 +14,11 @@ namespace Simulation
         public float3 CauldronSplashCenter;
     }
     
+    //[GhostComponent]
     public struct GameState : IComponentData
     {
+        //[GhostField]
+        public bool IsGameplayUnderway;
     }
 
     public class GameStateAuthoring : MonoBehaviour

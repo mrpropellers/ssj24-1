@@ -4,11 +4,8 @@ using UnityEngine;
 
 namespace Simulation
 {
-    [GhostComponent]
     public struct GameSetup : IComponentData
     {
-        [GhostField]
-        public bool IsGameplayUnderway;
         public Entity Player;
         public Entity CharacterSimulation;
         public Entity RatProjectileSimulation;
