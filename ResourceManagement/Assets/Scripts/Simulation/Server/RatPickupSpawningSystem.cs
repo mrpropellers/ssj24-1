@@ -47,13 +47,15 @@ namespace Simulation.Server
 
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
-            // TODO? Possibly optimize with RPC
+            // TODO! | P0 - Gameplay/NetCode | Spawn rats pickups with a RPC instead of using Ghosts
             //  Rather than relying on the Ghost component to send state updates for the rats down to each client, 
             //  we could simply spawn them into local simulations with a Server->Client RPC and then just let each
             //  player update their local simulations. This would heavily reduce the amount of network traffic generated
-            //  by rats who aren't yet being used as projectiles
+            //  by rats who aren't yet being used as projectiles, and make a lot of the downstream systems snappier
             //  Alternatively, we could probably just put initial position/orientation/scale into the Pickup component
             //  data and use that like a pseudo-RPC, then tell the server not to serialize/transmit LocalTransform
+            //  (Devin 8.10.24) This second method might be preferable... otherwise I'm not sure how we manage spawning
+            //      in all the rats for a player that hasn't been connected since the beginning?
             var tick = networkTime.ServerTick;
             foreach (var (tf, ratSpawner) in SystemAPI
                          .Query<RefRO<LocalTransform>, RefRW<RatPickupSpawner>>())

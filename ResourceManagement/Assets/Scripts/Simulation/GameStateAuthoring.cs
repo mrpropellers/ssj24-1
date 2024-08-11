@@ -1,7 +1,5 @@
-using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.NetCode;
 using UnityEngine;
 
 namespace Simulation
@@ -23,12 +21,19 @@ namespace Simulation
 
     public class GameStateAuthoring : MonoBehaviour
     {
+        public bool ForceUnderway;
+        
         public class GameStateBaker : Baker<GameStateAuthoring>
         {
             public override void Bake(GameStateAuthoring authoring)
             {
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
-                AddComponent<GameState>(entity);
+                AddComponent(entity, new GameState()
+                {
+                    #if UNITY_EDITOR
+                    IsGameplayUnderway = authoring.ForceUnderway
+                    #endif
+                });
                 AddBuffer<PendingRatScored>(entity);
             }
         }
