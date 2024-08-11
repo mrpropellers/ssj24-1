@@ -21,8 +21,6 @@ namespace Simulation
 
     public class GameStateAuthoring : MonoBehaviour
     {
-        public bool ForceUnderway;
-        
         public class GameStateBaker : Baker<GameStateAuthoring>
         {
             public override void Bake(GameStateAuthoring authoring)
@@ -30,9 +28,6 @@ namespace Simulation
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
                 AddComponent(entity, new GameState()
                 {
-                    #if UNITY_EDITOR
-                    IsGameplayUnderway = authoring.ForceUnderway
-                    #endif
                 });
                 AddBuffer<PendingRatScored>(entity);
             }

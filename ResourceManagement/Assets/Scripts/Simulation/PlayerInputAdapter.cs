@@ -17,7 +17,7 @@ namespace Simulation
         PlayerInput _playerInput;
         Camera _mainCamera;
 
-        ClientConnectionManager _connectionManager;
+        MultiplayerConnectionMenu m_ConnectionMenu;
 
         InputAction _move;
         InputAction _throw;
@@ -48,7 +48,7 @@ namespace Simulation
         }
         public void goToMenu()
         {
-            _connectionManager.goToMenu();
+            m_ConnectionMenu.goToMenu();
         }
 
     }

@@ -1,21 +1,25 @@
 using Unity.Entities;
 using Unity.Entities.Serialization;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace NetCode
 {
 #if UNITY_EDITOR
     public class GameplaySceneAuthoring : MonoBehaviour
     {
-        public UnityEditor.SceneAsset Scene;
+        [FormerlySerializedAs("Scene")]
+        public UnityEditor.SceneAsset GameplayScene;
+        public UnityEditor.SceneAsset GameSetupScene;
         public class GameplaySceneReferenceBaker : Baker<GameplaySceneAuthoring>
         {
             public override void Bake(GameplaySceneAuthoring authoring)
             {
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
-                AddComponent(entity, new GameplaySceneReference()
+                AddComponent(entity, new GameplaySceneReferences()
                 {
-                    Value = new EntitySceneReference(authoring.Scene)
+                    Level = new EntitySceneReference(authoring.GameplayScene),
+                    GameSetup = new EntitySceneReference(authoring.GameSetupScene)
                 });
             }
         }

@@ -47,7 +47,7 @@ namespace Simulation.Server
 
             var ecb = new EntityCommandBuffer(Allocator.Temp);
 
-            // TODO! | P0 - Gameplay/NetCode | Spawn rats pickups with a RPC instead of using Ghosts
+            // TODO | P2 - Gameplay/NetCode | Spawn rats pickups with a RPC instead of using Ghosts
             //  Rather than relying on the Ghost component to send state updates for the rats down to each client, 
             //  we could simply spawn them into local simulations with a Server->Client RPC and then just let each
             //  player update their local simulations. This would heavily reduce the amount of network traffic generated
