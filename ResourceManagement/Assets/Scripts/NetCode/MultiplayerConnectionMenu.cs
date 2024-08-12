@@ -7,6 +7,8 @@ using Steamworks;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine.Serialization;
+using NUnit.Framework;
+using System.Text;
 
 namespace NetCode
 {
@@ -22,6 +24,7 @@ namespace NetCode
         #region 
         public VisualElement uiDoc;
         private TextField _lobbyTitleField => uiDoc.Q<TextField>("_lobbyTitleField");
+        private TextField _hostIpField => uiDoc.Q<TextField>("_hostIpField");
         private Button _startButton => uiDoc.Q<Button>("_start");
         private Button _setupHostButton => uiDoc.Q<Button>("_setupHost");
         private Button _startGameButton => uiDoc.Q<Button>("_startGame");
@@ -145,6 +148,11 @@ namespace NetCode
                 Debug.LogWarning($"Current Client status: " +
                     $"{GameplaySceneLoader.WorldManager.ClientNetworkStream.CurrentState}");
             }
+
+            //query for entities that have playerUid in steamLobby;
+            //also a timer to kick them from lobby if they fail to join?
+            //and how do we communicate that?
+            //and we need to kick them from the lobby.
         }
 
         private void OnStartClicked()
@@ -198,13 +206,15 @@ namespace NetCode
 
         private void OnSetupHost()
         {
-            setUI(uiModes.setupHost);
             if (m_IpFetcher.ShouldFetchAddresses)
             {
                 m_IpFetcher.FetchIPAddresses();
             }
-        }
 
+            setHostIp(m_IpFetcher.GetIpAddress());
+            setUI(uiModes.setupHost);
+
+        }
         async private void OnHostLobby()
         {
             setUI(uiModes.loading);
@@ -221,16 +231,13 @@ namespace NetCode
 
             if (!createLobby)
                 return;
-            
-            await m_IpFetcher.FetchTask;
-            if (!m_IpFetcher.HasAddresses)
-            {
-                Debug.LogError("Something bad happened while waiting for IP Addresses...");
-            }
+
+            var targetAddress = m_IpFetcher.GetIpAddress();
+
             SteamManager.currentLobby.SetData("ratMakerId", ratKingPass);
-            SteamManager.currentLobby.SetData("mymelon", m_IpFetcher.myAddressGlobal);
+            SteamManager.currentLobby.SetData("mymelon", targetAddress);
             SteamManager.currentLobby.SetData("lobbyName", _lobbyTitleField.text);
-            GameplaySceneLoader.IpAddress = ForceLocalIP ? m_IpFetcher.myAddressLocal : m_IpFetcher.myAddressGlobal;
+            GameplaySceneLoader.IpAddress = ForceLocalIP ? m_IpFetcher.myAddressLocal : targetAddress;
             setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
             setUI(uiModes.Host);
             IsLobbyHost = true;
@@ -367,6 +374,7 @@ namespace NetCode
                     setSubheader("Please choose a public name for your game lobby.");
                     showElement(_subheader);
                     showElement(_lobbyTitleField);
+                    showElement(_hostIpField);
                     showElement(_hostLobbyButton);
                     showElement(_cancelButton);
                     break;
@@ -412,6 +420,7 @@ namespace NetCode
             showElement(_menuTitle);
             hideElement(_startButton);
             hideElement(_lobbyTitleField);
+            hideElement(_hostIpField);
             hideElement(_findLobbyButton);
             hideElement(_setupHostButton);
             hideElement(_startGameButton);
@@ -427,6 +436,7 @@ namespace NetCode
             hideElement(_subheader);
             hideElement(_refreshLobbiesButton);
         }
+        
         private void setMenuTitle(string text)
         {
             _menuTitle.text = text;
@@ -439,6 +449,11 @@ namespace NetCode
         private void setSubheader(string text)
         {
             _subheader.text = text;
+        }
+
+        private void setHostIp(string text)
+        {
+            _hostIpField.value = text;
         }
 
         private void hideElement(VisualElement element)

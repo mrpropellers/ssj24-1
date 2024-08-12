@@ -48,6 +48,7 @@ namespace NetCode
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<GameSetup>();
+            //state require for update clientUid;
             
             var builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<NetworkId>()
@@ -65,7 +66,7 @@ namespace NetCode
                 var req = commandBuffer.CreateEntity();
                 // TODO: Get the ClientUID from Steam or something
                 commandBuffer.AddComponent(req, new ClientJoinRequest() {
-                    Id = new ClientUid() { Value = Guids++}
+                    Id = new ClientUid() { Value = Guids++} //replace with value read off of steam
                 });
                 commandBuffer.AddComponent(req, new SendRpcCommandRequest { TargetConnection = entity });
             }
@@ -116,6 +117,9 @@ namespace NetCode
                     Rotation = quaternion.identity,
                     Scale = 1f
                 });
+
+                //setComponent(playerEntitty, new playerUid()) 
+
                 //Entity cameraEntity = ecb.Instantiate(gameSetup.CameraPrefab);
                     
                 // Add spawned prefabs to the connection entity's linked entities, so they get destroyed along with it

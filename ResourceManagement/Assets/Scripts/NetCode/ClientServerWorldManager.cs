@@ -62,7 +62,7 @@ namespace NetCode
                 }
             }
             
-            if (TryStartClient(ip, port))
+            if (TryStartClient(ip, port, isServer))
             { 
                 Debug.Log("Client started. Loading Client world.");
                 SceneSystem.LoadSceneAsync(clientWorld.Unmanaged, gameScene.GameSetup);
@@ -88,13 +88,15 @@ namespace NetCode
             return succeeded;
         }
 
-        private bool TryStartClient(string ipAddress, ushort port)
+        private bool TryStartClient(string ipAddress, ushort port, bool isServer)
         {
             Debug.Log($"Attempting to start client and connect to {ipAddress}:{port}");
             clientWorld = ClientServerBootstrap.CreateClientWorld("Ratking Client World");
             World.DefaultGameObjectInjectionWorld = clientWorld;
-            // TODO | P1 - NetCode | Always use 127.0.0.1 if we're on the same machine as the Server
-            var connectionEndpoint = NetworkEndpoint.Parse(ipAddress, port);
+            
+            var endpointIpAddress = isServer ? "127.0.0.1" : ipAddress;
+
+            var connectionEndpoint = NetworkEndpoint.Parse(endpointIpAddress, port);
             using var networkDriverQuery = clientWorld.EntityManager.CreateEntityQuery(
                 ComponentType.ReadWrite<NetworkStreamDriver>());
             {
