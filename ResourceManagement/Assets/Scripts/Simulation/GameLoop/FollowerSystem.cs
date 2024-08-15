@@ -73,7 +73,6 @@ namespace Simulation
                 // OwnerQueueRank value is lower for newly picked up rats
                 //      are newly picked up rats close or far?
                 //      which rats are thrown first? 
-
                 /* define normalVector of nearby rats for multiplication later */
                 var desiredNormalVectorToCollidingRats = new float3(1f, 0, 1);
                 /* iterate through throwableRatArray[] for locations of previously foreach'd rats */
@@ -86,17 +85,34 @@ namespace Simulation
                         /* multiply direction vector by -distance to each throwableCollidingRatArray[ ] */
                         var vectorFromThrowableRat = (-1 * throwableRatLocation) + tf.ValueRW.Position;
                         var distanceFromThrowableRat = math.distance((-1 * throwableRatLocation), tf.ValueRW.Position);
-                        if (distanceFromThrowableRat < 0.5f)
+                        // changing this from 15f to 300f DRASTICALLY changes behavior
+                        if (distanceFromThrowableRat < 15f)
+                        {
+                            /* multiply direction vector by -distance to each throwableCollidingRatArray[ ] */
+                            Debug.Log("test < 0.5 :)");
                             desiredNormalVectorToCollidingRats *= vectorFromThrowableRat;
+                        }
+                        /* else
+                            Debug.Log("test > 0.5"); */
                     }
                 }
+                /* save location of active rat */       /* this does not account for rat throwing and would need to be cleared onThrow */
+                locationsOfPickedUpRats[ownerData.NumThrowableFollowers - (follower.ValueRO.OwnerQueueRank - ownerData.NumThrownFollowers)] = tf.ValueRW.Position;
                 if (!desiredNormalVectorToCollidingRats.Equals(new float3 (1f, 0, 1)))
                 {
-                    var normalDirection2 = math.normalize(targetTf.Position - tf.ValueRW.Position);
+                    /* copy logic from existing direction rotation speed and position-translation from below
+                     * replacing vectorToPlayer with vectorFromCollidingRatNormal
+                     */
+                    var normalDirection2 = math.normalize(desiredNormalVectorToCollidingRats);
                     var travelVector2 = normalDirection2 * follower.ValueRO.Speed * deltaTime;
                     travelVector2.y = 0f;
                     tf.ValueRW.Rotation = quaternion.LookRotation(travelVector2, up);
-                    locationsOfPickedUpRats[ownerData.NumThrowableFollowers - (follower.ValueRO.OwnerQueueRank - ownerData.NumThrownFollowers)] = tf.ValueRW.Position;
+                    tf.ValueRW.Position += travelVector2;
+                    follower.ValueRW.CurrentSpeed = follower.ValueRO.Speed;
+                    /* this seems to register infrequently when rats clump 
+                     * causing all of them to scatter for multiple seconds
+                     * before eventually coming back
+                     */
                     continue;
                 }
 
