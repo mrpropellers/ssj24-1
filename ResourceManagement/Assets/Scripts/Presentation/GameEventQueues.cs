@@ -32,6 +32,8 @@ namespace Presentation
         [SerializeField] private GameObject ratPickupSfx;
         [SerializeField] private GameObject ratThrowSfx;
 
+        private GuiPresentation gui;
+
         [SerializeField] private bool testEvents;
 
         void Start()
@@ -43,26 +45,44 @@ namespace Presentation
 
             if (testEvents)
                 StartCoroutine(TestEvents());
+
+            GameObject guiGO = GameObject.FindGameObjectWithTag("GUI");
+            if( guiGO )
+            {
+                gui = guiGO.GetComponent<GuiPresentation>();
+            }
         }
         
         private void Update()
         {
+            if( !gui )
+            {
+                Debug.LogError("GameEventQueues::Update::No gui found for event queues to render to, BAIL!");
+                return;
+            }
+
             while (RatsScored.Count > 0)
             {
                 PendingRatScored score = RatsScored.Dequeue();
                 Instantiate(scoreRatSfx, score.CauldronSplashCenter, Quaternion.identity);
+
+                gui.UpdateScore();
             }
 
             while (RatsPickedUp.Count > 0)
             {
                 RatPickedUp pickup = RatsPickedUp.Dequeue();
                 Instantiate(ratPickupSfx, pickup.RatPosition, Quaternion.identity);
+
+                gui.AddRat();
             }
 
             while (RatsThrown.Count > 0)
             {
                 RatThrown thrownRat = RatsThrown.Dequeue();
                 Instantiate(ratThrowSfx, thrownRat.Position, Quaternion.identity);
+
+                gui.RemoveRat();
             }
         }
 

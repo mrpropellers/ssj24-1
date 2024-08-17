@@ -66,10 +66,20 @@ namespace Simulation
     {
         static readonly int k_Speed = Animator.StringToHash("Speed");
         static readonly int k_RollUp = Animator.StringToHash("RollUp");
+        static readonly int k_Offset = Animator.StringToHash("AnimationOffset");
 
         public void OnCreate(ref SystemState state)
         {
-            
+            // Scott couldn't figure out how to get a random number in here.  See AnimationOffset component!
+            //foreach (var (animatorLink, follower) in SystemAPI
+            //             .Query<AnimatorLink, RefRO<Follower>>()
+            //             .WithNone<ConvertToProjectile, NeedsOwnerAssignment>())
+            //{
+            //    Unity.Mathematics.Random random = new Unity.Mathematics.Random();
+            //    float randomOffset = random.NextFloat(0.1f, 0.9f);
+
+            //    animatorLink.Animator.SetFloat(k_Offset, randomOffset);
+            //}
         }
 
         public void OnUpdate(ref SystemState state)

@@ -1,8 +1,11 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Simulation;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.UI;
 
 public class GuiPresentation : MonoBehaviour
 {
@@ -13,10 +16,22 @@ public class GuiPresentation : MonoBehaviour
     private TextMeshProUGUI score;
 
     [SerializeField]
+    private Image scoreFill;
+
+    [SerializeField]
+    private TextMeshProUGUI rats;
+
+    [SerializeField]
     private GameObject scoreboard;
 
     [SerializeField]
     private bool testGui;
+
+    // This can't be right :/
+    private const float MAX_SCORE = 10.0f;
+    private int currentScore = 0;
+    private int currentRats = 0;
+
 
     private void Awake()
     {
@@ -24,17 +39,31 @@ public class GuiPresentation : MonoBehaviour
             StartCoroutine(TestGui());
     }
 
+    private void Start()
+    {
+        SetRats(currentRats);
+        SetScore(currentScore);
+    }
+
     public void SetTime(float timeRemaining)
     {
         int minutes = Mathf.FloorToInt(timeRemaining / 60);
         int seconds = Mathf.FloorToInt(timeRemaining % 60);
 
-        this.timeRemaining.SetText($"Time: {minutes:00}:{seconds:00}");
+        this.timeRemaining.SetText($"{minutes:00}:{seconds:00}");
     }
 
     public void SetScore(int score)
     {
-        this.score.SetText($"Rat Score: {score}");
+        this.score.SetText($"{score}");
+
+        float normal = ((float)score) / MAX_SCORE;
+        scoreFill.fillAmount = normal;
+    }
+
+    public void SetRats(int rats)
+    {
+        this.rats.SetText($"{rats}");
     }
 
     public void EnableScoreboard(List<string> playerNames, List<int> playerScores)
@@ -60,10 +89,23 @@ public class GuiPresentation : MonoBehaviour
 
     private IEnumerator TestGui()
     {
-        SetScore(0);
+        SetRats(0);
+        for( int i = 0; i< 5; i++)
+        {
+            AddRat();
+            yield return new WaitForSeconds(1);
+        }
         for (int i = 0; i < 5; i++)
         {
-            SetTime(5 - i);
+            RemoveRat();
+            yield return new WaitForSeconds(1);
+        }
+
+
+        SetScore(0);
+        for (int i = 0; i < 10; i++)
+        {
+            SetTime(10 - i);
             SetScore(i);
             yield return new WaitForSeconds(1);
         }
@@ -75,5 +117,23 @@ public class GuiPresentation : MonoBehaviour
         EnableScoreboard(testNames, testScores);
         yield return new WaitForSeconds(5);
         DisableScoreboard();
+    }
+
+    internal void RemoveRat()
+    {
+        currentRats--;
+        SetRats(currentRats);
+    }
+
+    internal void AddRat()
+    {
+        currentRats++;
+        SetRats(currentRats);
+    }
+
+    internal void UpdateScore()
+    {
+        currentScore++;
+        SetScore(currentScore);
     }
 }

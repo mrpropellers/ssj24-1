@@ -6,6 +6,7 @@ TagManager:
   tags:
   - MusicManager
   - CamTarget
+  - GUI
   layers:
   - Default
   - TransparentFX
