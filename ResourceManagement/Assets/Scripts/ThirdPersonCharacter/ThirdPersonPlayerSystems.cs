@@ -162,81 +162,20 @@ public partial struct ThirdPersonPlayerFixedStepControlSystem : ISystem
             {
                 foreach (var (ttf, player) in SystemAPI.Query<RefRO<LocalTransform>, ThirdPersonPlayer>())
                 {
-
                     if (SystemAPI.HasComponent<ThirdPersonCharacterControl>(player.ControlledCharacter))
                     {
-
                         ThirdPersonCharacterControl characterControl = SystemAPI.GetComponent<ThirdPersonCharacterControl>(player.ControlledCharacter);
-                        //float3 normal = math.normalizesafe(characterControl.MoveVector);
 
-                        //if (SystemAPI.HasComponent<AnimationLink>(characterControl))
                         float setSpeed = 0.0f;
                         if (characterControl.MoveVector.x < -0.1f || characterControl.MoveVector.x > 0.1f)
                             setSpeed = 1.0f;
                         if (characterControl.MoveVector.z < -0.1f || characterControl.MoveVector.z > 0.1f)
                             setSpeed = 1.0f;
 
-
-                        //Debug.Log("characterControl.MoveVector.x => " + characterControl.MoveVector.x);
-                        //Debug.Log("characterControl.MoveVector.z => " + characterControl.MoveVector.z);
-                        //Debug.Log("setSpeed => " + setSpeed);
-
-
                         animatorLink.Animator.SetFloat(k_Speed, setSpeed);
                     }
                 }
-
-
-
             }
-
-            ////foreach (var animatorLink in SystemAPI.Query<AnimatorLink>())
-            ////{
-            //    //Debug.Log("HELLO? " + animatorLink);
-
-            //    foreach (var (animatorLink, player) in SystemAPI.Query<AnimatorLink, ThirdPersonPlayer>())
-            //    {
-
-            //        Debug.Log("HELLO? " + animatorLink);
-
-            //        if (SystemAPI.HasComponent<ThirdPersonCharacterControl>(player.ControlledCharacter))
-            //        {
-            //            ThirdPersonCharacterControl characterControl = SystemAPI.GetComponent<ThirdPersonCharacterControl>(player.ControlledCharacter);
-            //            //float3 normal = math.normalizesafe(characterControl.MoveVector);
-
-            //            //if (SystemAPI.HasComponent<AnimationLink>(characterControl))
-
-            //            //animatorLink.Animator.SetFloat(k_Speed, characterControl.MoveVector.x);
-            //        }
-            //    }
-            ////}
-
-
-            //foreach (var (animatorLink, player) in SystemAPI
-            // .Query<AnimatorLink, RefRO<ThirdPersonPlayer>>())
-            //{
-            //    Debug.Log("Barf!");
-
-            //    //animatorLink.Animator.SetFloat(k_Speed, follower.ValueRO.CurrentSpeed / follower.ValueRO.Speed);
-            //}
-
-            //foreach (var (playerInputs, player) in SystemAPI.Query<ThirdPersonPlayerInputs, ThirdPersonPlayer>().WithAll<Simulate>())
-            //{
-            //    if (SystemAPI.HasComponent<AnimatorLink>(player.ControlledCharacter))
-            //    {
-            //        ThirdPersonCharacterControl characterControl = SystemAPI.GetComponent<ThirdPersonCharacterControl>(player.ControlledCharacter);
-            //        //float3 normal = math.normalizesafe(characterControl.MoveVector);
-
-            //        if (SystemAPI.HasComponent<AnimatorLink>(player.ControlledCharacter.AnimatorLink))
-            //        {
-
-            //        }
-
-            //        //if (SystemAPI.HasComponent<AnimationLink>(characterControl))
-
-            //        //animatorLink.Animator.SetFloat(k_Speed, characterControl.MoveVector.x);
-            //    }
-            //}
         }
     }
 }
