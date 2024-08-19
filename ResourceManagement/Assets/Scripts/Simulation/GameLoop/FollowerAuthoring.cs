@@ -38,6 +38,8 @@ namespace Simulation
                     Speed = authoring.FollowSpeed,
                     ProjectileSpeed = authoring.ThrowSpeed,
                 });
+                AddComponent(entity, new ConvertToProjectile());
+                SetComponentEnabled<ConvertToProjectile>(entity, false);
             }
         }
     }

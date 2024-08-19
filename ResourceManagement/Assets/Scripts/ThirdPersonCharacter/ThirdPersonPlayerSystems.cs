@@ -32,6 +32,12 @@ public partial class ThirdPersonPlayerInputsSystem : SystemBase
             inputs.ValueRW = default;
             inputs.ValueRW.MoveInput = inputProvider.Input.MoveVector;
             inputs.ValueRW.CameraOrientation = inputProvider.Input.CameraOrientation;
+            // (8.17.2024) TODO | P0 - NetCode | Separate action Inputs into their own ICommandBuffer
+            //  Since action inputs are discrete and should also be sent to other Non-Owner ghosts,
+            //  they should be separated into their own CommandBuffer and set up correctly. This will
+            //  allow us to re-work the rat Systems so they can locally simulate nearly everything and just
+            //  check with the Server values occasionally to ensure their state is correct.
+            //  https://docs.unity3d.com/Packages/com.unity.netcode@1.3/api/Unity.NetCode.ICommandData.html
             if (inputProvider.Input.ConsumeThrowInput())
             {
                 //Debug.Log("Throw is down.");

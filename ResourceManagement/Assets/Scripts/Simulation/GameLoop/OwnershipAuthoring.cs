@@ -9,18 +9,18 @@ namespace Simulation
     {
         //public bool HasPendingOwner;
         [GhostField]
-        public bool HasConfiguredOwner;
+        public bool HasConfiguredOwnerServer;
+        public bool HasConfiguredOwnerClient;
         [GhostField]
         public Entity Owner;
-
-        public bool CanBeClaimed => !HasConfiguredOwner;
     }
 
-    [GhostComponent]
-    public struct NeedsOwnerAssignment : IComponentData
-    {
-        
-    }
+    [GhostComponent, GhostEnabledBit]
+    public struct IsFollowingOwner : IComponentData, IEnableableComponent 
+    { }
+    
+    public struct HasConfiguredOwner : IComponentData, IEnableableComponent
+    {}
 
     public class OwnershipAuthoring : MonoBehaviour
     {
@@ -29,8 +29,9 @@ namespace Simulation
             public override void Bake(OwnershipAuthoring authoring)
             {
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
-                AddComponent(entity, new Ownership { HasConfiguredOwner = false, Owner = default });
-                AddComponent(entity, new NeedsOwnerAssignment());
+                AddComponent(entity, new Ownership { HasConfiguredOwnerServer = false, Owner = default });
+                AddComponent(entity, new IsFollowingOwner() {});
+                SetComponentEnabled<IsFollowingOwner>(entity, false);
             }
         }
     }

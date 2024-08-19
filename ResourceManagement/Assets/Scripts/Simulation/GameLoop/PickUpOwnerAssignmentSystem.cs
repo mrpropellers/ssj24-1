@@ -1,7 +1,7 @@
+using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.NetCode;
 using Unity.Physics;
 using Unity.Physics.Systems;
 using UnityEngine;
@@ -21,11 +21,11 @@ namespace Simulation
         public EntityCommandBuffer ECB;
         
         [ReadOnly]
-        public ComponentLookup<CharacterFollowerThrowing> CharacterLookup;
+        public ComponentLookup<FollowerThrower> CharacterLookup;
         [ReadOnly]
         public ComponentLookup<Ownership> OwnershipLookup;
         [ReadOnly]
-        public ComponentLookup<NeedsOwnerAssignment> NeedsAssignmentLookup;
+        public ComponentLookup<IsFollowingOwner> NeedsConfigureLookup;
         [ReadOnly]
         public ComponentLookup<Follower> FollowerLookup;
         
@@ -53,97 +53,57 @@ namespace Simulation
             if (!FollowerLookup.TryGetComponent(otherEntity, out _))
                 return;
             
-            // If it has an Ownership component, it's already been claimed
-            if (!NeedsAssignmentLookup.TryGetComponent(otherEntity, out _))
+            if (!OwnershipLookup.TryGetComponent(otherEntity, out var ownership) || ownership.Owner != default)
                 return;
 
-            if (!OwnershipLookup.TryGetComponent(otherEntity, out var ownership) || ownership.Owner != default)
+            // If it's already been collected for assignment, we don't need to do it again
+            if (NeedsConfigureLookup.IsComponentEnabled(otherEntity))
                 return;
             
             Debug.Log("Picking something up");
             
-            ECB.SetComponent(otherEntity, new Ownership()
-            {
-                Owner = characterEntity,
-                HasConfiguredOwner = false
-            });
+            ownership.Owner = characterEntity;
+            ownership.HasConfiguredOwnerServer = false;
+            ECB.SetComponent(otherEntity, ownership);
+            ECB.SetComponentEnabled<IsFollowingOwner>(otherEntity, true);
         }
     }
     
-    // TODO? Use RPCs from client to set PickUp state
-    //  Right now the server is simulating the pickups and needs to detect the triggers to assign Ownership, but this
-    //  is problematic because something breaks if we add a RigidBody to the rat pickups... instead we could just
-    //  have the client report when it picks something up and then the Server can replicate down the Ownership update,
-    //  then everyone can locally simulate the follower code rather than relying on updates from the server
-    // (Devin 8.10.24)
-    //  Might want to revisit this after rat spawning is handled by RPCs... we could probably simulate pickup locally
-    //  and just overwrite it with an Ownership update from the Server when it comes in (if pickup actually failed,
-    //  just put the rat back where it had initially spawned)
-    //[UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
-    [UpdateInGroup(typeof(PhysicsSystemGroup))]
-    [UpdateAfter(typeof(PhysicsSimulationGroup))]
-    //[WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
-    [BurstCompile]
-    public partial struct PickUpOwnerAssignmentSystem : ISystem
+    [UpdateInGroup(typeof(PhysicsSystemGroup)), UpdateBefore(typeof(PickUpOwnerAssignmentSystem))]
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+    [BurstCompile, StructLayout(LayoutKind.Auto)]
+    public partial struct PickUpCollectionRadiusSystem : ISystem
     {
-        ComponentLookup<CharacterFollowerThrowing> _characterLookup;
-        // [ReadOnly]
-        // public BufferLookup<PendingPickUp> CharacterPickUpBuffer;
+        ComponentLookup<FollowerThrower> _characterLookup;
         ComponentLookup<Ownership> _ownershipLookup;
-        ComponentLookup<NeedsOwnerAssignment> _needsAssignmentLookup;
-        //ComponentLookup<GhostOwner> _ghostOwnerLookup;
-        //ComponentLookup<NetworkId> _idLookup;
+        ComponentLookup<IsFollowingOwner> _needsAssignmentLookup;
         ComponentLookup<Follower> _followerLookup;
         
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<SimulationSingleton>();
+            _characterLookup = state.GetComponentLookup<FollowerThrower>(false);
+            _ownershipLookup = state.GetComponentLookup<Ownership>(false);
+            _needsAssignmentLookup = state.GetComponentLookup<IsFollowingOwner>(true);
+            _followerLookup = state.GetComponentLookup<Follower>(false);
         }
         
         
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            _characterLookup = state.GetComponentLookup<CharacterFollowerThrowing>(false);
-            _ownershipLookup = state.GetComponentLookup<Ownership>(false);
-            _needsAssignmentLookup = state.GetComponentLookup<NeedsOwnerAssignment>(true);
-            //_idLookup = state.GetComponentLookup<NetworkId>(true);
-            _followerLookup = state.GetComponentLookup<Follower>(false);
             var ecb = new EntityCommandBuffer(Allocator.TempJob);
-            
-            // Set up any followers collected last frame
-            foreach (var (follower, ownership, followerEntity) in SystemAPI
-                         .Query<RefRW<Follower>, RefRW<Ownership>>()
-                         .WithAll<NeedsOwnerAssignment>()
-                         .WithEntityAccess())
-            {
-                if (ownership.ValueRW.Owner == default)
-                    continue;
-                if (ownership.ValueRW.HasConfiguredOwner)
-                {
-                    // We should have already cleaned up its NeedsOwnerAssignment tag by now...
-                    Debug.LogWarning("Detected a follower that's already been configured. That shouldn't be possible!");
-                    continue;
-                }
-
-                _characterLookup.TryGetComponent(ownership.ValueRO.Owner, out var character);
-                character.NumThrowableFollowers++;
-                ecb.SetComponent(ownership.ValueRO.Owner, character);
-                follower.ValueRW.OwnerQueueRank = character.NumThrowableFollowers + character.NumThrownFollowers;
-                ecb.AppendToBuffer(ownership.ValueRO.Owner, new ThrowableFollowerElement()
-                {
-                    Follower = followerEntity
-                });
-                
-                ownership.ValueRW.HasConfiguredOwner = true;
-            }
+            _characterLookup.Update(ref state);
+            _ownershipLookup.Update(ref state);
+            _needsAssignmentLookup.Update(ref state);
+            _followerLookup.Update(ref state);
             
             state.Dependency = new PickUpJob()
                 {
                     CharacterLookup = _characterLookup,
                     OwnershipLookup = _ownershipLookup,
-                    NeedsAssignmentLookup = _needsAssignmentLookup,
+                    NeedsConfigureLookup = _needsAssignmentLookup,
                     FollowerLookup = _followerLookup,
                     // GhostOwnerLookup = _ghostOwnerLookup,
                     // OwnerIdLookup = _idLookup,
@@ -155,29 +115,129 @@ namespace Simulation
             ecb.Dispose();
         }
     }
-
-    [UpdateInGroup(typeof(AfterPhysicsSystemGroup))]
+    
+    [UpdateInGroup(typeof(PhysicsSystemGroup))]
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [BurstCompile]
-    //[WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
-    public partial struct CleanUpOwnerAssignmentTagSystem : ISystem
+    [StructLayout(LayoutKind.Auto)]
+    public partial struct PickUpOwnerAssignmentSystem : ISystem
     {
-        // Removes the NeedsOwnerAssignment tag component when things have been successfully configured
-        // Has to be in its own System because we're not allowed to make structural changes (remove a component)
-        // inside the PhysicsSystemGroup
+        ComponentLookup<FollowerThrower> _characterLookup;
+        
+        [BurstCompile]
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<SimulationSingleton>();
+            _characterLookup = state.GetComponentLookup<FollowerThrower>(false);
+        }
+        
+        
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            _characterLookup.Update(ref state);
+            var now = (float)SystemAPI.Time.ElapsedTime;
             var ecb = new EntityCommandBuffer(Allocator.Temp);
-            foreach (var (ownership, entity) in SystemAPI
-                         .Query<RefRO<Ownership>>().WithAll<NeedsOwnerAssignment>().WithEntityAccess())
+            
+            foreach (var (follower, ownership, followerEntity) in SystemAPI
+                         .Query<RefRW<Follower>, RefRW<Ownership>>()
+                         .WithAll<IsFollowingOwner>()
+                         .WithNone<HasConfiguredOwner>()
+                         .WithEntityAccess())
             {
-                // Leave any unconfigured things alone
-                if (!ownership.ValueRO.HasConfiguredOwner)
+                if (ownership.ValueRW.Owner == default)
+                {
+                    Debug.LogError("Detected follower that has been picked up but has no Owner.");
                     continue;
+                }
+                if (ownership.ValueRW.HasConfiguredOwnerServer)
+                {
+                    // We might get multiple PickUp triggers for the same follower due to re-simulation
+                    Debug.Log("Detected a follower that's already been configured.");
+                    continue;
+                }
+
+                var ownerEntity = ownership.ValueRO.Owner;
+                _characterLookup.TryGetComponent(ownerEntity, out var thrower);
+                thrower.Counts.NumThrowableFollowers++;
+                thrower.Counts.TimeLastFollowerPickedUp = now;
+                thrower.Counts_Auth = thrower.Counts;
+                state.EntityManager.SetComponentData(ownerEntity, thrower);
+                var counts = thrower.Counts;
+                follower.ValueRW.OwnerQueueRank = counts.NumThrowableFollowers + counts.NumThrownFollowers;
+                var followerBuffer = state.EntityManager.GetBuffer<ThrowableFollowerElement>(ownerEntity);
+                followerBuffer.Add(new ThrowableFollowerElement()
+                {
+                    Follower = followerEntity
+                });
                 
-                ecb.RemoveComponent<NeedsOwnerAssignment>(entity);
+                ownership.ValueRW.HasConfiguredOwnerServer = true;
+                ecb.AddComponent<HasConfiguredOwner>(followerEntity);
+                //state.EntityManager.SetComponentEnabled<IsFollowingOwner>(followerEntity, false);
             }
             
+            ecb.Playback(state.EntityManager);
+            ecb.Dispose();
+        }
+    }
+
+    [UpdateInGroup(typeof(PhysicsSystemGroup))]
+    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
+    [BurstCompile]
+    [StructLayout(LayoutKind.Auto)]
+    public partial struct PickUpAddToClientBufferSystem : ISystem
+    {
+        ComponentLookup<FollowerThrower> _characterLookup;
+
+        [BurstCompile]
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<SimulationSingleton>();
+            _characterLookup = state.GetComponentLookup<FollowerThrower>(false);
+        }
+
+        //[BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            _characterLookup.Update(ref state);
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
+
+            foreach (var (ownership, followerEntity) in SystemAPI
+                         .Query<RefRW<Ownership>>()
+                         .WithAll<Follower, IsFollowingOwner>()
+                         .WithNone<HasConfiguredOwner>()
+                         .WithEntityAccess())
+            {
+                if (ownership.ValueRW.Owner == default)
+                {
+                    Debug.LogError("Detected follower that has been picked up but has no Owner.");
+                    continue;
+                }
+
+                if (!ownership.ValueRW.HasConfiguredOwnerServer)
+                {
+                    // This is probably impossible?
+                    Debug.LogError("Detected a follower that hasn't been configured on Server.");
+                    continue;
+                }
+
+                if (ownership.ValueRW.HasConfiguredOwnerClient)
+                {
+                    // Not sure if this is bad or not yet
+                    Debug.Log("Detected a follower that's already been configured.");
+                    continue;
+                }
+
+                var ownerEntity = ownership.ValueRO.Owner;
+                var followerBuffer = state.EntityManager.GetBuffer<ThrowableFollowerElement>(ownerEntity);
+                followerBuffer.Add(new ThrowableFollowerElement() { Follower = followerEntity });
+
+                ownership.ValueRW.HasConfiguredOwnerClient = true;
+                ecb.AddComponent<HasConfiguredOwner>(followerEntity);
+
+                //state.EntityManager.SetComponentEnabled<IsFollowingOwner>(followerEntity, false);
+            }
+
             ecb.Playback(state.EntityManager);
             ecb.Dispose();
         }

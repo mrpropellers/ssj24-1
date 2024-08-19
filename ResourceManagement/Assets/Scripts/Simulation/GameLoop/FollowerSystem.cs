@@ -2,17 +2,17 @@ using Presentation;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.NetCode;
 using Unity.Transforms;
 using UnityEngine;
 
 namespace Simulation
 {
-    // TODO? Run this locally instead of on the Server
-    //  Location of rat followers is only really relevant for the presentation layer. If we can figure out how to 
-    //  replicate down only the spawn location, clients can run all the follower code locally and not rely on the Server
-    //  to constantly be updating these transforms
+    // >>> TODO: IN PROGRESS: Just run this client-side and disable follower transform ghosts entirely,
+    //  Maybe it will work automatically that they spawn where they're set to on the Server, but if not,
+    //  just send an RPC to spawn them. Re-work the FollowerThrowingSystem so that on the Server just
+    //  sends the Target destination, and let each player do the tweening math locally. 
     [UpdateInGroup(typeof(LateSimulationSystemGroup))]
-    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     public partial struct FollowerSystem : ISystem
     {
         static readonly float3 up = new float3(0f, 1, 0);
@@ -29,13 +29,14 @@ namespace Simulation
             //var ecb = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (tf, pickUp, follower) in SystemAPI
                          .Query<RefRW<LocalTransform>, RefRO<Ownership>, RefRW<Follower>>()
-                         .WithNone<ConvertToProjectile, NeedsOwnerAssignment>())
+                         .WithAll<Simulate, IsFollowingOwner, HasConfiguredOwner>()
+                         .WithNone<ConvertToProjectile>())
             {
-                if (!pickUp.ValueRO.HasConfiguredOwner)
+                if (!pickUp.ValueRO.HasConfiguredOwnerServer)
                     continue;
 
                 var targetTf = SystemAPI.GetComponent<LocalTransform>(pickUp.ValueRO.Owner);
-                var ownerData = state.EntityManager.GetComponentData<CharacterFollowerThrowing>(pickUp.ValueRO.Owner);
+                var ownerData = state.EntityManager.GetComponentData<FollowerThrower>(pickUp.ValueRO.Owner).Counts;
                 var placeInLine = ownerData.NumThrowableFollowers - (follower.ValueRO.OwnerQueueRank - ownerData.NumThrownFollowers);
                 var goalDistance = follower.ValueRO.GoalDistance + placeInLine * 1.2f;
                 var currentDistance = math.distance(targetTf.Position, tf.ValueRW.Position);
@@ -76,7 +77,7 @@ namespace Simulation
         {
             foreach (var (animatorLink, follower) in SystemAPI
                          .Query<AnimatorLink, RefRO<Follower>>()
-                         .WithNone<ConvertToProjectile, NeedsOwnerAssignment>())
+                         .WithNone<ConvertToProjectile, IsFollowingOwner>())
             {
                 animatorLink.Animator.SetFloat(k_Speed, follower.ValueRO.CurrentSpeed / follower.ValueRO.Speed);
             }

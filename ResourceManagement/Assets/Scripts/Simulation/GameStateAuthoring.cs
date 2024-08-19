@@ -4,12 +4,19 @@ using UnityEngine;
 
 namespace Simulation
 {
+    public enum ScoringReceptacle
+    {
+        Cauldron,
+        Basket
+    }
+    
     public struct PendingRatScored : IBufferElementData
     {
         public Entity RatEntityScored;
+        public ScoringReceptacle Receptacle;
         public int OwnerId;
         public float3 LocationTriggered;
-        public float3 CauldronSplashCenter;
+        public float3 ReceptacleCenter;
     }
     
     //[GhostComponent]

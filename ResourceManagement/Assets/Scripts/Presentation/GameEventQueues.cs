@@ -50,7 +50,7 @@ namespace Presentation
             while (RatsScored.Count > 0)
             {
                 PendingRatScored score = RatsScored.Dequeue();
-                Instantiate(scoreRatSfx, score.CauldronSplashCenter, Quaternion.identity);
+                Instantiate(scoreRatSfx, score.ReceptacleCenter, Quaternion.identity);
             }
 
             while (RatsPickedUp.Count > 0)

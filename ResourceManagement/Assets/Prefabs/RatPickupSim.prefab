@@ -103,7 +103,6 @@ MonoBehaviour:
   FollowDistance: 2
   FollowSpeed: 10
   ThrowSpeed: 25
-  ProjectileConversionTime: 0.2
 --- !u!114 &1210306622233738237
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -129,7 +128,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DefaultGhostMode: 0
-  SupportedGhostModes: 2
+  SupportedGhostModes: 3
   OptimizationMode: 0
   Importance: 1
   prefabId: 016f5f3dba3f50049bd17083eb60bb5a

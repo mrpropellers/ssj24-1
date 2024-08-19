@@ -1,2 +1,4 @@
 .idea
 *~
+ResourceManagement/Assets/Plugins/FMOD/Cache/*
+ResourceManagement/fmod_editor.log
