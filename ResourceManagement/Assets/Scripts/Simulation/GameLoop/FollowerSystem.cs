@@ -39,13 +39,18 @@ namespace Simulation
              */
             /* define temp empty array to hold locations of throwable rats */                           /* (unsure how to decide length of array)  arbitrarily set to 15? */
             var locationsOfPickedUpRats = new float3[] { new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1), new float3(1f, 0, 1) };
-                // set location values to (1,0,1) initially
+            // set location values to (1,0,1) initially
+            // check if click input was registered from input script
+            var receiveInputRightClick = (Input.GetMouseButtonDown(1)); //GameObject.Find("").GetComponent<inputclassname>().passInputToFollowerSystem;
             foreach (var (tf, pickUp, follower) in SystemAPI
                          .Query<RefRW<LocalTransform>, RefRO<Ownership>, RefRW<Follower>>()
                          .WithNone<ConvertToProjectile, NeedsOwnerAssignment>())
             {
                 if (!pickUp.ValueRO.HasConfiguredOwner)
+                {
+                    receiveInputRightClick = false;
                     continue;
+                }
 
                 
                 /* if throwableRatArray[i] is within goaldistance of rat */
@@ -67,6 +72,8 @@ namespace Simulation
                 //                                                  placeInLine = NumThrowableFollowers + (-OwnerQueueRank + NumThrownFollowers)
                 //                                                  placeInLine = NumThrowableFollowers + (-NumThrowableFollowers)
                 //                                                  placeInLine = 0
+                if (receiveInputRightClick)
+                    Debug.Log("place in line: " + placeInLine);
                 var goalDistance = follower.ValueRO.GoalDistance + placeInLine * 1.2f;
                 // goalDistance is directly correlated with placeInLine
                 // placeInLine is inversely correlated with OwnerQueueRank
@@ -74,7 +81,7 @@ namespace Simulation
                 //      are newly picked up rats close or far?
                 //      which rats are thrown first? 
                 /* define normalVector of nearby rats for multiplication later */
-                var desiredNormalVectorToCollidingRats = new float3(1f, 0, 1);
+                var desiredNormalVectorToCollidingRats = new float3(0f, 0, 0);
                 /* iterate through throwableRatArray[] for locations of previously foreach'd rats */
                 for (int l = 0; l < locationsOfPickedUpRats.Length; l++)
                 {
@@ -83,22 +90,32 @@ namespace Simulation
                     if (!throwableRatLocation.Equals( new float3(1f, 0, 1)))
                     {
                         /* multiply direction vector by -distance to each throwableCollidingRatArray[ ] */
-                        var vectorFromThrowableRat = (-1 * throwableRatLocation) + tf.ValueRW.Position;
-                        var distanceFromThrowableRat = math.distance((-1 * throwableRatLocation), tf.ValueRW.Position);
+                        if (receiveInputRightClick)
+                            Debug.Log("Rat[" + l + "]'s position is  " + throwableRatLocation);
+                        var vectorFromThrowableRat = math.normalize(-1 * (throwableRatLocation + tf.ValueRW.Position) );
+                        var distanceFromThrowableRat = math.distance((throwableRatLocation), tf.ValueRW.Position);
                         // changing this from 15f to 300f DRASTICALLY changes behavior
-                        if (distanceFromThrowableRat < 15f)
+
+                        Debug.Log("sanity check & dist for [" + l + "] = " +distanceFromThrowableRat);
+                        if (distanceFromThrowableRat < 2f)
                         {
                             /* multiply direction vector by -distance to each throwableCollidingRatArray[ ] */
                             Debug.Log("test < 0.5 :)");
-                            desiredNormalVectorToCollidingRats *= vectorFromThrowableRat;
+                            desiredNormalVectorToCollidingRats += vectorFromThrowableRat * 10;
                         }
-                        /* else
-                            Debug.Log("test > 0.5"); */
+                        else if (receiveInputRightClick)
+                            Debug.Log("distanceFromThrowableRat[" + l + "]<4 && = " + distanceFromThrowableRat);
                     }
                 }
-                /* save location of active rat */       /* this does not account for rat throwing and would need to be cleared onThrow */
-                locationsOfPickedUpRats[ownerData.NumThrowableFollowers - (follower.ValueRO.OwnerQueueRank - ownerData.NumThrownFollowers)] = tf.ValueRW.Position;
-                if (!desiredNormalVectorToCollidingRats.Equals(new float3 (1f, 0, 1)))
+                /* save relative location of active rat */       /* this does not account for rat throwing and would need to be cleared onThrow */
+                if (receiveInputRightClick)
+                    Debug.Log("setting[" + (ownerData.NumThrowableFollowers - (follower.ValueRO.OwnerQueueRank - ownerData.NumThrownFollowers)) + "] to " + tf.ValueRW.Position);
+                // Debug.Log(tf.ValueRW.Position);
+                Debug.Log("setting[" + (ownerData.NumThrowableFollowers - (follower.ValueRO.OwnerQueueRank - ownerData.NumThrownFollowers)) + "] to " + tf.ValueRW.Position);
+                locationsOfPickedUpRats[ownerData.NumThrowableFollowers - (follower.ValueRO.OwnerQueueRank - ownerData.NumThrownFollowers)] = /*targetTf.Position - */tf.ValueRW.Position;
+
+
+                if (!desiredNormalVectorToCollidingRats.Equals(new float3 (0f, 0, 0)))
                 {
                     /* copy logic from existing direction rotation speed and position-translation from below
                      * replacing vectorToPlayer with vectorFromCollidingRatNormal
@@ -113,6 +130,7 @@ namespace Simulation
                      * causing all of them to scatter for multiple seconds
                      * before eventually coming back
                      */
+                    receiveInputRightClick = false;
                     continue;
                 }
 
@@ -128,6 +146,7 @@ namespace Simulation
                 if (currentDistance < goalDistance)
                 {
                     follower.ValueRW.CurrentSpeed = 0f;
+                    receiveInputRightClick = false;
                     continue;
                 }
                 tf.ValueRW.Position += travelVector;
@@ -135,6 +154,7 @@ namespace Simulation
 
                 // TODO: Figure out how to do this with physics velocities so the rats can collide with each other
                 //velocity.ValueRW.Linear = travelVector;
+                receiveInputRightClick = false;
             }
         }
 
