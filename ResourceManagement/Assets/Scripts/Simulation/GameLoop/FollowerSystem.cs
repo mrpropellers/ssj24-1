@@ -2,17 +2,13 @@ using Presentation;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.NetCode;
 using Unity.Transforms;
 using UnityEngine;
 
 namespace Simulation
 {
-    // >>> TODO: IN PROGRESS: Just run this client-side and disable follower transform ghosts entirely,
-    //  Maybe it will work automatically that they spawn where they're set to on the Server, but if not,
-    //  just send an RPC to spawn them. Re-work the FollowerThrowingSystem so that on the Server just
-    //  sends the Target destination, and let each player do the tweening math locally. 
     [UpdateInGroup(typeof(LateSimulationSystemGroup))]
+    [BurstCompile]
     public partial struct FollowerSystem : ISystem
     {
         static readonly float3 up = new float3(0f, 1, 0);
@@ -32,9 +28,14 @@ namespace Simulation
                          .WithAll<Simulate, IsFollowingOwner, HasConfiguredOwner>()
                          .WithNone<ConvertToProjectile>())
             {
-                if (!pickUp.ValueRO.HasConfiguredOwnerServer)
+                if (!pickUp.ValueRO.HasConfiguredOwner)
+                {
+                    // This shouldn't be possible...
+                    Debug.LogError(
+                        "Found an entity that with HasConfiguredOwner component enabled but value is set to false!");
                     continue;
-
+                }
+                
                 var targetTf = SystemAPI.GetComponent<LocalTransform>(pickUp.ValueRO.Owner);
                 var ownerData = state.EntityManager.GetComponentData<FollowerThrower>(pickUp.ValueRO.Owner).Counts;
                 var placeInLine = ownerData.NumThrowableFollowers - (follower.ValueRO.OwnerQueueRank - ownerData.NumThrownFollowers);
@@ -77,7 +78,8 @@ namespace Simulation
         {
             foreach (var (animatorLink, follower) in SystemAPI
                          .Query<AnimatorLink, RefRO<Follower>>()
-                         .WithNone<ConvertToProjectile, IsFollowingOwner>())
+                         .WithAll<IsFollowingOwner>()
+                         .WithNone<ConvertToProjectile>())
             {
                 animatorLink.Animator.SetFloat(k_Speed, follower.ValueRO.CurrentSpeed / follower.ValueRO.Speed);
             }

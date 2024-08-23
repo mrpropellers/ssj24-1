@@ -56,12 +56,11 @@ namespace Simulation
     [GhostComponent]
     public struct FollowerThrower : IComponentData
     {
-        // mutable
-        //public DynamicBuffer<ThrowableFollowerElement> ThrowableFollowers;
+        [GhostField]
         public FollowerCounts Counts;
 
-        [GhostField]
-        public FollowerCounts Counts_Auth;
+        // [GhostField]
+        // public FollowerCounts Counts_Auth;
     }
 
     [Serializable]
@@ -89,9 +88,11 @@ namespace Simulation
         public CharacterActionTracking actionTracking;
     }
     
+    [GhostComponent]
     [InternalBufferCapacity(512)]
     public struct ThrowableFollowerElement : IBufferElementData
     {
+        [GhostField]
         public Entity Follower;
     }
 

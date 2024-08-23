@@ -9,29 +9,33 @@ using UnityEngine;
 
 namespace Simulation
 {
-    [GhostComponent]
+    [GhostComponent, GhostEnabledBit]
     public struct ConvertToProjectile : IComponentData, IEnableableComponent
     {
         public float ConversionPeriod;
         
-        // These are set locally because we don't care if they diverge with Server
+        [GhostField]
         public float TimeStarted;
+        [GhostField]
+        public float3 TargetPosition;
+        [GhostField]
+        public quaternion TargetRotation;
         public int OwnerId;
         public float3 InitialPosition;
         public quaternion InitialRotation;
-        public float3 TargetPosition;
-        public quaternion TargetRotation;
 
         public float TimeFinished => TimeStarted + ConversionPeriod;
         
-        [GhostField]
-        public float TimeStarted_Auth;
-        [GhostField]
-        public float3 TargetPosition_Auth;
-        [GhostField]
-        public quaternion TargetRotation_Auth;
+        // public float TimeStarted_Auth;
+        // public float3 TargetPosition_Auth;
+        // public quaternion TargetRotation_Auth;
     }
 
+    // TODO | P0 NetCode | Set first N followers in line to Predicted if they're on Interpolated
+    //  While most of the followers are fine to be set to interpolated. For any given player, on their
+    //  own follower queue, their first few followers should be Predicted to make it more responsive when the
+    //  player presses throw. N probably should just be 2 unless we lower the throw cooldown substantially
+    
     [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
     //[UpdateAfter(typeof(ThirdPersonCharacterVariableUpdateSystem))]
     [BurstCompile]
@@ -40,11 +44,15 @@ namespace Simulation
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
+            state.RequireForUpdate<NetworkTime>();
         }
 
-        //[BurstCompile]
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            if (!SystemAPI.GetSingleton<NetworkTime>().IsFirstTimeFullyPredictingTick)
+                return;
+            
             foreach (var (localTransform, 
                          control, 
                          config,
@@ -62,11 +70,6 @@ namespace Simulation
                          .WithAll<ThrowableFollowerElement>()
                          .WithEntityAccess())
             {
-                // TODO | P1 NetCode | Set first-in-line follower to Predicted if it's on Interpolated
-                //  While most of the followers are fine to be set to interpolated. For any given player, on their
-                //  own follower queue, their first follower should be Predicted to make it more responsive when the
-                //  player presses throw
-                
                 if (thrower.ValueRW.Counts.NumThrowableFollowers <= 0)
                 {
                     if (thrower.ValueRW.Counts.NumThrowableFollowers < 0)
@@ -76,7 +79,7 @@ namespace Simulation
                     continue;
                 }
                 
-                if (!control.ValueRW.Throw)
+                if (!control.ValueRO.Throw)
                     continue;
 
                 var now = (float)SystemAPI.Time.ElapsedTime;
@@ -99,15 +102,10 @@ namespace Simulation
                     thrower.ValueRW.Counts.NumThrowableFollowers = 0;
                     continue;
                 }
-                if (throwables.Length < numThrowables || throwables.Length > numThrowables + 1)
+                if (throwables.Length < numThrowables || throwables.Length > numThrowables)
                 {
                     // Something is likely wrong here..
                     Debug.LogError($"There are {throwables.Length} throwables in buffer but we should have {numThrowables}... what's going on here?");
-                }
-                else if (throwables.Length > numThrowables)
-                {
-                    // This is *probably* ok? Should only happen if latency is >= throwCooldown though
-                    Debug.LogWarning("Throwing another follower before the last was authenticated by server...");
                 }
                 
                 // BUG: Until I complete the work to get prediction/late cleanup on the buffer working,
@@ -133,9 +131,9 @@ namespace Simulation
                     OwnerId = ghostOwner.ValueRO.NetworkId
                 };
                 // If we're on the client, these values may be overwritten later by the Server
-                toProjectile.TimeStarted_Auth = toProjectile.TimeStarted;
-                toProjectile.TargetPosition_Auth = toProjectile.TargetPosition;
-                toProjectile.TargetRotation_Auth = toProjectile.TargetRotation;
+                // toProjectile.TimeStarted_Auth = toProjectile.TimeStarted;
+                // toProjectile.TargetPosition_Auth = toProjectile.TargetPosition;
+                // toProjectile.TargetRotation_Auth = toProjectile.TargetRotation;
                 state.EntityManager.SetComponentData(follower, toProjectile);
                 // This is probably true by default, but better safe than sorry
                 state.EntityManager.SetComponentEnabled<ConvertToProjectile>(follower, true);
@@ -145,10 +143,73 @@ namespace Simulation
         [BurstCompile]
         public void OnDestroy(ref SystemState state) { }
     }
+    
+    [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
+    [UpdateAfter(typeof(FollowerThrowingSystem))]
+    [BurstCompile]
+    public partial struct RemoveFollowersFromBufferSystem : ISystem
+    {
+        BufferLookup<ThrowableFollowerElement> _followerBufferLookup;
+        
+        [BurstCompile]
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<NetworkTime>();
+            _followerBufferLookup = state.GetBufferLookup<ThrowableFollowerElement>();
+        }
+
+        [BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            if (!SystemAPI.GetSingleton<NetworkTime>().IsFirstTimeFullyPredictingTick)
+                return;
+
+            _followerBufferLookup.Update(ref state);
+            //var ecb = new EntityCommandBuffer(Allocator.Temp);
+            foreach (var (ownership, _, followerEntity) in SystemAPI
+                         .Query<RefRW<Ownership>, RefRO<Follower>>()
+                         .WithAll<ConvertToProjectile, IsFollowingOwner, HasConfiguredOwner>()
+                         .WithEntityAccess())
+            {
+                var owner = ownership.ValueRW.Owner;
+                _followerBufferLookup.TryGetBuffer(owner, out var followerBuffer);
+                var numFollowers = followerBuffer.Length;
+                var followerIdx = numFollowers - 1;
+                if (followerBuffer[followerIdx].Follower != followerEntity)
+                {
+                    Debug.LogWarning("Follower was not the last detected in buffer. That's weird! Looking for it...");
+                    for (var i = followerIdx - 1; i >= 0; --i)
+                    {
+                        if (followerEntity == followerBuffer[i].Follower)
+                        {
+                            Debug.Log("Follower found earlier in buffer!");
+                            followerIdx = i;
+                            break;
+                        }
+                    }
+
+                    var followerFound = followerIdx != numFollowers - 1;
+                    if (!followerFound)
+                    {
+                        Debug.LogError("Follower not found in buffer. Something is wrong!");
+                        continue;
+                    }
+                }
+                
+                followerBuffer.RemoveAt(followerIdx);
+                state.EntityManager.SetComponentEnabled<IsFollowingOwner>(followerEntity, false);
+            }
+            // ecb.Playback(state.EntityManager);
+            // ecb.Dispose();
+        }
+
+        [BurstCompile]
+        public void OnDestroy(ref SystemState state) { }
+    }
 
     [BurstCompile]
     [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
-    [UpdateAfter(typeof(FollowerThrowingSystem))]
+    [UpdateAfter(typeof(RemoveFollowersFromBufferSystem))]
     public partial struct TweenToProjectileSystem : ISystem
     {
         public void OnCreate(ref SystemState state)
@@ -159,20 +220,23 @@ namespace Simulation
         [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            if (!SystemAPI.GetSingleton<NetworkTime>().IsFirstTimeFullyPredictingTick)
+                return;
+            
             var now = (float)SystemAPI.Time.ElapsedTime;
             
             foreach (var (tf, converter, follower) in SystemAPI
                          .Query<RefRW<LocalTransform>, RefRW<ConvertToProjectile>, RefRO<Follower>>()
-                         .WithAll<Simulate>()
+                         .WithAll<Simulate, ConvertToProjectile>()
+                         .WithNone<MarkedForDestroy>())
                          // Ensures that we only fetch Enabled ConvertToProjectile components
-                         .WithAll<ConvertToProjectile>())
             {
                 var period = converter.ValueRO.ConversionPeriod;
                 var timeStarted = converter.ValueRO.TimeStarted;
                 var timeFinished = converter.ValueRO.TimeStarted + period;
                 if (now > timeFinished)
                 {
-                    Debug.Log($"Follower has reached its destination and should be destroyed!");
+                    //Debug.Log($"Follower has reached its destination and should be destroyed!");
                     tf.ValueRW.Position = converter.ValueRW.TargetPosition;
                     tf.ValueRW.Rotation = converter.ValueRW.TargetRotation;
                     continue;
@@ -191,13 +255,12 @@ namespace Simulation
         }
     }
     
-    // >>> TODO: IN PROGRESS: Spawn the projectile as soon as the ConvertToProjectile component is
-    //  activated and link it to the Entity it spawned from. When the Projectile shows up on the 
-    //  client, hide it until the follower is finished tweening, then destroy the follower and 
-    //  activate the projectile (predicted)
+    // TODO? | P3 - NetCode | Pre-spawn the projectile
+    //  We could guarantee responsiveness by spawning the rat projectile hidden and inert when the tween starts and
+    //  then simply attach the presentation and apply the velocity when the tween finishes. This would guarantee
+    //  the projectile is spawned on the Server by the time it should fire
     [BurstCompile]
-    [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+    [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
     public partial struct ConvertToProjectileSystem : ISystem
     {
         public void OnCreate(ref SystemState state)
@@ -208,23 +271,24 @@ namespace Simulation
 
         public void OnUpdate(ref SystemState state)
         {
+            if (!SystemAPI.GetSingleton<NetworkTime>().IsFirstTimeFullyPredictingTick)
+                return;
+            
             var ecb = new EntityCommandBuffer(Allocator.Temp);
             var game = SystemAPI.GetSingleton<GameSetup>();
             var now = (float)SystemAPI.Time.ElapsedTime;
             foreach (var (follower, pc, entity) in SystemAPI
                          .Query<RefRO<Follower>, RefRO<ConvertToProjectile>>()
-                         .WithAll<Simulate>()
+                         .WithAll<Simulate, ConvertToProjectile>()
+                         .WithNone<MarkedForDestroy>()
                          //.WithAll<GhostOwnerIsLocal>()
                          .WithEntityAccess())
             {
                 if (now <  pc.ValueRO.TimeFinished) // follower.ValueRO.ToProjectileTicks)
                     continue;
                 
-                // TODO >>> IN PROGRESS: Move Projectile component logic to same prefab as Follower
-                //  (merge Projectile/Pickup prefabs). Allow logic to run locally in addition to Server,
-                //  and be sure to remove the Entity from the buffer here.
                 Debug.Log("converting to projectile!");
-                ecb.DestroyEntity(entity);
+                
                 var projectile = ecb.Instantiate(game.RatProjectileSimulation);
                 var targetTf = new LocalTransform()
                 {
@@ -240,6 +304,7 @@ namespace Simulation
                     Linear = follower.ValueRO.ProjectileSpeed * direction,
                     Angular = new float3(15f, 0f, 0f)
                 });
+                ecb.AddComponent<MarkedForDestroy>(entity);
             }
             ecb.Playback(state.EntityManager);
             ecb.Dispose();

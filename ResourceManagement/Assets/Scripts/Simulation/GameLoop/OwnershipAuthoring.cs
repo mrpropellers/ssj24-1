@@ -7,10 +7,8 @@ namespace Simulation
     [GhostComponent]
     public struct Ownership : IComponentData
     {
-        //public bool HasPendingOwner;
         [GhostField]
-        public bool HasConfiguredOwnerServer;
-        public bool HasConfiguredOwnerClient;
+        public bool HasConfiguredOwner;
         [GhostField]
         public Entity Owner;
     }
@@ -19,6 +17,7 @@ namespace Simulation
     public struct IsFollowingOwner : IComponentData, IEnableableComponent 
     { }
     
+    [GhostComponent, GhostEnabledBit]
     public struct HasConfiguredOwner : IComponentData, IEnableableComponent
     {}
 
@@ -29,9 +28,11 @@ namespace Simulation
             public override void Bake(OwnershipAuthoring authoring)
             {
                 var entity = GetEntity(TransformUsageFlags.Dynamic);
-                AddComponent(entity, new Ownership { HasConfiguredOwnerServer = false, Owner = default });
+                AddComponent(entity, new Ownership { HasConfiguredOwner = false, Owner = default });
                 AddComponent(entity, new IsFollowingOwner() {});
                 SetComponentEnabled<IsFollowingOwner>(entity, false);
+                AddComponent(entity, new HasConfiguredOwner() { });
+                SetComponentEnabled<HasConfiguredOwner>(entity, false);
             }
         }
     }

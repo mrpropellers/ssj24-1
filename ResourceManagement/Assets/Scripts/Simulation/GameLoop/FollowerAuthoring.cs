@@ -18,6 +18,7 @@ namespace Simulation
         //  global "game config" object in seconds
         public static readonly uint ToProjectileTicks = 30;
         public static readonly float ToProjectileDivisor = 1f / ((float)ToProjectileTicks);
+        [GhostField]
         public int OwnerQueueRank;
     }
 
@@ -26,6 +27,7 @@ namespace Simulation
         public float FollowDistance = 2f;
         public float FollowSpeed = 10f;
         public float ThrowSpeed = 10f;
+        public float ToProjectilePeriod = 0.6f;
         
         public class FollowerBaker : Baker<FollowerAuthoring>
         {
@@ -38,7 +40,11 @@ namespace Simulation
                     Speed = authoring.FollowSpeed,
                     ProjectileSpeed = authoring.ThrowSpeed,
                 });
-                AddComponent(entity, new ConvertToProjectile());
+                AddComponent(entity, new ConvertToProjectile()
+                {
+                    ConversionPeriod = authoring.ToProjectilePeriod,
+                });
+                
                 SetComponentEnabled<ConvertToProjectile>(entity, false);
             }
         }

@@ -63,7 +63,7 @@ namespace Simulation
             Debug.Log("Picking something up");
             
             ownership.Owner = characterEntity;
-            ownership.HasConfiguredOwnerServer = false;
+            ownership.HasConfiguredOwner = false;
             ECB.SetComponent(otherEntity, ownership);
             ECB.SetComponentEnabled<IsFollowingOwner>(otherEntity, true);
         }
@@ -150,7 +150,7 @@ namespace Simulation
                     Debug.LogError("Detected follower that has been picked up but has no Owner.");
                     continue;
                 }
-                if (ownership.ValueRW.HasConfiguredOwnerServer)
+                if (ownership.ValueRW.HasConfiguredOwner)
                 {
                     // We might get multiple PickUp triggers for the same follower due to re-simulation
                     Debug.Log("Detected a follower that's already been configured.");
@@ -161,7 +161,7 @@ namespace Simulation
                 _characterLookup.TryGetComponent(ownerEntity, out var thrower);
                 thrower.Counts.NumThrowableFollowers++;
                 thrower.Counts.TimeLastFollowerPickedUp = now;
-                thrower.Counts_Auth = thrower.Counts;
+                //thrower.Counts_Auth = thrower.Counts;
                 state.EntityManager.SetComponentData(ownerEntity, thrower);
                 var counts = thrower.Counts;
                 follower.ValueRW.OwnerQueueRank = counts.NumThrowableFollowers + counts.NumThrownFollowers;
@@ -171,8 +171,8 @@ namespace Simulation
                     Follower = followerEntity
                 });
                 
-                ownership.ValueRW.HasConfiguredOwnerServer = true;
-                ecb.AddComponent<HasConfiguredOwner>(followerEntity);
+                ownership.ValueRW.HasConfiguredOwner = true;
+                ecb.SetComponentEnabled<HasConfiguredOwner>(followerEntity, true);
                 //state.EntityManager.SetComponentEnabled<IsFollowingOwner>(followerEntity, false);
             }
             
@@ -181,65 +181,65 @@ namespace Simulation
         }
     }
 
-    [UpdateInGroup(typeof(PhysicsSystemGroup))]
-    [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
-    [BurstCompile]
-    [StructLayout(LayoutKind.Auto)]
-    public partial struct PickUpAddToClientBufferSystem : ISystem
-    {
-        ComponentLookup<FollowerThrower> _characterLookup;
+    // [UpdateInGroup(typeof(PhysicsSystemGroup))]
+    // [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.ThinClientSimulation)]
+    // [BurstCompile]
+    // [StructLayout(LayoutKind.Auto)]
+    // public partial struct PickUpAddToClientBufferSystem : ISystem
+    // {
+    //     ComponentLookup<FollowerThrower> _characterLookup;
 
-        [BurstCompile]
-        public void OnCreate(ref SystemState state)
-        {
-            state.RequireForUpdate<SimulationSingleton>();
-            _characterLookup = state.GetComponentLookup<FollowerThrower>(false);
-        }
+    //     [BurstCompile]
+    //     public void OnCreate(ref SystemState state)
+    //     {
+    //         state.RequireForUpdate<SimulationSingleton>();
+    //         _characterLookup = state.GetComponentLookup<FollowerThrower>(false);
+    //     }
 
-        //[BurstCompile]
-        public void OnUpdate(ref SystemState state)
-        {
-            _characterLookup.Update(ref state);
-            var ecb = new EntityCommandBuffer(Allocator.Temp);
+    //     //[BurstCompile]
+    //     public void OnUpdate(ref SystemState state)
+    //     {
+    //         _characterLookup.Update(ref state);
+    //         var ecb = new EntityCommandBuffer(Allocator.Temp);
 
-            foreach (var (ownership, followerEntity) in SystemAPI
-                         .Query<RefRW<Ownership>>()
-                         .WithAll<Follower, IsFollowingOwner>()
-                         .WithNone<HasConfiguredOwner>()
-                         .WithEntityAccess())
-            {
-                if (ownership.ValueRW.Owner == default)
-                {
-                    Debug.LogError("Detected follower that has been picked up but has no Owner.");
-                    continue;
-                }
+    //         foreach (var (ownership, followerEntity) in SystemAPI
+    //                      .Query<RefRW<Ownership>>()
+    //                      .WithAll<Follower, IsFollowingOwner>()
+    //                      .WithNone<HasConfiguredOwner>()
+    //                      .WithEntityAccess())
+    //         {
+    //             if (ownership.ValueRW.Owner == default)
+    //             {
+    //                 Debug.LogError("Detected follower that has been picked up but has no Owner.");
+    //                 continue;
+    //             }
 
-                if (!ownership.ValueRW.HasConfiguredOwnerServer)
-                {
-                    // This is probably impossible?
-                    Debug.LogError("Detected a follower that hasn't been configured on Server.");
-                    continue;
-                }
+    //             if (!ownership.ValueRW.HasConfiguredOwnerServer)
+    //             {
+    //                 // This is probably impossible?
+    //                 Debug.LogError("Detected a follower that hasn't been configured on Server.");
+    //                 continue;
+    //             }
 
-                if (ownership.ValueRW.HasConfiguredOwnerClient)
-                {
-                    // Not sure if this is bad or not yet
-                    Debug.Log("Detected a follower that's already been configured.");
-                    continue;
-                }
+    //             if (ownership.ValueRW.HasConfiguredOwnerClient)
+    //             {
+    //                 // Not sure if this is bad or not yet
+    //                 Debug.Log("Detected a follower that's already been configured.");
+    //                 continue;
+    //             }
 
-                var ownerEntity = ownership.ValueRO.Owner;
-                var followerBuffer = state.EntityManager.GetBuffer<ThrowableFollowerElement>(ownerEntity);
-                followerBuffer.Add(new ThrowableFollowerElement() { Follower = followerEntity });
+    //             var ownerEntity = ownership.ValueRO.Owner;
+    //             var followerBuffer = state.EntityManager.GetBuffer<ThrowableFollowerElement>(ownerEntity);
+    //             followerBuffer.Add(new ThrowableFollowerElement() { Follower = followerEntity });
 
-                ownership.ValueRW.HasConfiguredOwnerClient = true;
-                ecb.AddComponent<HasConfiguredOwner>(followerEntity);
+    //             ownership.ValueRW.HasConfiguredOwnerClient = true;
+    //             ecb.AddComponent<HasConfiguredOwner>(followerEntity);
 
-                //state.EntityManager.SetComponentEnabled<IsFollowingOwner>(followerEntity, false);
-            }
+    //             //state.EntityManager.SetComponentEnabled<IsFollowingOwner>(followerEntity, false);
+    //         }
 
-            ecb.Playback(state.EntityManager);
-            ecb.Dispose();
-        }
-    }
+    //         ecb.Playback(state.EntityManager);
+    //         ecb.Dispose();
+    //     }
+    // }
 }

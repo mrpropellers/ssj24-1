@@ -16,6 +16,7 @@ GameObject:
   - component: {fileID: 8892309332343785103}
   - component: {fileID: 5856190961517083753}
   - component: {fileID: 1749428003252909065}
+  - component: {fileID: 2548570567160085388}
   m_Layer: 6
   m_Name: RatPickupSim
   m_TagString: Untagged
@@ -127,7 +128,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7c79d771cedb4794bf100ce60df5f764, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DefaultGhostMode: 0
+  DefaultGhostMode: 1
   SupportedGhostModes: 3
   OptimizationMode: 0
   Importance: 1
@@ -172,3 +173,16 @@ CapsuleCollider:
   m_Height: 1
   m_Direction: 2
   m_Center: {x: 0, y: 0.25, z: 0}
+--- !u!114 &2548570567160085388
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5024494472191067875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bfdaa6c06fe64fbda2b16e07a4ee0b25, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ComponentOverrides: []
