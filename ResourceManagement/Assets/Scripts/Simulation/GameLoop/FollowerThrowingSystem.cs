@@ -79,6 +79,21 @@ namespace Simulation
                     continue;
                 }
                 
+                var throwables = 
+                    state.EntityManager.GetBuffer<ThrowableFollowerElement>(throwingEntity);
+                
+                // Since we can't set this field the moment a follower is picked up we just make sure to do it here
+                if (throwables.Length > 0)
+                {
+                    state.EntityManager.SetComponentEnabled<ForceInterpolatedGhost>(
+                        throwables[^1].Follower, false);
+                }
+                if (throwables.Length > 2)
+                {
+                    state.EntityManager.SetComponentEnabled<ForceInterpolatedGhost>(
+                        throwables[^3].Follower, true);
+                }
+                
                 if (!control.ValueRO.Throw)
                     continue;
 
@@ -92,8 +107,6 @@ namespace Simulation
                 control.ValueRW.Throw = false;
                 thrower.ValueRW.Counts.TimeLastThrowPerformed = now;
                 
-                var throwables = 
-                    state.EntityManager.GetBuffer<ThrowableFollowerElement>(throwingEntity);
 
                 var numThrowables = thrower.ValueRO.Counts.NumThrowableFollowers;
                 if (throwables.Length == 0)
@@ -121,15 +134,13 @@ namespace Simulation
                 var throwOffset = throwerTf.TransformDirection(
                     new float3(0f, config.ValueRO.ThrowHeight, 1f));
 
-                var toProjectile = new ConvertToProjectile()
-                {
-                    InitialPosition = followerTf.Position,
-                    InitialRotation = followerTf.Rotation,
-                    TimeStarted = now,
-                    TargetPosition = throwerTf.Position + throwOffset,
-                    TargetRotation = throwerTf.Rotation,
-                    OwnerId = ghostOwner.ValueRO.NetworkId
-                };
+                var toProjectile = state.EntityManager.GetComponentData<ConvertToProjectile>(follower);
+                toProjectile.InitialPosition = followerTf.Position;
+                toProjectile.InitialRotation = followerTf.Rotation;
+                toProjectile.TimeStarted = now;
+                toProjectile.TargetPosition = throwerTf.Position + throwOffset;
+                toProjectile.TargetRotation = throwerTf.Rotation;
+                toProjectile.OwnerId = ghostOwner.ValueRO.NetworkId;
                 // If we're on the client, these values may be overwritten later by the Server
                 // toProjectile.TimeStarted_Auth = toProjectile.TimeStarted;
                 // toProjectile.TargetPosition_Auth = toProjectile.TargetPosition;
@@ -243,7 +254,7 @@ namespace Simulation
                 }
 
                 var t = (now - timeStarted) / period;
-                if (t > 1f)
+                if (t > 1f + float.Epsilon)
                 {
                     Debug.LogError(
                         "Shouldn't be able to reach this because we early-out above...");

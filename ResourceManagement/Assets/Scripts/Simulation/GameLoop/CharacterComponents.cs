@@ -38,6 +38,7 @@ namespace Simulation
     public struct FollowerCounts
     {
         public int NumThrownFollowers;
+        // TODO: Do we need this any more? Maybe can just rely on buffer now that it's being replicated
         public int NumThrowableFollowers;
         
         public float TimeLastThrowPerformed;
@@ -76,15 +77,6 @@ namespace Simulation
     public struct CharacterState : IComponentData
     {
         public NetworkTick TickLastModified;
-        public CharacterActionTracking actionTracking;
-    }
-    
-    [GhostComponent]
-    public struct CharacterState_Auth : IComponentData
-    {
-        public AnticipationSyncTracking SyncTracking;
-        
-        [GhostField]
         public CharacterActionTracking actionTracking;
     }
     

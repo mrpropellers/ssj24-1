@@ -56,7 +56,6 @@ public class ThirdPersonCharacterAuthoring : MonoBehaviour
             AddBuffer<PendingProjectileCollisions>(entity);
             AddComponent(entity, new CharacterScore() { Value = 0 });
             AddComponent(entity, new CharacterState());
-            AddComponent(entity, new CharacterState_Auth());
 
             //AddBuffer<PendingPickUp>(entity);
         }

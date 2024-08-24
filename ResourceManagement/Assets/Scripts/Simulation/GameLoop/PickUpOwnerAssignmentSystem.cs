@@ -166,11 +166,19 @@ namespace Simulation
                 var counts = thrower.Counts;
                 follower.ValueRW.OwnerQueueRank = counts.NumThrowableFollowers + counts.NumThrownFollowers;
                 var followerBuffer = state.EntityManager.GetBuffer<ThrowableFollowerElement>(ownerEntity);
+                //var numFollowers = followerBuffer.Length;
+                // Only allow front 3 followers to be set to predicted, the rest should be Interpolated
+                // if (numFollowers > 2)
+                // {
+                //     var thirdFromFront = numFollowers - 3;
+                //     ecb.SetComponentEnabled<ForceInterpolatedGhost>(
+                //         followerBuffer[thirdFromFront].Follower, true);
+                // }
                 followerBuffer.Add(new ThrowableFollowerElement()
                 {
                     Follower = followerEntity
                 });
-                
+                //ecb.SetComponentEnabled<ForceInterpolatedGhost>(followerEntity, false);
                 ownership.ValueRW.HasConfiguredOwner = true;
                 ecb.SetComponentEnabled<HasConfiguredOwner>(followerEntity, true);
                 //state.EntityManager.SetComponentEnabled<IsFollowingOwner>(followerEntity, false);

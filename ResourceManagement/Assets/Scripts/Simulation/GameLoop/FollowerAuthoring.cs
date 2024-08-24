@@ -44,7 +44,8 @@ namespace Simulation
                 {
                     ConversionPeriod = authoring.ToProjectilePeriod,
                 });
-                
+
+                AddComponent(entity, new ForceInterpolatedGhost());
                 SetComponentEnabled<ConvertToProjectile>(entity, false);
             }
         }
