@@ -22,7 +22,7 @@ namespace NetCode
         #region 
         public VisualElement uiDoc;
         private TextField _lobbyTitleField => uiDoc.Q<TextField>("_lobbyTitleField");
-        private Button _startButton => uiDoc.Q<Button>("_start");
+        //private Button _startButton => uiDoc.Q<Button>("_start");
         private Button _setupHostButton => uiDoc.Q<Button>("_setupHost");
         private Button _startGameButton => uiDoc.Q<Button>("_startGame");
         private Button _findLobbyButton => uiDoc.Q<Button>("_findLobby");
@@ -82,12 +82,15 @@ namespace NetCode
         {
             SteamManager = steamManagerObject.GetComponent<SteamManager>();
             m_IpFetcher = new IPFetcher();
+
+            // Moved the 'Start' to the MainMenu - if we get here now, we're ready to find or create a lobby
+            OnStartClicked();
         }
 
         void OnEnable()
         {
             _refreshLobbiesButton.clicked += OnFindLobby; //note that this is the same logic as findLobbies, intentional reuse
-            _startButton.clicked += OnStartClicked;
+            //_startButton.clicked += OnStartClicked;
             _exitButton.clicked += OnExitClicked;
             _findLobbyButton.clicked += OnFindLobby;
             _setupHostButton.clicked += OnSetupHost;
@@ -104,7 +107,7 @@ namespace NetCode
         void OnDisable()
         {
             _refreshLobbiesButton.clicked -= OnFindLobby; //note that this is the same logic as findLobbies, intentional reuse
-            _startButton.clicked -= OnStartClicked;
+            //_startButton.clicked -= OnStartClicked;
             _exitButton.clicked -= OnExitClicked;
             _findLobbyButton.clicked -= OnFindLobby;
             _setupHostButton.clicked -= OnSetupHost;
@@ -168,10 +171,15 @@ namespace NetCode
 
         private void OnExitClicked()
         {
+#if UNITY_STANDALONE
             Application.Quit();
+#endif
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#endif
         }
 
-        async private void OnFindLobby()
+            async private void OnFindLobby()
         {
             await GetRatKingLobbies();
             var currentSteamLobbies = SteamManager.activeLobbies;
@@ -348,7 +356,7 @@ namespace NetCode
                     break;
                 case uiModes.startOfGame:
                     setMenuTitle(defaultTitle);
-                    showElement(_startButton);
+                    //showElement(_startButton);
                     showElement(_exitButton);
                     break;
                 case uiModes.noSteamClient:
@@ -410,7 +418,7 @@ namespace NetCode
         {
             //got to be a way to just iterate over all elements... but brute forcing will do for now.
             showElement(_menuTitle);
-            hideElement(_startButton);
+            //hideElement(_startButton);
             hideElement(_lobbyTitleField);
             hideElement(_findLobbyButton);
             hideElement(_setupHostButton);

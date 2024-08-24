@@ -7,133 +7,135 @@ using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.UI;
 
-public class GuiPresentation : MonoBehaviour
+namespace Presentation
 {
-    [SerializeField]
-    private TextMeshProUGUI timeRemaining;
-
-    [SerializeField]
-    private TextMeshProUGUI score;
-
-    [SerializeField]
-    private Image scoreFill;
-
-    [SerializeField]
-    private TextMeshProUGUI rats;
-
-    [SerializeField]
-    private GameObject scoreboard;
-
-    [SerializeField]
-    private bool testGui;
-
-    // This can't be right :/
-    private const float MAX_SCORE = 10.0f;
-    private int currentScore = 0;
-    private int currentRats = 0;
-
-
-    private void Awake()
+    public class GuiPresentation : MonoBehaviour
     {
-        if (testGui)
-            StartCoroutine(TestGui());
-    }
+        [SerializeField]
+        private TextMeshProUGUI score;
 
-    private void Start()
-    {
-        SetRats(currentRats);
-        SetScore(currentScore);
-    }
+        [SerializeField]
+        private Image scoreFill;
 
-    public void SetTime(float timeRemaining)
-    {
-        int minutes = Mathf.FloorToInt(timeRemaining / 60);
-        int seconds = Mathf.FloorToInt(timeRemaining % 60);
+        [SerializeField]
+        private TextMeshProUGUI rats;
 
-        this.timeRemaining.SetText($"{minutes:00}:{seconds:00}");
-    }
+        [SerializeField]
+        private GameObject scoreboard;
 
-    public void SetScore(int score)
-    {
-        this.score.SetText($"{score}");
+        [SerializeField]
+        private bool testGui;
 
-        float normal = ((float)score) / MAX_SCORE;
-        scoreFill.fillAmount = normal;
-    }
+        [SerializeField] private HourglassPresentation hourglass;
 
-    public void SetRats(int rats)
-    {
-        this.rats.SetText($"{rats}");
-    }
+        private const float MAX_TIME = 180f;
+        private const float MAX_SCORE = 21.0f;
+        private int currentScore = 0;
+        private int currentRats = 0;
 
-    public void EnableScoreboard(List<string> playerNames, List<int> playerScores)
-    {
-        Assert.AreEqual(playerNames.Count, playerScores.Count);
-        scoreboard.SetActive(true);
-        for (int i = 0; i < 5; i++)
+
+        private void Awake()
         {
-            TextMeshProUGUI scoreText = scoreboard.transform.Find($"{i + 1}Score").GetComponent<TextMeshProUGUI>();
-            scoreText.SetText("");
-            if (i >= playerNames.Count || i >= playerScores.Count)
+            if (testGui)
+                StartCoroutine(TestGui());
+        }
+
+        private void Start()
+        {
+            SetRats(currentRats);
+            SetScore(currentScore);
+
+            // TODO: Configured?  Via server?
+            hourglass.Initialize(MAX_TIME);
+        }
+
+        public void SetTime(float timeRemaining)
+        {
+            hourglass.UpdateTime(timeRemaining);
+        }
+
+        public void SetScore(int score)
+        {
+            this.score.SetText($"{score}");
+
+            float normal = ((float)score) / MAX_SCORE;
+            scoreFill.fillAmount = normal;
+        }
+
+        public void SetRats(int rats)
+        {
+            this.rats.SetText($"{rats}");
+        }
+
+        public void EnableScoreboard(List<string> playerNames, List<int> playerScores)
+        {
+            Assert.AreEqual(playerNames.Count, playerScores.Count);
+            scoreboard.SetActive(true);
+            for (int i = 0; i < 5; i++)
             {
-                continue;
+                TextMeshProUGUI scoreText = scoreboard.transform.Find($"{i + 1}Score").GetComponent<TextMeshProUGUI>();
+                scoreText.SetText("");
+                if (i >= playerNames.Count || i >= playerScores.Count)
+                {
+                    continue;
+                }
+                scoreText.SetText($"{i + 1}: {playerNames[i]} - {playerScores[i]} rats");
             }
-            scoreText.SetText($"{i + 1}: {playerNames[i]} - {playerScores[i]} rats");
         }
-    }
 
-    public void DisableScoreboard()
-    {
-        scoreboard.SetActive(false);
-    }
-
-    private IEnumerator TestGui()
-    {
-        SetRats(0);
-        for( int i = 0; i< 5; i++)
+        public void DisableScoreboard()
         {
-            AddRat();
-            yield return new WaitForSeconds(1);
+            scoreboard.SetActive(false);
         }
-        for (int i = 0; i < 5; i++)
+
+        private IEnumerator TestGui()
         {
-            RemoveRat();
+            SetRats(0);
+            for (int i = 0; i < 5; i++)
+            {
+                AddRat();
+                yield return new WaitForSeconds(1);
+            }
+            for (int i = 0; i < 5; i++)
+            {
+                RemoveRat();
+                yield return new WaitForSeconds(1);
+            }
+
+
+            SetScore(0);
+            for (int i = 0; i <= 10; i++)
+            {
+                SetTime(10 - i);
+                SetScore(i);
+                yield return new WaitForSeconds(1);
+            }
+
             yield return new WaitForSeconds(1);
+
+            List<string> testNames = new() { "Testerbro", "JohnnyLongNameMcgeeWahoo", "Hi", "Cool", "Pal", "CantSeeMe" };
+            List<int> testScores = new() { 420, 69, 3, 2, 1, 0 };
+            EnableScoreboard(testNames, testScores);
+            yield return new WaitForSeconds(5);
+            DisableScoreboard();
         }
 
-
-        SetScore(0);
-        for (int i = 0; i < 10; i++)
+        internal void RemoveRat()
         {
-            SetTime(10 - i);
-            SetScore(i);
-            yield return new WaitForSeconds(1);
+            currentRats--;
+            SetRats(currentRats);
         }
 
-        yield return new WaitForSeconds(1);
+        internal void AddRat()
+        {
+            currentRats++;
+            SetRats(currentRats);
+        }
 
-        List<string> testNames = new() { "Testerbro", "JohnnyLongNameMcgeeWahoo", "Hi", "Cool", "Pal", "CantSeeMe" };
-        List<int> testScores = new() { 420, 69, 3, 2, 1, 0 };
-        EnableScoreboard(testNames, testScores);
-        yield return new WaitForSeconds(5);
-        DisableScoreboard();
-    }
-
-    internal void RemoveRat()
-    {
-        currentRats--;
-        SetRats(currentRats);
-    }
-
-    internal void AddRat()
-    {
-        currentRats++;
-        SetRats(currentRats);
-    }
-
-    internal void UpdateScore()
-    {
-        currentScore++;
-        SetScore(currentScore);
+        internal void UpdateScore()
+        {
+            currentScore++;
+            SetScore(currentScore);
+        }
     }
 }
