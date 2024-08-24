@@ -41,8 +41,13 @@ namespace Simulation
                     m_PlayerScores.Add(pending.OwnerId, 1);
                 }
             }
-            
-            foreach (var (ghostOwner, score) in SystemAPI.Query<RefRO<GhostOwner>, RefRW<CharacterScore>>())
+
+            if (pendingScores.Length == 0)
+            {
+                Debug.Log("No more rat scores!");
+            }
+
+            foreach (var (ghostOwner, score) in SystemAPI.Query<RefRO<GhostOwner>, RefRW<Score>>())
             {
                 if (m_PlayerScores.TryGetValue(ghostOwner.ValueRO.NetworkId, out var playerScore))
                 {
@@ -56,7 +61,7 @@ namespace Simulation
     }
 
     [BurstCompile]
-    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    [UpdateInGroup(typeof(InitializationSystemGroup))]
     public partial struct BroadcastScoreEventsSystem : ISystem
     {
         public void OnCreate(ref SystemState state)
@@ -69,6 +74,8 @@ namespace Simulation
             var pendingScores = SystemAPI.GetSingletonBuffer<PendingRatScored>();
             if (pendingScores.Length == 0)
                 return;
+
+            Debug.Log("As far as Scott can tell, this never happens.");
 
             foreach (var score in pendingScores)
             {
@@ -112,6 +119,12 @@ namespace Simulation
                     gameObject.SetActive(false);
                 }
             }
+
+            if (pendingScores.Length > 0)
+            {
+                Debug.Log($"Still have scores in q");
+            }
+
 
             // IMPORTANT: We assume the PendingRatScored buffer is attached to GameState (from GameStateAuthoring)
             //  If this stops being true, the following will break and we will never properly clear the buffer and/or

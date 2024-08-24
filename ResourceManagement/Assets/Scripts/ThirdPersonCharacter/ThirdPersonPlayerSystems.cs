@@ -9,6 +9,7 @@ using Unity.Transforms;
 using UnityEngine;
 using Unity.CharacterController;
 using Unity.NetCode;
+using Presentation;
 
 [UpdateInGroup(typeof(GhostInputSystemGroup))]
 [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
@@ -147,6 +148,39 @@ public partial struct ThirdPersonPlayerFixedStepControlSystem : ISystem
                 characterControl.Throw = shouldThrow;
 
                 SystemAPI.SetComponent(player.ControlledCharacter, characterControl);
+            }
+        }
+    }
+
+    [UpdateInGroup(typeof(PresentationSystemGroup))]
+    public partial struct ThirdPersonCharacterAnimationSystem : ISystem
+    {
+        static readonly int k_Speed = Animator.StringToHash("Speed");
+
+        public void OnCreate(ref SystemState state)
+        {
+        }
+
+        public void OnUpdate(ref SystemState state)
+        {
+            foreach (var (tf, animatorLink) in SystemAPI
+                         .Query<RefRO<LocalTransform>, AnimatorLink>())
+            {
+                foreach (var (ttf, player) in SystemAPI.Query<RefRO<LocalTransform>, ThirdPersonPlayer>())
+                {
+                    if (SystemAPI.HasComponent<ThirdPersonCharacterControl>(player.ControlledCharacter))
+                    {
+                        ThirdPersonCharacterControl characterControl = SystemAPI.GetComponent<ThirdPersonCharacterControl>(player.ControlledCharacter);
+
+                        float setSpeed = 0.0f;
+                        if (characterControl.MoveVector.x < -0.1f || characterControl.MoveVector.x > 0.1f)
+                            setSpeed = 1.0f;
+                        if (characterControl.MoveVector.z < -0.1f || characterControl.MoveVector.z > 0.1f)
+                            setSpeed = 1.0f;
+
+                        animatorLink.Animator.SetFloat(k_Speed, setSpeed);
+                    }
+                }
             }
         }
     }
