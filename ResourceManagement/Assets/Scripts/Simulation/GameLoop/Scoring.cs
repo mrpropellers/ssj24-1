@@ -47,7 +47,8 @@ namespace Simulation
                 Debug.Log("No more rat scores!");
             }
 
-            foreach (var (ghostOwner, score) in SystemAPI.Query<RefRO<GhostOwner>, RefRW<Score>>())
+            foreach (var (ghostOwner, score) in SystemAPI
+                         .Query<RefRO<GhostOwner>, RefRW<CharacterScore>>())
             {
                 if (m_PlayerScores.TryGetValue(ghostOwner.ValueRO.NetworkId, out var playerScore))
                 {
