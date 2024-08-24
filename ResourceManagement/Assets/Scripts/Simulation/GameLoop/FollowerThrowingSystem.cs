@@ -31,11 +31,6 @@ namespace Simulation
         // public quaternion TargetRotation_Auth;
     }
 
-    // TODO | P0 NetCode | Set first N followers in line to Predicted if they're on Interpolated
-    //  While most of the followers are fine to be set to interpolated. For any given player, on their
-    //  own follower queue, their first few followers should be Predicted to make it more responsive when the
-    //  player presses throw. N probably should just be 2 unless we lower the throw cooldown substantially
-    
     [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
     //[UpdateAfter(typeof(ThirdPersonCharacterVariableUpdateSystem))]
     [BurstCompile]
@@ -47,7 +42,8 @@ namespace Simulation
             state.RequireForUpdate<NetworkTime>();
         }
 
-        [BurstCompile]
+        // TODO: Re-enable BurstCompile here once we're sure it's not throwing exceptions any more
+        //[BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             if (!SystemAPI.GetSingleton<NetworkTime>().IsFirstTimeFullyPredictingTick)
@@ -160,13 +156,13 @@ namespace Simulation
     [BurstCompile]
     public partial struct RemoveFollowersFromBufferSystem : ISystem
     {
-        BufferLookup<ThrowableFollowerElement> _followerBufferLookup;
+        BufferLookup<ThrowableFollowerElement> m_FollowerBufferLookup;
         
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<NetworkTime>();
-            _followerBufferLookup = state.GetBufferLookup<ThrowableFollowerElement>();
+            m_FollowerBufferLookup = state.GetBufferLookup<ThrowableFollowerElement>();
         }
 
         [BurstCompile]
@@ -175,7 +171,7 @@ namespace Simulation
             if (!SystemAPI.GetSingleton<NetworkTime>().IsFirstTimeFullyPredictingTick)
                 return;
 
-            _followerBufferLookup.Update(ref state);
+            m_FollowerBufferLookup.Update(ref state);
             //var ecb = new EntityCommandBuffer(Allocator.Temp);
             foreach (var (ownership, _, followerEntity) in SystemAPI
                          .Query<RefRW<Ownership>, RefRO<Follower>>()
@@ -183,12 +179,13 @@ namespace Simulation
                          .WithEntityAccess())
             {
                 var owner = ownership.ValueRW.Owner;
-                _followerBufferLookup.TryGetBuffer(owner, out var followerBuffer);
+                m_FollowerBufferLookup.TryGetBuffer(owner, out var followerBuffer);
                 var numFollowers = followerBuffer.Length;
                 var followerIdx = numFollowers - 1;
                 if (followerBuffer[followerIdx].Follower != followerEntity)
                 {
-                    Debug.LogWarning("Follower was not the last detected in buffer. That's weird! Looking for it...");
+                    Debug.LogWarning(
+                        "Follower was not the last detected in buffer. That's weird! Looking for it...");
                     for (var i = followerIdx - 1; i >= 0; --i)
                     {
                         if (followerEntity == followerBuffer[i].Follower)
@@ -280,6 +277,7 @@ namespace Simulation
             state.RequireForUpdate<NetworkTime>();
         }
 
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             if (!SystemAPI.GetSingleton<NetworkTime>().IsFirstTimeFullyPredictingTick)

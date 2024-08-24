@@ -157,30 +157,15 @@ public partial struct ThirdPersonPlayerFixedStepControlSystem : ISystem
     {
         static readonly int k_Speed = Animator.StringToHash("Speed");
 
-        public void OnCreate(ref SystemState state)
-        {
-        }
-
         public void OnUpdate(ref SystemState state)
         {
-            foreach (var (tf, animatorLink) in SystemAPI
-                         .Query<RefRO<LocalTransform>, AnimatorLink>())
+            foreach (var (animatorLink, characterControl) in SystemAPI
+                         .Query<AnimatorLink, RefRO<ThirdPersonCharacterControl>>())
             {
-                foreach (var (ttf, player) in SystemAPI.Query<RefRO<LocalTransform>, ThirdPersonPlayer>())
-                {
-                    if (SystemAPI.HasComponent<ThirdPersonCharacterControl>(player.ControlledCharacter))
-                    {
-                        ThirdPersonCharacterControl characterControl = SystemAPI.GetComponent<ThirdPersonCharacterControl>(player.ControlledCharacter);
-
-                        float setSpeed = 0.0f;
-                        if (characterControl.MoveVector.x < -0.1f || characterControl.MoveVector.x > 0.1f)
-                            setSpeed = 1.0f;
-                        if (characterControl.MoveVector.z < -0.1f || characterControl.MoveVector.z > 0.1f)
-                            setSpeed = 1.0f;
-
-                        animatorLink.Animator.SetFloat(k_Speed, setSpeed);
-                    }
-                }
+                var setSpeed = math.lengthsq(characterControl.ValueRO.MoveVector.xz) > 0.1f
+                    ? 1f
+                    : 0f;
+                animatorLink.Animator.SetFloat(k_Speed, setSpeed);
             }
         }
     }
