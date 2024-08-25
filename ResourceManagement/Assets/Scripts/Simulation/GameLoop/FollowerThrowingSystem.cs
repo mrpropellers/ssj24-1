@@ -79,7 +79,10 @@ namespace Simulation
                     state.EntityManager.GetBuffer<ThrowableFollowerElement>(throwingEntity);
                 
                 // Since we can't set this field the moment a follower is picked up we just make sure to do it here
-                if (throwables.Length > 0)
+                if (throwables.Length > 0 
+                    // Need to check if it exists because the buffer may be updated on Client before the Rat was
+                    // actually spawned (happens when you're standing directly on top of a spawner)
+                    && state.EntityManager.Exists(throwables[^1].Follower))
                 {
                     state.EntityManager.SetComponentEnabled<ForceInterpolatedGhost>(
                         throwables[^1].Follower, false);

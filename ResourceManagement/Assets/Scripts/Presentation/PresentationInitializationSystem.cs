@@ -75,8 +75,8 @@ namespace Presentation
                     Debug.LogError("Failed to find the InputAdapter on the player presentation");
                 }
                 AddPresentationLinks(ref commandBuffer, playerComponent.ControlledCharacter, tf, playerPresentation);
-                PresentationInstantiator.PlayerVirtualCamera.Follow = playerPresentation.transform;
-                PresentationInstantiator.PlayerVirtualCamera.LookAt = playerPresentation.transform;
+                // PresentationInstantiator.PlayerVirtualCamera.Follow = playerPresentation.transform;
+                // PresentationInstantiator.PlayerVirtualCamera.LookAt = playerPresentation.transform;
                 PresentationInstantiator.PlayerCameraRig.follow = playerPresentation.transform;
             }
 

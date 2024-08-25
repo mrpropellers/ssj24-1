@@ -8,6 +8,9 @@ namespace Critter3DPixelCamera
 	{
 		// ---------------------- Public variables ----------------------
 
+		[SerializeField]
+		public bool forceOrthographic;
+		
 		[Tooltip(Tooltips.TT_CAMERA)] [SerializeField]
 		public Camera pixelCamera;
 
@@ -71,7 +74,8 @@ namespace Critter3DPixelCamera
 				Debug.LogError("ERROR: PixelatedCamera did not find Camera component from CameraAdjuster.");
 			}
 
-			pixelCamera.orthographic = true;
+			if (forceOrthographic)
+				pixelCamera.orthographic = true;
 
 			_canvas = _camAdjuster.canvas;
 			_canvasMaterial = _canvas.GetComponent<Renderer>().material;
@@ -122,7 +126,8 @@ namespace Critter3DPixelCamera
 					Debug.LogError("ERROR: No target render texture set on camera.");
 				}
 
-				pixelCamera.orthographic = true;
+				if (forceOrthographic)
+					pixelCamera.orthographic = true;
 				_canvasCamera.orthographic = true;
 				_canvas = _camAdjuster.canvas;
 				_canvasCamera.orthographicSize = _CANVAS_HEIGHT / 2f;
