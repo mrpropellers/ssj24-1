@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using NetCode;
 using Simulation;
 using TMPro;
 using UnityEngine;
@@ -11,6 +12,8 @@ namespace Presentation
 {
     public class GuiPresentation : MonoBehaviour
     {
+        [SerializeField] GameObject container;
+
         [SerializeField]
         private TextMeshProUGUI score;
 
@@ -33,11 +36,15 @@ namespace Presentation
         private int currentScore = 0;
         private int currentRats = 0;
 
+        private bool isStarted = false;
+
 
         private void Awake()
         {
             if (testGui)
                 StartCoroutine(TestGui());
+
+            container.SetActive(false);
         }
 
         private void Start()
@@ -47,6 +54,18 @@ namespace Presentation
 
             // TODO: Configured?  Via server?
             hourglass.Initialize(MAX_TIME);
+        }
+
+        private void Update()
+        {
+            if (isStarted)
+                return;
+
+            if( GameplaySceneLoader.GameCanStart )
+            {
+                container.SetActive(true);
+                isStarted = true;
+            }            
         }
 
         public void SetTime(float timeRemaining)
