@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 558837e7f39a4fc9a68d452846eed088, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GameplayScene: {fileID: 102900000, guid: 2d3f0ae80b065834bbc1084222c2a8a3, type: 3}
+  GameplayScene: {fileID: 102900000, guid: 9ba33d3915ad77741983c90341d27638, type: 3}
   GameSetupScene: {fileID: 102900000, guid: ec9a55b44fb9dd1498e81657096cdb7a, type: 3}
 --- !u!4 &842611474
 Transform:
