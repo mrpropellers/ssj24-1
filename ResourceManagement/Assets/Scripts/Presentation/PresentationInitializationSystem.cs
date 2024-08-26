@@ -37,7 +37,7 @@ namespace Presentation
             var renderer = presentation.GetComponentInChildren<Renderer>();
             if (!ReferenceEquals(null, renderer))
             {
-                Debug.Log($"Adding renderer link to {presentation.name}");
+                //Debug.Log($"Adding renderer link to {presentation.name}");
                 commandBuffer.AddComponent(entity, new RendererLink()
                 {
                     Renderer = renderer

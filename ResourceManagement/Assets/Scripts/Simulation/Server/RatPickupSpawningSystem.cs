@@ -63,10 +63,10 @@ namespace Simulation.Server
                 var spawnTick = ratSpawner.ValueRW.TickLastSpawned;
                 if (spawnTick.IsValid && tick.TicksSince(spawnTick) < ratSpawner.ValueRW.SpawnCooldownTicks)
                     continue;
-                Debug.Log("Spawning a guy");
+                //Debug.Log("Spawning a guy");
                 ratSpawner.ValueRW.TickLastSpawned = tick;
                 var randomVector = ratSpawner.ValueRW.SpawnRadius * s_Rand.NextFloat3();
-                randomVector.y = tf.ValueRO.Position.y + 0.25f;
+                randomVector.y = tf.ValueRO.Position.y - 0.25f;
                 var rat = ecb.Instantiate(ratSpawner.ValueRW.Simulation);
                 var spawnLocation = tf.ValueRO.Position + randomVector;
                 ecb.SetComponent(rat, new LocalTransform()

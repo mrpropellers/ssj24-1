@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.NetCode;
 using UnityEngine;
 
 namespace Simulation
@@ -7,9 +8,13 @@ namespace Simulation
     //  Projectiles should be eventually removed from the Scene so they aren't just rolling around forever
     //  Add a lifespan field here and implement a system which destroys the Projectile's entity once enough time
     //  has elapsed.
+    [GhostComponent]
     public struct Projectile : IComponentData
     {
         public int InstigatorNetworkId;
+        public float TimeSpawned;
+        [GhostField]
+        public bool HasBounced;
         public bool HasScored;
     }
 

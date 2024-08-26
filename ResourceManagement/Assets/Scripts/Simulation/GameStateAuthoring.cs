@@ -1,5 +1,6 @@
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Physics;
 using UnityEngine;
 
 namespace Simulation
@@ -10,6 +11,7 @@ namespace Simulation
         Basket
     }
     
+    [InternalBufferCapacity(32)]
     public struct PendingRatScored : IBufferElementData
     {
         public Entity RatEntityScored;
@@ -17,6 +19,15 @@ namespace Simulation
         public int OwnerId;
         public float3 LocationTriggered;
         public float3 ReceptacleCenter;
+    }
+
+    [InternalBufferCapacity(128)]
+    public struct PendingCollision : IBufferElementData
+    {
+        public Projectile ProjectileState;
+        public Entity ProjectileEntity;
+        public Entity EntityHit;
+        //public CollisionEvent CollisionEvent;
     }
     
     //[GhostComponent]
@@ -37,6 +48,7 @@ namespace Simulation
                 {
                 });
                 AddBuffer<PendingRatScored>(entity);
+                AddBuffer<PendingCollision>(entity);
             }
         }
     }

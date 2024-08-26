@@ -1,3 +1,4 @@
+using Simulation;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.NetCode;
@@ -16,22 +17,35 @@ namespace Presentation
         static readonly int k_ColorId = Shader.PropertyToID("_BaseColor");
         static readonly Color k_PredictedColor = Color.green;
         static readonly Color k_InterpolatedColor = Color.yellow;
+        static readonly Color k_BouncedColor = Color.cyan;
+
+        ComponentLookup<Projectile> m_ProjectileLookup;
         
         [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
-            
+            m_ProjectileLookup = state.GetComponentLookup<Projectile>(true);
         }
 
         //[BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            m_ProjectileLookup.Update(ref state);
+            
             foreach (var (colorOverride, entity) in SystemAPI
                          .Query<RefRW<ColorOverride>>()
-                         .WithAll<PredictedGhost>().WithEntityAccess())
+                         .WithAll<PredictedGhost>()
+                         .WithEntityAccess())
             {
-                colorOverride.ValueRW.Value = k_PredictedColor;
-                state.EntityManager.SetComponentEnabled<ColorOverride>(entity, true);
+                if (m_ProjectileLookup.TryGetComponent(entity, out var projectile)
+                    && projectile.HasBounced)
+                {
+                    colorOverride.ValueRW.Value = k_BouncedColor;
+                }
+                else
+                {
+                    colorOverride.ValueRW.Value = k_PredictedColor;
+                }
             }
             
             foreach (var (colorOverride, entity) in SystemAPI
@@ -39,7 +53,6 @@ namespace Presentation
                          .WithNone<PredictedGhost>().WithEntityAccess())
             {
                 colorOverride.ValueRW.Value = k_InterpolatedColor;
-                state.EntityManager.SetComponentEnabled<ColorOverride>(entity, true);
             }
         }
 

@@ -9,7 +9,7 @@ using UnityEngine;
 namespace Simulation
 {
     [BurstCompile]
-    public struct ProjectileCollisionsJob : ITriggerEventsJob
+    public struct ProjectileTriggersJob : ITriggerEventsJob
     {
         public DynamicBuffer<PendingRatScored> RatScoringBuffer;
         [ReadOnly]
@@ -21,39 +21,48 @@ namespace Simulation
         [BurstCompile]
         public void Execute(TriggerEvent triggerEvent)
         {
-            Entity cauldronEntity;
+            Entity otherEntity;
             Entity projectileEntity;
-            if (CauldronLookup.TryGetComponent(triggerEvent.EntityA, out var cauldron))
+            if (ProjectileLookup.TryGetComponent(triggerEvent.EntityA, out var projectile))
             {
-                cauldronEntity = triggerEvent.EntityA;
-                projectileEntity = triggerEvent.EntityB;
-            }
-            else if (CauldronLookup.TryGetComponent(triggerEvent.EntityB, out cauldron))
-            {
-                cauldronEntity = triggerEvent.EntityB;
                 projectileEntity = triggerEvent.EntityA;
+                otherEntity = triggerEvent.EntityB;
+            }
+            else if (ProjectileLookup.TryGetComponent(triggerEvent.EntityB, out projectile))
+            {
+                otherEntity = triggerEvent.EntityA;
+                projectileEntity = triggerEvent.EntityB;
             }
             else
             {
                 return;
             }
 
-            if (!ProjectileLookup.TryGetComponent(projectileEntity, out var projectile) ||
-                projectile.HasScored ||
-                !TransformLookup.TryGetComponent(projectileEntity, out var projectileTf))
+            if (projectile.HasBounced || projectile.HasScored)
+                return;
+
+            if (!TransformLookup.TryGetComponent(projectileEntity, out var projectileTf))
             {
+                Debug.LogError("Failed to get a projectile LocalTransform. Something is broken!");
                 return;
             }
 
-            Debug.Log("Rat cauldron dunk detected!");
-            projectile.HasScored = true;
-            RatScoringBuffer.Add(new PendingRatScored()
+            if (CauldronLookup.TryGetComponent(projectileEntity, out var cauldron))
             {
-                RatEntityScored = projectileEntity,
-                OwnerId = projectile.InstigatorNetworkId,
-                LocationTriggered = projectileTf.Position,
-                ReceptacleCenter = cauldron.SplashZone
-            });
+                Debug.Log("Rat cauldron dunk detected!");
+                projectile.HasScored = true;
+                RatScoringBuffer.Add(new PendingRatScored()
+                {
+                    RatEntityScored = projectileEntity,
+                    OwnerId = projectile.InstigatorNetworkId,
+                    LocationTriggered = projectileTf.Position,
+                    ReceptacleCenter = cauldron.SplashZone
+                });
+            }
+            else
+            {
+                Debug.Log("Rat hit a trigger that was not a cauldron??");
+            }
         }
     }
     
@@ -85,13 +94,14 @@ namespace Simulation
             _tfLookup.Update(ref state);
             var ratScoringBuffer = SystemAPI.GetSingletonBuffer<PendingRatScored>();
 
-            state.Dependency = new ProjectileCollisionsJob()
+            state.Dependency = new ProjectileTriggersJob()
             {
                 CauldronLookup = _cauldronLookup, 
                 ProjectileLookup = _projectileLookup, 
                 TransformLookup = _tfLookup, 
                 RatScoringBuffer = ratScoringBuffer
             }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
+            
             state.CompleteDependency();
         }
 
@@ -99,4 +109,91 @@ namespace Simulation
         public void OnDestroy(ref SystemState state) { }
     }
 
+    [BurstCompile]
+    public struct ProjectileCollisionsJob : ICollisionEventsJob
+    {
+        public ComponentLookup<Projectile> ProjectileLookup;
+        public DynamicBuffer<PendingCollision> CollisionsBuffer;
+
+        [BurstCompile]
+        public void Execute(CollisionEvent collisionEvent)
+        {
+            Entity otherEntity;
+            Entity projectileEntity;
+            if (ProjectileLookup.TryGetComponent(collisionEvent.EntityA, out var projectile))
+            {
+                projectileEntity = collisionEvent.EntityA;
+                otherEntity = collisionEvent.EntityB;
+            }
+            else if (ProjectileLookup.TryGetComponent(collisionEvent.EntityB, out projectile))
+            {
+                otherEntity = collisionEvent.EntityA;
+                projectileEntity = collisionEvent.EntityB;
+            }
+            else
+            {
+                return;
+            }
+
+            if (projectile.HasBounced || projectile.HasScored)
+                return;
+
+            CollisionsBuffer.Add(new PendingCollision()
+            {
+                //CollisionEvent = collisionEvent, 
+                ProjectileState = projectile, 
+                ProjectileEntity = projectileEntity, 
+                EntityHit = otherEntity
+            });
+        }
+    }
+    
+    [BurstCompile]
+    [UpdateInGroup(typeof(SimulationSystemGroup))]
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+    [StructLayout(LayoutKind.Auto)]
+    public partial struct RatCollisionProcessingSystem : ISystem
+    {
+        ComponentLookup<Projectile> _projectileLookup;
+        
+        [BurstCompile]
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<SimulationSingleton>();
+            state.RequireForUpdate<PendingCollision>();
+            _projectileLookup = state.GetComponentLookup<Projectile>(false);
+        }
+
+        //[BurstCompile]
+        public void OnUpdate(ref SystemState state)
+        {
+            _projectileLookup.Update(ref state);
+            var collisionBuffer = SystemAPI.GetSingletonBuffer<PendingCollision>();
+
+            state.Dependency = new ProjectileCollisionsJob()
+            {
+                CollisionsBuffer = collisionBuffer,
+                ProjectileLookup = _projectileLookup, 
+            }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
+            
+            state.CompleteDependency();
+
+            // if (collisionBuffer.Length > 0)
+            //     Debug.Log($"Detected {collisionBuffer.Length} collisions.");
+            foreach (var collision in collisionBuffer)
+            {
+                if (!collision.ProjectileState.HasBounced)
+                {
+                    var projectile = collision.ProjectileState;
+                    projectile.HasBounced = true;
+                    state.EntityManager.SetComponentData(collision.ProjectileEntity, projectile);
+                }
+            }
+            
+            collisionBuffer.Clear();
+        }
+
+        [BurstCompile]
+        public void OnDestroy(ref SystemState state) { }
+    }
 }

@@ -10,6 +10,29 @@ namespace Simulation
 
     [UpdateInGroup(typeof(LateSimulationSystemGroup))]
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+    public partial struct DestroyOldProjectilesSystem : ISystem
+    {
+        public void OnUpdate(ref SystemState state)
+        {
+            var ecb = new EntityCommandBuffer(Allocator.Temp);
+            var now = (float)SystemAPI.Time.ElapsedTime;
+            foreach (var (projectile, entity) in SystemAPI
+                         .Query<RefRO<Projectile>>().WithEntityAccess())
+            {
+                var timeSinceSpawn = now - projectile.ValueRO.TimeSpawned;
+                if (timeSinceSpawn < 5f)
+                    continue;
+                
+                ecb.DestroyEntity(entity);
+            }
+            
+            ecb.Playback(state.EntityManager);
+            ecb.Dispose();
+        }
+    }
+
+    [UpdateInGroup(typeof(LateSimulationSystemGroup))]
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     public partial struct DestroyOnServerSystem : ISystem
     {
         public void OnUpdate(ref SystemState state)

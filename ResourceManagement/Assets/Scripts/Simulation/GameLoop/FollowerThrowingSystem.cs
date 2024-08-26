@@ -132,7 +132,7 @@ namespace Simulation
                 Debug.Log($"Attempting to throw a rat from index {followerIdx}!");
                 var throwerTf = localTransform.ValueRO;
                 var throwOffset = throwerTf.TransformDirection(
-                    new float3(0f, config.ValueRO.ThrowHeight, 2f));
+                    new float3(0f, config.ValueRO.ThrowHeight, 3f));
 
                 var toProjectile = state.EntityManager.GetComponentData<ConvertToProjectile>(follower);
                 toProjectile.InitialPosition = followerTf.Position;
@@ -141,10 +141,6 @@ namespace Simulation
                 toProjectile.TargetPosition = throwerTf.Position + throwOffset;
                 toProjectile.TargetRotation = throwerTf.Rotation;
                 toProjectile.OwnerId = ghostOwner.ValueRO.NetworkId;
-                // If we're on the client, these values may be overwritten later by the Server
-                // toProjectile.TimeStarted_Auth = toProjectile.TimeStarted;
-                // toProjectile.TargetPosition_Auth = toProjectile.TargetPosition;
-                // toProjectile.TargetRotation_Auth = toProjectile.TargetRotation;
                 state.EntityManager.SetComponentData(follower, toProjectile);
                 // This is probably true by default, but better safe than sorry
                 state.EntityManager.SetComponentEnabled<ConvertToProjectile>(follower, true);
@@ -267,7 +263,7 @@ namespace Simulation
         }
     }
     
-    // TODO? | P3 - NetCode | Pre-spawn the projectile
+    // TODO | P2 - NetCode | Pre-spawn the projectile
     //  We could guarantee responsiveness by spawning the rat projectile hidden and inert when the tween starts and
     //  then simply attach the presentation and apply the velocity when the tween finishes. This would guarantee
     //  the projectile is spawned on the Server by the time it should fire
@@ -310,7 +306,11 @@ namespace Simulation
                     Scale = 1f
                 };
                 ecb.SetComponent(projectile, targetTf);
-                ecb.SetComponent(projectile, new Projectile() { InstigatorNetworkId = pc.ValueRO.OwnerId });
+                ecb.SetComponent(projectile, new Projectile()
+                {
+                    InstigatorNetworkId = pc.ValueRO.OwnerId,
+                    TimeSpawned = (float)SystemAPI.Time.ElapsedTime,
+                });
                 var direction = targetTf.TransformDirection(new float3(0f, 0f, 1f));
                 ecb.SetComponent(projectile, new PhysicsVelocity()
                 {
