@@ -26,11 +26,21 @@ namespace Presentation
             };
             commandBuffer.AddComponent(entity, link);
             var animator = presentation.GetComponentInChildren<Animator>();
-            if (animator != null)
+            if (!ReferenceEquals(null, animator))
             {
                 commandBuffer.AddComponent(entity, new AnimatorLink()
                 {
                     Animator = animator
+                });
+            }
+
+            var renderer = presentation.GetComponentInChildren<Renderer>();
+            if (!ReferenceEquals(null, renderer))
+            {
+                Debug.Log($"Adding renderer link to {presentation.name}");
+                commandBuffer.AddComponent(entity, new RendererLink()
+                {
+                    Renderer = renderer
                 });
             }
 

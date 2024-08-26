@@ -19,7 +19,7 @@ public class ThirdPersonCharacterAuthoring : MonoBehaviour
     public float3 Gravity = math.up() * -30f;
     public float ThrowHeight = 1f;
     public float ThrowCooldownSeconds = 1f;
-    public float ThrowVelocity = 10f;
+    //public float ThrowVelocity = 10f;
     public bool PreventAirAccelerationAgainstUngroundedHits = true;
     public BasicStepAndSlopeHandlingParameters StepAndSlopeHandling = BasicStepAndSlopeHandlingParameters.GetDefault();
 
@@ -47,7 +47,7 @@ public class ThirdPersonCharacterAuthoring : MonoBehaviour
             AddComponent(entity, new ThirdPersonCharacterControl());
             AddComponent(entity, new ThrowerConfig()
             {
-                InitialRatVelocity = authoring.ThrowVelocity,
+                //InitialRatVelocity = authoring.ThrowVelocity,
                 ThrowHeight = authoring.ThrowHeight,
                 ThrowCooldown = authoring.ThrowCooldownSeconds 
             });

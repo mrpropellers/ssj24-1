@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7006683133125407231}
   - component: {fileID: 5925176680536165302}
   - component: {fileID: 5663366713991013600}
+  - component: {fileID: 60556129328401180}
   - component: {fileID: 2651294781728332450}
   - component: {fileID: 1210306622233738237}
   - component: {fileID: 8892309332343785103}
@@ -89,6 +90,18 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &60556129328401180
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5024494472191067875}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6474fe11f03b47f59dabc404ee25bb9d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &2651294781728332450
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -102,8 +115,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   FollowDistance: 2
-  FollowSpeed: 10
-  ThrowSpeed: 15
+  FollowSpeed: 12
+  ThrowSpeed: 20
   ToProjectilePeriod: 0.3
 --- !u!114 &1210306622233738237
 MonoBehaviour:

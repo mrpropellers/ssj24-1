@@ -87,6 +87,7 @@ namespace Simulation
                     state.EntityManager.SetComponentEnabled<ForceInterpolatedGhost>(
                         throwables[^1].Follower, false);
                 }
+                // BUG: When picking up a bunch of rats at once, some get stuck as predicted
                 if (throwables.Length > 2)
                 {
                     state.EntityManager.SetComponentEnabled<ForceInterpolatedGhost>(
@@ -131,7 +132,7 @@ namespace Simulation
                 Debug.Log($"Attempting to throw a rat from index {followerIdx}!");
                 var throwerTf = localTransform.ValueRO;
                 var throwOffset = throwerTf.TransformDirection(
-                    new float3(0f, config.ValueRO.ThrowHeight, 1f));
+                    new float3(0f, config.ValueRO.ThrowHeight, 2f));
 
                 var toProjectile = state.EntityManager.GetComponentData<ConvertToProjectile>(follower);
                 toProjectile.InitialPosition = followerTf.Position;

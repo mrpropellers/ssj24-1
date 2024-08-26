@@ -5,7 +5,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using Unity.NetCode;
 using Unity.Collections;
-using Unity.Rendering;
+using UnityEngine;
 
 namespace Simulation
 {
@@ -14,8 +14,26 @@ namespace Simulation
     // throwable)
     public struct ForceInterpolatedGhost : IComponentData, IEnableableComponent
     { }
+
+    public partial struct FixCommandTargetSystem : ISystem
+    {
+        public void OnCreate(ref SystemState state)
+        {
+            state.RequireForUpdate<CommandTarget>();
+        }
+
+        public void OnUpdate(ref SystemState state)
+        {
+            foreach (var player in SystemAPI
+                         .Query<RefRO<ThirdPersonPlayer>>()
+                         .WithAll<GhostOwnerIsLocal>())
+            {
+                SystemAPI.SetSingleton(new CommandTarget() { targetEntity = player.ValueRO.ControlledCharacter });
+            }
+        }
+    }
     
-    [BurstCompile]
+    //[BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
     [StructLayout(LayoutKind.Auto)]
     public partial struct PredictionSwitchingSystem : ISystem
@@ -33,7 +51,7 @@ namespace Simulation
             m_ForceInterpolation = state.GetComponentLookup<ForceInterpolatedGhost>(true);
         }
 
-        [BurstCompile]
+        //[BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var playerEnt = SystemAPI.GetSingleton<CommandTarget>().targetEntity;
@@ -47,6 +65,7 @@ namespace Simulation
 
             m_GhostOwnerFromEntity.Update(ref state);
             m_ForceInterpolation.Update(ref state);
+            // (Devin) I don't know why we do this but it's the pattern they used in the example code...
             var ghostOwnerFromEntity = m_GhostOwnerFromEntity;
             var forceInterpolation = m_ForceInterpolation;
 
@@ -59,6 +78,7 @@ namespace Simulation
                 predictedQueue = ghostPredictionSwitchingQueues.ConvertToPredictedQueue,
                 enterRadiusSq = predictionSwitchingSettings.PredictionSwitchingRadius * predictionSwitchingSettings.PredictionSwitchingRadius,
                 ghostOwnerFromEntity = ghostOwnerFromEntity,
+                forceInterpolation = forceInterpolation,
                 transitionDurationSeconds = predictionSwitchingSettings.TransitionDurationSeconds,
             }.ScheduleParallel();
 
@@ -77,7 +97,7 @@ namespace Simulation
 
         [BurstCompile]
         [WithNone(typeof(PredictedGhost), typeof(SwitchPredictionSmoothing))]
-        [WithNone(typeof(ForceInterpolatedGhost))]
+        //[WithNone(typeof(ForceInterpolatedGhost))]
         [StructLayout(LayoutKind.Auto)]
         partial struct SwitchToPredictedGhost : IJobEntity
         {
@@ -89,12 +109,17 @@ namespace Simulation
 
             [ReadOnly]
             public ComponentLookup<GhostOwner> ghostOwnerFromEntity;
+            [ReadOnly]
+            public ComponentLookup<ForceInterpolatedGhost> forceInterpolation;
 
             public float transitionDurationSeconds;
 
             void Execute(Entity ent, [EntityIndexInQuery] int entityIndexInQuery, in LocalTransform transform, in GhostInstance ghostInstance)
             {
                 if (ghostInstance.ghostType < 0) return;
+
+                if (forceInterpolation.HasComponent(ent) && forceInterpolation.IsComponentEnabled(ent))
+                    return;
 
                 if (math.distancesq(playerPos, transform.Position) < enterRadiusSq)
                 {
@@ -108,7 +133,7 @@ namespace Simulation
         }
 
         [BurstCompile]
-        [WithNone(typeof(SwitchPredictionSmoothing))]
+        [WithNone(typeof(SwitchPredictionSmoothing), typeof(GhostOwnerIsLocal))]
         [WithAll(typeof(PredictedGhost))]
         partial struct SwitchToInterpolatedGhost : IJobEntity
         {
@@ -136,8 +161,8 @@ namespace Simulation
                         TargetEntity = ent,
                         TransitionDurationSeconds = transitionDurationSeconds,
                     });
-                    if (!ghostOwnerFromEntity.HasComponent(ent))
-                        parallelEcb.RemoveComponent<URPMaterialPropertyBaseColor>(entityIndexInQuery, ent);
+                    // if (!ghostOwnerFromEntity.HasComponent(ent))
+                    //     parallelEcb.RemoveComponent<URPMaterialPropertyBaseColor>(entityIndexInQuery, ent);
                 }
             }
         }

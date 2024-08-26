@@ -49,7 +49,7 @@ namespace Simulation
 
     public struct ThrowerConfig : IComponentData
     {
-        public float InitialRatVelocity;
+        //public float InitialRatVelocity;
         public float ThrowHeight;
         public float ThrowCooldown;
     }

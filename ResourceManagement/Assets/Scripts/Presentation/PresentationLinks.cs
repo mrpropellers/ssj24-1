@@ -1,4 +1,3 @@
-using Cinemachine;
 using Unity.Entities;
 using UnityEngine;
 
@@ -13,5 +12,10 @@ namespace Presentation
     public class AnimatorLink : IComponentData
     {
         public Animator Animator;
+    }
+
+    public class RendererLink : IComponentData
+    {
+        public Renderer Renderer;
     }
 }
