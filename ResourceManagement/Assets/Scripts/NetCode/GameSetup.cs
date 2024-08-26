@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Simulation;
 using Unity.Burst;
@@ -18,6 +19,12 @@ namespace NetCode
     public struct ClientJoinRequest : IRpcCommand
     {
         public ClientUid Id;
+    }
+    
+    public struct PlayerSpawnPoint : IComponentData
+    {
+        public double TimeLastSpawned;
+        public int NumSpawnsPerformed;
     }
     
     /// <summary>
@@ -101,21 +108,52 @@ namespace NetCode
 
             // Get our GameSetup singleton, which contains the prefabs we'll spawn
             GameSetup gameSetup = SystemAPI.GetSingleton<GameSetup>();
+
+            var spawnPoints = new List<ValueTuple<RefRW<PlayerSpawnPoint>, RefRO<LocalTransform>>>();
+            var foundSpawnPoints = false;
             
             // When a client wants to join, spawn and setup a character for them
             foreach (var (recieveRPC, joinRequest, entity) in SystemAPI.Query<ReceiveRpcCommandRequest, ClientJoinRequest>().WithEntityAccess())
-            {                
+            {
+                // TODO | P4 - Tech Debt | Store SpawnPoints in a DynamicBuffer attached to GameSetup
+                //  This should just be something that happens a single time on game start and gets pulled off the
+                //  GameSetup entity rather than constantly re-built here, but it's also not hurting anything to do
+                //  it this way, really.
+                if (spawnPoints.Count == 0)
+                {
+                    foreach (var spawnPoint in SystemAPI
+                                 .Query<RefRW<PlayerSpawnPoint>, RefRO<LocalTransform>>())
+                    {
+                        spawnPoints.Add(spawnPoint);
+                    }
+                    
+                    spawnPoints.Sort((x, y) => 
+                        x.Item1.ValueRO.NumSpawnsPerformed == y.Item1.ValueRO.NumSpawnsPerformed 
+                            ? x.Item1.ValueRO.TimeLastSpawned < y.Item1.ValueRO.TimeLastSpawned ? -1 : 1
+                            : x.Item1.ValueRO.NumSpawnsPerformed < y.Item1.ValueRO.NumSpawnsPerformed ? -1 : 1);
+
+                    foundSpawnPoints = spawnPoints.Count != 0;
+                }
+                
                 // TODO: Check the UidToNetworkIdMap to see if this player has already joined
                 //  if so, just re-enable all their stuff
                 // Spawn character, player, and camera ghost prefabs
                 Entity characterEntity = ecb.Instantiate(gameSetup.CharacterSimulation);
                 Entity playerEntity = ecb.Instantiate(gameSetup.Player);
-                ecb.SetComponent(characterEntity, new LocalTransform()
+                var playerTf = new LocalTransform();
+                if (foundSpawnPoints)
                 {
-                    Position = new float3(5f, 0f, 5f),
-                    Rotation = quaternion.identity,
-                    Scale = 1f
-                });
+                    var (spawn, spawnTf) = spawnPoints[0];
+                    playerTf = spawnTf.ValueRO;
+                    spawn.ValueRW.NumSpawnsPerformed += 1;
+                    spawn.ValueRW.TimeLastSpawned = SystemAPI.Time.ElapsedTime;
+                }
+                else
+                {
+                    Debug.LogWarning("No spawn points found for player!");
+                }
+
+                ecb.SetComponent(characterEntity, playerTf);
                 //Entity cameraEntity = ecb.Instantiate(gameSetup.CameraPrefab);
                     
                 // Add spawned prefabs to the connection entity's linked entities, so they get destroyed along with it
