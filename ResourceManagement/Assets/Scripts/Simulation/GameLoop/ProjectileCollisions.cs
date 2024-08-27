@@ -47,7 +47,7 @@ namespace Simulation
                 return;
             }
 
-            if (CauldronLookup.TryGetComponent(projectileEntity, out var cauldron))
+            if (CauldronLookup.TryGetComponent(otherEntity, out var cauldron))
             {
                 Debug.Log("Rat cauldron dunk detected!");
                 projectile.HasScored = true;

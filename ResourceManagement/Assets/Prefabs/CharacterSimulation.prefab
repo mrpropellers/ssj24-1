@@ -197,7 +197,7 @@ MonoBehaviour:
     y: -30
     z: -0
   ThrowHeight: 1.5
-  ThrowCooldownSeconds: 1.5
+  ThrowCooldownSeconds: 0.8
   PreventAirAccelerationAgainstUngroundedHits: 1
   StepAndSlopeHandling:
     StepHandling: 0

@@ -48,7 +48,8 @@ namespace Simulation
         }
         public void goToMenu()
         {
-            m_ConnectionMenu.goToMenu();
+            if (!ReferenceEquals(null, m_ConnectionMenu))
+                m_ConnectionMenu.goToMenu();
         }
 
     }

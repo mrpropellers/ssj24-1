@@ -74,6 +74,7 @@ namespace Presentation
         //[BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
+            #if UNITY_EDITOR
             foreach (var (colorOverride, rendererLink) in SystemAPI
                          .Query<RefRO<ColorOverride>, RendererLink>()
                          .WithAll<ColorOverride>())
@@ -82,6 +83,7 @@ namespace Presentation
                 mbp.SetColor(k_ColorId, colorOverride.ValueRO.Value);
                 rendererLink.Renderer.SetPropertyBlock(mbp);
             }
+            #endif
         }
 
         [BurstCompile]

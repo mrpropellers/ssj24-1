@@ -9,7 +9,7 @@ public class PlayDingOnCamera : MonoBehaviour
     private IEnumerator Start()
     {
         yield return new WaitForSeconds(seconds);
-        GameObject cam = GameObject.FindGameObjectWithTag("CamTarget");
+        GameObject cam = Camera.main.gameObject;
         Instantiate(toSpawn, cam.transform.position, Quaternion.identity, cam.transform);
     }
 }

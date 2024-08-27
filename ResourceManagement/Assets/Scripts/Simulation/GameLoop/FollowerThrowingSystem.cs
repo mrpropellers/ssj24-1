@@ -129,7 +129,7 @@ namespace Simulation
                 
                 var followerTf = state.EntityManager.GetComponentData<LocalTransform>(follower);
 
-                Debug.Log($"Attempting to throw a rat from index {followerIdx}!");
+                //Debug.Log($"Attempting to throw a rat from index {followerIdx}!");
                 var throwerTf = localTransform.ValueRO;
                 var throwOffset = throwerTf.TransformDirection(
                     new float3(0f, config.ValueRO.ThrowHeight, 3f));
@@ -253,8 +253,8 @@ namespace Simulation
                 var t = (now - timeStarted) / period;
                 if (t > 1f + float.Epsilon)
                 {
-                    Debug.LogError(
-                        "Shouldn't be able to reach this because we early-out above...");
+                    // Debug.LogError(
+                    //     "Shouldn't be able to reach this because we early-out above...");
                     t = 1f;
                 }
                 tf.ValueRW.Position = math.lerp(converter.ValueRW.InitialPosition, converter.ValueRW.TargetPosition, t);
@@ -296,7 +296,7 @@ namespace Simulation
                 if (now <  pc.ValueRO.TimeFinished) // follower.ValueRO.ToProjectileTicks)
                     continue;
                 
-                Debug.Log("converting to projectile!");
+                //Debug.Log("converting to projectile!");
                 
                 var projectile = ecb.Instantiate(game.RatProjectileSimulation);
                 var targetTf = new LocalTransform()

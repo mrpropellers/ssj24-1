@@ -442,7 +442,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea8fb5811f7493a4aba67fb1d1e96c69, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  defaultTitle: Welcome to Ratking
+  defaultTitle: Rats II
   steamManagerObject: {fileID: 1911664947}
   ratKingPass: abc123throwthemrats
   ForceLocalIP: 1

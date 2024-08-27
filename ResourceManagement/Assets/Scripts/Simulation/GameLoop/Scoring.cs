@@ -76,7 +76,7 @@ namespace Simulation
             if (pendingScores.Length == 0)
                 return;
 
-            Debug.Log("As far as Scott can tell, this never happens.");
+            //Debug.Log("As far as Scott can tell, this never happens.");
 
             foreach (var score in pendingScores)
             {
@@ -121,15 +121,7 @@ namespace Simulation
                 }
             }
 
-            if (pendingScores.Length > 0)
-            {
-                Debug.Log($"Still have scores in q");
-            }
-
-
-            // IMPORTANT: We assume the PendingRatScored buffer is attached to GameState (from GameStateAuthoring)
-            //  If this stops being true, the following will break and we will never properly clear the buffer and/or
-            //  violate some rule about singleton buffers
+            // This resets the queue by setting the buffer to an empty state
             ecb.SetBuffer<PendingRatScored>(gameStateEntity);
             ecb.Playback(EntityManager);
             ecb.Dispose();

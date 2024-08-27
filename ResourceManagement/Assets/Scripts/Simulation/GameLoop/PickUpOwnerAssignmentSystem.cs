@@ -60,7 +60,7 @@ namespace Simulation
             if (NeedsConfigureLookup.IsComponentEnabled(otherEntity))
                 return;
             
-            Debug.Log("Picking something up");
+            //Debug.Log("Picking something up");
             
             ownership.Owner = characterEntity;
             ownership.HasConfiguredOwner = false;
