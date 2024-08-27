@@ -35,6 +35,7 @@ namespace NetCode
         public static ushort Port { get; set; } = 7979;
         public static bool IsServer { get; set; } = true;
         public static bool GameCanStart { get; set; }
+        public static bool GameStarted { get; set; }
         public static bool ShouldInitializeWorlds => GameCanStart
             && !Instance._worldManager.WorldsAreInitialized 
             && !Instance._worldManager.HasAttemptedInitialization;

@@ -350,8 +350,7 @@ namespace NetCode
             switch (uiMode)
             {
                 case uiModes.inGame:
-                    hideElement(_menuTitle);
-                    hideElement(_menuBox);
+                    hideElement(uiDoc);
                     break;
                 case uiModes.loading:
                     setMenuTitle("One moment please...");
@@ -468,6 +467,8 @@ namespace NetCode
 
             setUI(uiModes.inGame);
             GameplaySceneLoader.WorldManager.StartGameOnServer();
+
+            GameplaySceneLoader.GameStarted = true;
         }
     }
 }
