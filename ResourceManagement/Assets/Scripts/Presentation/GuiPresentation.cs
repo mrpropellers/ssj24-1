@@ -65,7 +65,12 @@ namespace Presentation
             {
                 container.SetActive(true);
                 isStarted = true;
-            }            
+            }
+
+            //if( GameplaySceneLoader.GameStarted )
+            //{
+            //    container.SetActive(false);
+            //}
         }
 
         public void SetTime(float timeRemaining)
