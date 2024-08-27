@@ -13,6 +13,7 @@ namespace Presentation
         [SerializeField] private float time = 1f;
 
         private Image fadeImage;
+        Tweener _fadeInTween;
 
         private Color solidBlack;
         private Color clearBlack;
@@ -47,7 +48,9 @@ namespace Presentation
 
         public YieldInstruction FadeIn()
         {
-            return fadeImage.DOFade(0f, time).OnComplete(FadeInComplete).WaitForCompletion();
+
+            _fadeInTween = fadeImage.DOFade(0f, time);
+            return _fadeInTween.OnComplete(FadeInComplete).WaitForCompletion();
         }
 
         public YieldInstruction FadeIn(float fadeInTime)
@@ -57,6 +60,7 @@ namespace Presentation
 
         public YieldInstruction FadeOut()
         {
+            _fadeInTween.Complete();
             fadeImage.gameObject.SetActive(true);
             return fadeImage.DOFade(1f, time).OnComplete(FadeOutComplete).WaitForCompletion();
         }

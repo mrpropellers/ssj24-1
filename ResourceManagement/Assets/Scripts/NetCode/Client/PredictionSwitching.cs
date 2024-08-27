@@ -96,7 +96,7 @@ namespace Simulation
         }
 
         [BurstCompile]
-        [WithNone(typeof(PredictedGhost), typeof(SwitchPredictionSmoothing))]
+        [WithNone(typeof(PredictedGhost), typeof(SwitchPredictionSmoothing), typeof(GameState))]
         //[WithNone(typeof(ForceInterpolatedGhost))]
         [StructLayout(LayoutKind.Auto)]
         partial struct SwitchToPredictedGhost : IJobEntity

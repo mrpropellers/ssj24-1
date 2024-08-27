@@ -37,6 +37,7 @@ namespace NetCode
         private Label _noLobbiesLabel => uiDoc.Q<Label>("_noLobbies");
 
         private Label _menuTitle => uiDoc.Q<Label>("menu__title");
+        VisualElement _menuBox => uiDoc.Q<VisualElement>("VisualElement");
         private Label _errorMessage => uiDoc.Q<Label>("_errorMessage");
         private Label _subheader => uiDoc.Q<Label>("_subheader");
 
@@ -350,6 +351,7 @@ namespace NetCode
             {
                 case uiModes.inGame:
                     hideElement(_menuTitle);
+                    hideElement(_menuBox);
                     break;
                 case uiModes.loading:
                     setMenuTitle("One moment please...");
@@ -418,6 +420,7 @@ namespace NetCode
         {
             //got to be a way to just iterate over all elements... but brute forcing will do for now.
             showElement(_menuTitle);
+            showElement(_menuBox);
             //hideElement(_startButton);
             hideElement(_lobbyTitleField);
             hideElement(_findLobbyButton);

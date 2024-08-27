@@ -1,6 +1,7 @@
 using FMODUnity;
 using UnityEngine;
 
+
 public class MusicManager : MonoBehaviour
 {
     static MusicManager _instance;
@@ -17,15 +18,16 @@ public class MusicManager : MonoBehaviour
     {
         _instance = this;
         _menuMusicInstance = RuntimeManager.CreateInstance(menuMusic);
+        _gameMusicInstance = RuntimeManager.CreateInstance(gameMusic);
         _menuMusicInstance.start();
     }
 
     public static void PlayGameMusic()
     {
         _menuMusicInstance.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
-        _menuMusicInstance.release();
+        //_menuMusicInstance.release();
 
-        _gameMusicInstance = RuntimeManager.CreateInstance(_instance.gameMusic);
+        //_gameMusicInstance = RuntimeManager.CreateInstance(_instance.gameMusic);
         _gameMusicInstance.start();
         IsPlayingGameMusic = true;
     }
@@ -33,9 +35,9 @@ public class MusicManager : MonoBehaviour
     public static void PlayMenuMusic()
     {
         _gameMusicInstance.stop(FMOD.Studio.STOP_MODE.ALLOWFADEOUT);
-        _gameMusicInstance.release();
+        //_gameMusicInstance.release();
 
-        _menuMusicInstance = RuntimeManager.CreateInstance(_instance.menuMusic);
+        //_menuMusicInstance = RuntimeManager.CreateInstance(_instance.menuMusic);
         _menuMusicInstance.start();
         IsPlayingGameMusic = false;
     }

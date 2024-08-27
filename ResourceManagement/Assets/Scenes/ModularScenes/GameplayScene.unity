@@ -202,7 +202,7 @@ PrefabInstance:
     - target: {fileID: 1166560343694496028, guid: 346a5452e2ec4764d96eea04a3c0058b,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.8
+      value: -9.4
       objectReference: {fileID: 0}
     - target: {fileID: 1166560343694496028, guid: 346a5452e2ec4764d96eea04a3c0058b,
         type: 3}
@@ -212,7 +212,7 @@ PrefabInstance:
     - target: {fileID: 1166560343694496028, guid: 346a5452e2ec4764d96eea04a3c0058b,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -32.6
+      value: -88.6
       objectReference: {fileID: 0}
     - target: {fileID: 1166560343694496028, guid: 346a5452e2ec4764d96eea04a3c0058b,
         type: 3}
@@ -307,8 +307,31 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2524762113422631170, guid: 346a5452e2ec4764d96eea04a3c0058b,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 309330715}
   m_SourcePrefab: {fileID: 100100000, guid: 346a5452e2ec4764d96eea04a3c0058b, type: 3}
+--- !u!1 &309330714 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2524762113422631170, guid: 346a5452e2ec4764d96eea04a3c0058b,
+    type: 3}
+  m_PrefabInstance: {fileID: 309330713}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &309330715
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 309330714}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86c6556701af9e04380698b89f691b6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  attenuationObject: {fileID: 0}
 --- !u!114 &436991600 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8479647848789957554, guid: 346a5452e2ec4764d96eea04a3c0058b,
@@ -457,7 +480,7 @@ PrefabInstance:
     - target: {fileID: 6916103969155262042, guid: 5a25beb54b98d094fa22bacb1ab21a97,
         type: 3}
       propertyPath: testGui
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

@@ -1,5 +1,6 @@
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.NetCode;
 using Unity.Physics;
 using UnityEngine;
 
@@ -30,10 +31,10 @@ namespace Simulation
         //public CollisionEvent CollisionEvent;
     }
     
-    //[GhostComponent]
+    [GhostComponent]
     public struct GameState : IComponentData
     {
-        //[GhostField]
+        [GhostField]
         public bool IsGameplayUnderway;
     }
 
@@ -43,7 +44,7 @@ namespace Simulation
         {
             public override void Bake(GameStateAuthoring authoring)
             {
-                var entity = GetEntity(TransformUsageFlags.Dynamic);
+                var entity = GetEntity(TransformUsageFlags.None);
                 AddComponent(entity, new GameState()
                 {
                 });

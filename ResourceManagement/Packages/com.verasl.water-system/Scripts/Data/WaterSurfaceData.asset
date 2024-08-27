@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b17284ebf5e80436eb6089f8c7459dab, type: 3}
   m_Name: WaterSurfaceData
   m_EditorClassIdentifier: 
-  _waterMaxVisibility: 33
+  _waterMaxVisibility: 200
   _absorptionRamp:
     serializedVersion: 2
-    key0: {r: 0, g: 1, b: 0.89255476, a: 1}
-    key1: {r: 0.9474964, g: 0.014705882, b: 0.9852941, a: 1}
-    key2: {r: 1, g: 0.1273585, b: 0.1628317, a: 1}
-    key3: {r: 0.99941266, g: 1, b: 0, a: 0}
-    key4: {r: 0.9474964, g: 0.014705882, b: 0.9852941, a: 0}
+    key0: {r: 0.48659024, g: 0.49056602, b: 0.025453899, a: 1}
+    key1: {r: 0.4801976, g: 0.9339623, b: 0.76032364, a: 1}
+    key2: {r: 0.9056604, g: 0.86591804, b: 0.055535804, a: 1}
+    key3: {r: 1, g: 0.9176218, b: 0, a: 0}
+    key4: {r: 0, g: 0, b: 0, a: 0}
     key5: {r: 1, g: 0.1273585, b: 0.1628317, a: 0}
     key6: {r: 1, g: 0.46949852, b: 0, a: 0}
     key7: {r: 0.99941266, g: 1, b: 0, a: 0}
@@ -27,7 +27,7 @@ MonoBehaviour:
     ctime1: 24672
     ctime2: 42212
     ctime3: 65535
-    ctime4: 36044
+    ctime4: 65535
     ctime5: 45875
     ctime6: 56090
     ctime7: 65535

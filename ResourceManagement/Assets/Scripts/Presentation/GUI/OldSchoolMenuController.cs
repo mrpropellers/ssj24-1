@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,18 +10,44 @@ namespace Presentation
 {
     public class OldSchoolMenuController : MonoBehaviour
     {
+        List<AsyncOperation> m_SceneLoaders;
+        
         [SerializeField] float fadeOutTime = 3.0f;
+
+        void Start()
+        {
+            StartSceneLoads();
+        }
 
         public void OnStartGameClicked()
         {
-            Fader.Instance.FadeOut();
 
-            Invoke("LoadMainScene", fadeOutTime);
+            StartCoroutine(LoadMainScene());
         }
 
-        public void LoadMainScene()
+        void StartSceneLoads()
         {
-            SceneManager.LoadScene(1);
+            SceneManager.LoadSceneAsync(4, LoadSceneMode.Additive);
+            
+            m_SceneLoaders = new List<AsyncOperation>();
+            for (var i = 1; i < 4; ++i)
+            {
+                var load = SceneManager.LoadSceneAsync(i, LoadSceneMode.Additive);
+                load.allowSceneActivation = false;
+                m_SceneLoaders.Add(load);
+            }
+        }
+
+        public IEnumerator LoadMainScene()
+        {
+            yield return Fader.Instance.FadeOut();
+            
+            //yield return new WaitForSeconds(fadeOutTime);
+            for (var i = 0; i < m_SceneLoaders.Count; i++)
+            {
+                m_SceneLoaders[i].allowSceneActivation = true;
+            }
+            SceneManager.UnloadSceneAsync(0);
         }
 
         public void OnExitGameClicked()
