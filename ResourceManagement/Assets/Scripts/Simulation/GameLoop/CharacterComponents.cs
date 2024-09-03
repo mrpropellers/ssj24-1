@@ -37,62 +37,57 @@ namespace Simulation
     [Serializable]
     public struct FollowerCounts
     {
-        public int NumThrownFollowers;
-        // TODO: Do we need this any more? Maybe can just rely on buffer now that it's being replicated
-        public int NumThrowableFollowers;
-        
-        public float TimeLastThrowPerformed;
-        public float TimeLastFollowerPickedUp;
-
-        public float TimeLastUpdated => math.max(TimeLastThrowPerformed, TimeLastFollowerPickedUp);
     }
 
     public struct ThrowerConfig : IComponentData
     {
         //public float InitialRatVelocity;
         public float ThrowHeight;
-        public float ThrowCooldown;
+        public uint ThrowCooldownTicks;
     }
     
     [GhostComponent]
     public struct FollowerThrower : IComponentData
     {
         [GhostField]
-        public FollowerCounts Counts;
+        public int NumThrownFollowers;
 
-        // [GhostField]
-        // public FollowerCounts Counts_Auth;
-    }
-
-    [Serializable]
-    public struct CharacterActionTracking
-    {
-        public float TimeBankingLastStarted;
-        public float TimeBankingLastStopped;
-        public float TimeLastHit;
+        [GhostField]
+        public NetworkTick TickNextThrowAllowed;
         
-        public bool IsBanking => TimeBankingLastStarted > TimeBankingLastStopped + float.Epsilon;
     }
 
-    public struct CharacterState : IComponentData
-    {
-        public NetworkTick TickLastModified;
-        public CharacterActionTracking actionTracking;
-    }
+    // [Serializable]
+    // public struct CharacterActionTracking
+    // {
+    //     public float TimeBankingLastStarted;
+    //     public float TimeBankingLastStopped;
+    //     public float TimeLastHit;
+    //     
+    //     public bool IsBanking => TimeBankingLastStarted > TimeBankingLastStopped + float.Epsilon;
+    // }
+
+    // public struct CharacterState : IComponentData
+    // {
+    //     public NetworkTick TickLastModified;
+    //     public CharacterActionTracking actionTracking;
+    // }
     
     [GhostComponent]
-    [InternalBufferCapacity(512)]
+    [InternalBufferCapacity(256)]
     public struct ThrowableFollowerElement : IBufferElementData
     {
         [GhostField]
         public Entity Follower;
     }
 
-    [Serializable]
+    [Serializable, GhostComponent]
     public struct ThirdPersonCharacterControl : IComponentData
     {
+        [GhostField]
         public float3 MoveVector;
         public bool Jump;
+        [GhostField]
         public bool Throw;
     }
 

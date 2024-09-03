@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.NetCode;
 using Unity.Physics;
 using Unity.Physics.Systems;
 using UnityEngine;
@@ -69,7 +70,7 @@ namespace Simulation
         }
     }
     
-    [UpdateInGroup(typeof(PhysicsSystemGroup)), UpdateBefore(typeof(PickUpOwnerAssignmentSystem))]
+    [UpdateInGroup(typeof(PredictedSimulationSystemGroup)), UpdateBefore(typeof(PickUpOwnerAssignmentSystem))]
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [BurstCompile, StructLayout(LayoutKind.Auto)]
     public partial struct PickUpCollectionRadiusSystem : ISystem
@@ -116,7 +117,7 @@ namespace Simulation
         }
     }
     
-    [UpdateInGroup(typeof(PhysicsSystemGroup))]
+    [UpdateInGroup(typeof(PredictedSimulationSystemGroup)), UpdateBefore(typeof(FollowerThrowingSystem))]
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [BurstCompile]
     [StructLayout(LayoutKind.Auto)]
@@ -136,7 +137,6 @@ namespace Simulation
         public void OnUpdate(ref SystemState state)
         {
             _characterLookup.Update(ref state);
-            var now = (float)SystemAPI.Time.ElapsedTime;
             var ecb = new EntityCommandBuffer(Allocator.Temp);
             
             foreach (var (follower, ownership, followerEntity) in SystemAPI
@@ -159,21 +159,10 @@ namespace Simulation
 
                 var ownerEntity = ownership.ValueRO.Owner;
                 _characterLookup.TryGetComponent(ownerEntity, out var thrower);
-                thrower.Counts.NumThrowableFollowers++;
-                thrower.Counts.TimeLastFollowerPickedUp = now;
                 //thrower.Counts_Auth = thrower.Counts;
-                state.EntityManager.SetComponentData(ownerEntity, thrower);
-                var counts = thrower.Counts;
-                follower.ValueRW.OwnerQueueRank = counts.NumThrowableFollowers + counts.NumThrownFollowers;
+                //state.EntityManager.SetComponentData(ownerEntity, thrower);
                 var followerBuffer = state.EntityManager.GetBuffer<ThrowableFollowerElement>(ownerEntity);
-                //var numFollowers = followerBuffer.Length;
-                // Only allow front 3 followers to be set to predicted, the rest should be Interpolated
-                // if (numFollowers > 2)
-                // {
-                //     var thirdFromFront = numFollowers - 3;
-                //     ecb.SetComponentEnabled<ForceInterpolatedGhost>(
-                //         followerBuffer[thirdFromFront].Follower, true);
-                // }
+                follower.ValueRW.BufferIndex = followerBuffer.Length;
                 followerBuffer.Add(new ThrowableFollowerElement()
                 {
                     Follower = followerEntity

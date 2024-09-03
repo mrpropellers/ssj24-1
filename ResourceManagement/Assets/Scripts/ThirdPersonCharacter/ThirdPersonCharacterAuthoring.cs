@@ -1,3 +1,4 @@
+using System;
 using Simulation;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -49,13 +50,14 @@ public class ThirdPersonCharacterAuthoring : MonoBehaviour
             {
                 //InitialRatVelocity = authoring.ThrowVelocity,
                 ThrowHeight = authoring.ThrowHeight,
-                ThrowCooldown = authoring.ThrowCooldownSeconds 
+                ThrowCooldownTicks = Convert.ToUInt32(
+                    Mathf.FloorToInt(authoring.ThrowCooldownSeconds * 60f))
             });
             AddComponent<FollowerThrower>(entity);
             AddBuffer<ThrowableFollowerElement>(entity);
             AddBuffer<PendingProjectileCollisions>(entity);
             AddComponent(entity, new CharacterScore() { Value = 0 });
-            AddComponent(entity, new CharacterState());
+            //AddComponent(entity, new CharacterState());
 
             //AddBuffer<PendingPickUp>(entity);
         }

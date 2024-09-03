@@ -39,7 +39,7 @@ public readonly partial struct ThirdPersonCharacterAspect : IAspect, IKinematicC
         CharacterAspect.Update_ParentMovement(in this, ref context, ref baseContext, ref characterBody, ref characterPosition, characterBody.WasGroundedBeforeCharacterUpdate);
         CharacterAspect.Update_Grounding(in this, ref context, ref baseContext, ref characterBody, ref characterPosition);
         
-        // Update desired character velocity after grounding was detected, but before doing additional processing that depends on velocity
+        // Update desired character velocity after grounding was detected, but before doing additional processing that depe/ds on velocity
         HandleVelocityControl(ref context, ref baseContext);
 
         // Second phase of default character update
@@ -69,7 +69,8 @@ public readonly partial struct ThirdPersonCharacterAspect : IAspect, IKinematicC
         {
             // Move on ground
             float3 targetVelocity = characterControl.MoveVector * characterComponent.GroundMaxSpeed;
-            CharacterControlUtilities.StandardGroundMove_Interpolated(ref characterBody.RelativeVelocity, targetVelocity, characterComponent.GroundedMovementSharpness, deltaTime, characterBody.GroundingUp, characterBody.GroundHit.Normal);
+            CharacterControlUtilities.StandardGroundMove_Interpolated(
+                ref characterBody.RelativeVelocity, targetVelocity, characterComponent.GroundedMovementSharpness, deltaTime, characterBody.GroundingUp, characterBody.GroundHit.Normal);
 
             // Jump
             if (characterControl.Jump)

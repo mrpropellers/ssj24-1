@@ -1,3 +1,4 @@
+using System;
 using Unity.Entities;
 using Unity.NetCode;
 using UnityEngine;
@@ -12,6 +13,7 @@ namespace Simulation.Server
         public float SpawnRadius;
         public int SpawnCooldownTicks;
         public Entity Simulation;
+        public Unity.Mathematics.Random Rand;
     }
 
     public class RatPickupSpawnerAuthoring : MonoBehaviour
@@ -35,6 +37,7 @@ namespace Simulation.Server
                     Simulation = GetEntity(authoring.RatPickupSimulation, TransformUsageFlags.Dynamic),
                     SpawnRadius = authoring.SpawnRadius,
                     SpawnCooldownTicks = Mathf.FloorToInt(authoring.SpawnCooldownSeconds * 60),
+                    Rand = new Unity.Mathematics.Random((uint)UnityEngine.Random.Range(0, int.MaxValue))
                 });
             }
         }

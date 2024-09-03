@@ -279,6 +279,7 @@ namespace NetCode
                 Debug.
                     Log($"ip is {SteamManager.currentLobby.GetData("mymelon")}");
                 GameplaySceneLoader.IpAddress = SteamManager.currentLobby.GetData("mymelon");
+                GameplaySceneLoader.IsServer = false;
                 setUI(uiModes.inLobby);
                 GameplaySceneLoader.GameCanStart = true;
             }

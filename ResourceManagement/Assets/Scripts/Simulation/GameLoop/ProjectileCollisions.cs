@@ -66,6 +66,10 @@ namespace Simulation
         }
     }
     
+    // TODO | P1 - Gameplay | Trigger Presentation layer on Client from these systems
+    //  Right now the Server simulation does all of the collision detection and hands down the results to the Client
+    //  afterwards. Instead, these checks should run on both, and the Client should play the visual effects immediately,
+    //  even if they end up being invalidated by the Server afterwards
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
     [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]

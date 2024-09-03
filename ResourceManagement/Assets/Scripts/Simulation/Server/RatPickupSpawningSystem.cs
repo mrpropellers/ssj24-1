@@ -1,4 +1,3 @@
-using Presentation;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -16,7 +15,7 @@ namespace Simulation.Server
     {
         static Random s_Rand;
         
-        //[BurstCompile]
+        [BurstCompile]
         public void OnCreate(ref SystemState state)
         {
             var builder = new EntityQueryBuilder(Allocator.Temp)
@@ -25,22 +24,15 @@ namespace Simulation.Server
             state.RequireForUpdate<NetworkTime>();
             state.RequireForUpdate<GameState>();
             state.RequireForUpdate(state.GetEntityQuery(builder));
-            s_Rand = new Random(1);
         }
 
-        static bool hasUpdated = false;
-        //[BurstCompile]
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var gameState = SystemAPI.GetSingleton<GameState>();
             if (!gameState.IsGameplayUnderway)
                 return;
             
-            if (!hasUpdated)
-            {
-                Debug.Log("Spawner updated");
-                hasUpdated = true;
-            }
             var networkTime = SystemAPI.GetSingleton<NetworkTime>();
             // if (!networkTime.IsFirstTimeFullyPredictingTick)
             //     return;
@@ -57,6 +49,9 @@ namespace Simulation.Server
             //  (Devin 8.10.24) This second method might be preferable... otherwise I'm not sure how we manage spawning
             //      in all the rats for a player that hasn't been connected since the beginning?
             var tick = networkTime.ServerTick;
+
+            var min = new float3(-1f, -1f, -1f);
+            var max = new float3(1f, 1f, 1f);
             foreach (var (tf, ratSpawner) in SystemAPI
                          .Query<RefRO<LocalTransform>, RefRW<RatPickupSpawner>>())
             {
@@ -65,7 +60,8 @@ namespace Simulation.Server
                     continue;
                 //Debug.Log("Spawning a guy");
                 ratSpawner.ValueRW.TickLastSpawned = tick;
-                var randomVector = ratSpawner.ValueRW.SpawnRadius * s_Rand.NextFloat3();
+                var randomVector = ratSpawner.ValueRW.SpawnRadius * 
+                    ratSpawner.ValueRW.Rand.NextFloat3(min, max);
                 randomVector.y = tf.ValueRO.Position.y - 0.25f;
                 var rat = ecb.Instantiate(ratSpawner.ValueRW.Simulation);
                 var spawnLocation = tf.ValueRO.Position + randomVector;

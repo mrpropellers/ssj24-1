@@ -176,6 +176,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce1e2a70729e695489f05778f8bd8e9f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  forceOrthographic: 0
   pixelCamera: {fileID: 2192781028251145156}
   pixelPerfect: 1
   subPixelCamera: 1

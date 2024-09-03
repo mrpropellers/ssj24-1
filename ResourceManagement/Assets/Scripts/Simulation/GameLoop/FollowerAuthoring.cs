@@ -1,6 +1,8 @@
+using System;
 using Unity.Entities;
 using Unity.NetCode;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Simulation
 {
@@ -9,8 +11,6 @@ namespace Simulation
     {
         public float GoalDistance;
         public float Speed;
-        [GhostField]
-        public float CurrentSpeed;
         public float ProjectileSpeed;
         // TODO | P2 - Tech Debt | Put ProjectileConversionTime in proper prefs object
         //  I'm lazily (and redundantly) plumbing a config value set in the Scene into a static config field
@@ -19,7 +19,7 @@ namespace Simulation
         public static readonly uint ToProjectileTicks = 30;
         public static readonly float ToProjectileDivisor = 1f / ((float)ToProjectileTicks);
         [GhostField]
-        public int OwnerQueueRank;
+        public int BufferIndex;
     }
 
     public class FollowerAuthoring : MonoBehaviour
@@ -42,7 +42,8 @@ namespace Simulation
                 });
                 AddComponent(entity, new ConvertToProjectile()
                 {
-                    ConversionPeriod = authoring.ToProjectilePeriod,
+                    ConversionPeriod = Convert.ToUInt32(
+                        Mathf.FloorToInt(authoring.ToProjectilePeriod * 60f))
                 });
 
                 AddComponent(entity, new ForceInterpolatedGhost());

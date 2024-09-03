@@ -102,6 +102,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6474fe11f03b47f59dabc404ee25bb9d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  StartEnabled: 1
 --- !u!114 &2651294781728332450
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -199,4 +200,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bfdaa6c06fe64fbda2b16e07a4ee0b25, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ComponentOverrides: []
+  ComponentOverrides:
+  - FullTypeName: Unity.Transforms.LocalTransform
+    EntityIndex: 0
+    PrefabType: -1
+    SendTypeOptimization: -1
+    VariantHash: 17312028693704544116

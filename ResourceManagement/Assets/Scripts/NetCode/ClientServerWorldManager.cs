@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Simulation;
@@ -13,12 +14,32 @@ namespace NetCode
     public class ClientServerWorldManager
     {
         Entity _clientConnector;
+        MonoBehaviour _owner;
         List<Entity> _serverLoadEntities = new List<Entity>();
         List<Entity> _clientLoadEntities = new List<Entity>();
         float _timeLoadStarted;
         
         public World serverWorld { get; private set; }
         public World clientWorld { get; private set; }
+
+        public ClientServerWorldManager(MonoBehaviour owner)
+        {
+            _owner = owner;
+        }
+
+        bool ServerIsInitialized
+        {
+            get
+            {
+                foreach (var serverLoad in _serverLoadEntities)
+                {
+                    if (!SceneSystem.IsSceneLoaded(serverWorld.Unmanaged, serverLoad))
+                        return false;
+                }
+
+                return true;
+            }
+        }
 
         public bool WorldsAreInitialized
         {
@@ -27,10 +48,10 @@ namespace NetCode
                 if (!HasAttemptedInitialization)
                     return false;
 
-                foreach (var serverLoad in _serverLoadEntities)
+                if ((_serverLoadEntities.Any() && !ServerIsInitialized) 
+                    || !_clientLoadEntities.Any())
                 {
-                    if (!SceneSystem.IsSceneLoaded(serverWorld.Unmanaged, serverLoad))
-                        return false;
+                    return false; 
                 }
                 
                 foreach (var clientLoad in _clientLoadEntities)
@@ -43,7 +64,7 @@ namespace NetCode
             }
         }
 
-        public bool HasAttemptedInitialization => _clientLoadEntities.Any();
+        public bool HasAttemptedInitialization => _serverLoadEntities.Any() || _clientLoadEntities.Any();
         public NetworkStreamConnection ClientNetworkStream => WorldsAreInitialized
             ? clientWorld.EntityManager.GetComponentData<NetworkStreamConnection>(_clientConnector)
             : default;
@@ -60,6 +81,36 @@ namespace NetCode
             gameState.IsGameplayUnderway = true;
             serverWorld.EntityManager.SetComponentData(gameStateEntity, gameState);
         }
+
+        IEnumerator StartClientAfterServer(
+            GameplaySceneReferences gameScene, string ip, ushort port, float timeOut = 5f)
+        {
+            var start = Time.time;
+            if (TryStartServer(port) && TryStartClient(ip, port))
+            {
+                Debug.Log("Server and client started. Loading Server World");
+                _serverLoadEntities.Add(SceneSystem.LoadSceneAsync(serverWorld.Unmanaged, gameScene.Level));
+                _serverLoadEntities.Add(SceneSystem.LoadSceneAsync(serverWorld.Unmanaged, gameScene.GameSetup));
+            }
+            else
+            {
+                Debug.LogError("Failed to start Server or Client. Aborting world initialization.");
+            }
+            while (!ServerIsInitialized && Time.time - start < timeOut)
+            {
+                yield return null;
+            }
+
+            if (Time.time - start >= timeOut - float.Epsilon)
+            {
+                Debug.LogError("Failed to start the Server! Aborting");
+                yield break;
+            }
+            
+            Debug.Log("Server world loaded. Loading Client world.");
+            _clientLoadEntities.Add(SceneSystem.LoadSceneAsync(clientWorld.Unmanaged, gameScene.Level));
+            _clientLoadEntities.Add(SceneSystem.LoadSceneAsync(clientWorld.Unmanaged, gameScene.GameSetup));
+        }
         
         public void InitializeWorlds(GameplaySceneReferences gameScene, string ip, ushort port, bool isServer)
         {
@@ -75,24 +126,18 @@ namespace NetCode
             
             if (isServer)
             {
-                if (TryStartServer(port))
-                {
-                    Debug.Log("Server started. Loading Server World");
-                    _serverLoadEntities.Add(SceneSystem.LoadSceneAsync(serverWorld.Unmanaged, gameScene.GameSetup));
-                    _serverLoadEntities.Add(SceneSystem.LoadSceneAsync(serverWorld.Unmanaged, gameScene.Level));
-                }
-                else
-                {
-                    Debug.LogError("Failed to start Server. Aborting world initialization.");
-                    return;
-                }
+                _owner.StartCoroutine(StartClientAfterServer(gameScene, ip, port));
+
+                return;
             }
             
-            if (TryStartClient(ip, port))
+            if (TryStartClient(
+                    //isServer ? "127.0.0.1" : 
+                    ip, port))
             { 
                 Debug.Log("Client started. Loading Client world.");
-                _clientLoadEntities.Add(SceneSystem.LoadSceneAsync(clientWorld.Unmanaged, gameScene.GameSetup));
                 _clientLoadEntities.Add(SceneSystem.LoadSceneAsync(clientWorld.Unmanaged, gameScene.Level));
+                _clientLoadEntities.Add(SceneSystem.LoadSceneAsync(clientWorld.Unmanaged, gameScene.GameSetup));
             }
             else
             {
@@ -118,7 +163,6 @@ namespace NetCode
             Debug.Log($"Attempting to start client and connect to {ipAddress}:{port}");
             clientWorld = ClientServerBootstrap.CreateClientWorld("Ratking Client World");
             World.DefaultGameObjectInjectionWorld = clientWorld;
-            // TODO | P1 - NetCode | Always use 127.0.0.1 if we're on the same machine as the Server
             var connectionEndpoint = NetworkEndpoint.Parse(ipAddress, port);
             using var networkDriverQuery = clientWorld.EntityManager.CreateEntityQuery(
                 ComponentType.ReadWrite<NetworkStreamDriver>());

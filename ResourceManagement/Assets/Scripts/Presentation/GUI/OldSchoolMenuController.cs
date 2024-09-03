@@ -47,6 +47,7 @@ namespace Presentation
             {
                 m_SceneLoaders[i].allowSceneActivation = true;
             }
+
             SceneManager.UnloadSceneAsync(0);
         }
 

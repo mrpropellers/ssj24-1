@@ -46,7 +46,7 @@ namespace NetCode
             GameCanStart = false;
             IsServer = true;
             IpAddress = "127.0.0.1";
-            _worldManager = new ClientServerWorldManager();
+            _worldManager = new ClientServerWorldManager(this);
         }
 
 #if UNITY_EDITOR

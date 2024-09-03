@@ -9,6 +9,7 @@ namespace Presentation
     public struct ColorOverride : IComponentData, IEnableableComponent
     {
         public Color Value;
+        public bool WasApplied;
     }
     
     [UpdateInGroup(typeof(PresentationSystemGroup))]
@@ -31,6 +32,8 @@ namespace Presentation
         public void OnUpdate(ref SystemState state)
         {
             m_ProjectileLookup.Update(ref state);
+            if (!Debug.isDebugBuild)
+                return;
             
             foreach (var (colorOverride, entity) in SystemAPI
                          .Query<RefRW<ColorOverride>>()
@@ -38,13 +41,16 @@ namespace Presentation
                          .WithEntityAccess())
             {
                 if (m_ProjectileLookup.TryGetComponent(entity, out var projectile)
-                    && projectile.HasBounced)
+                    && projectile.HasBounced
+                    && colorOverride.ValueRO.Value != k_BouncedColor)
                 {
                     colorOverride.ValueRW.Value = k_BouncedColor;
+                    colorOverride.ValueRW.WasApplied = false;
                 }
-                else
+                else if (colorOverride.ValueRO.Value != k_PredictedColor)
                 {
                     colorOverride.ValueRW.Value = k_PredictedColor;
+                    colorOverride.ValueRW.WasApplied = false;
                 }
             }
             
@@ -52,7 +58,11 @@ namespace Presentation
                          .Query<RefRW<ColorOverride>>()
                          .WithNone<PredictedGhost>().WithEntityAccess())
             {
+                if (colorOverride.ValueRO.Value == k_InterpolatedColor)
+                    continue;
+                
                 colorOverride.ValueRW.Value = k_InterpolatedColor;
+                colorOverride.ValueRW.WasApplied = false;
             }
         }
 
@@ -74,16 +84,20 @@ namespace Presentation
         //[BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            #if UNITY_EDITOR
+            if (!Debug.isDebugBuild)
+                return;
+            
             foreach (var (colorOverride, rendererLink) in SystemAPI
-                         .Query<RefRO<ColorOverride>, RendererLink>()
+                         .Query<RefRW<ColorOverride>, RendererLink>()
                          .WithAll<ColorOverride>())
             {
+                if (colorOverride.ValueRO.WasApplied)
+                    continue;
                 var mbp = new MaterialPropertyBlock();
                 mbp.SetColor(k_ColorId, colorOverride.ValueRO.Value);
                 rendererLink.Renderer.SetPropertyBlock(mbp);
+                colorOverride.ValueRW.WasApplied = true;
             }
-            #endif
         }
 
         [BurstCompile]
