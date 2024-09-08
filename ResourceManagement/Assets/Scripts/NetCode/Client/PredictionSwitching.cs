@@ -33,7 +33,7 @@ namespace Simulation
         }
     }
     
-    //[BurstCompile]
+    [BurstCompile]
     [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
     [StructLayout(LayoutKind.Auto)]
     public partial struct PredictionSwitchingSystem : ISystem
@@ -51,7 +51,7 @@ namespace Simulation
             m_ForceInterpolation = state.GetComponentLookup<ForceInterpolatedGhost>(true);
         }
 
-        //[BurstCompile]
+        [BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
             var playerEnt = SystemAPI.GetSingleton<CommandTarget>().targetEntity;
@@ -96,7 +96,10 @@ namespace Simulation
         }
 
         [BurstCompile]
-        [WithNone(typeof(PredictedGhost), typeof(SwitchPredictionSmoothing), typeof(GameState))]
+        [WithNone(typeof(GhostOwner), 
+            typeof(PredictedGhost), 
+            typeof(SwitchPredictionSmoothing), 
+            typeof(GameState))]
         //[WithNone(typeof(ForceInterpolatedGhost))]
         [StructLayout(LayoutKind.Auto)]
         partial struct SwitchToPredictedGhost : IJobEntity
@@ -133,7 +136,7 @@ namespace Simulation
         }
 
         [BurstCompile]
-        [WithNone(typeof(SwitchPredictionSmoothing), typeof(GhostOwnerIsLocal))]
+        [WithNone(typeof(GhostOwner), typeof(SwitchPredictionSmoothing), typeof(GhostOwnerIsLocal))]
         [WithAll(typeof(PredictedGhost))]
         partial struct SwitchToInterpolatedGhost : IJobEntity
         {

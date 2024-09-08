@@ -8,7 +8,7 @@ namespace NetCode
 {
 #if !UNITY_EDITOR
     [UpdateInGroup(typeof(PredictedSimulationSystemGroup))]
-    public partial struct DebugLogging : ISystem
+    public partial struct NetCodeLogDumper : ISystem
     {
         [BurstCompile]
         public void OnCreate(ref SystemState state)
@@ -19,7 +19,7 @@ namespace NetCode
         //[BurstCompile]
         public void OnUpdate(ref SystemState state)
         {
-            if (!Debug.isDebugBuild)
+            if (true) //(!Debug.isDebugBuild)
                 return;
             var networkTime = SystemAPI.GetSingleton<NetworkTime>();
             var isServer = state.World.IsServer();

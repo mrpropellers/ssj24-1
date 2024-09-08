@@ -9,6 +9,7 @@ namespace NetCode
     {
         public EntitySceneReference Level;
         public EntitySceneReference GameSetup;
+        public EntityPrefabReference GameState;
     }
 
     public class GameplaySceneLoader : MonoBehaviour
@@ -20,14 +21,17 @@ namespace NetCode
         bool LoadWorldsOnPlay;
         bool ImmediateLoadFinished;
 
-        public static ClientServerWorldManager WorldManager => Instance._worldManager;
+        public static EntityWorlds EntityWorldsInstance => ReferenceEquals(null, Instance) 
+            ? null 
+            : Instance.m_EntityWorlds;
         // (8.11.24) TODO | P3 - NetCode / Tech Debt | Make WorldManager a IDisposable and only use it when appropriate
         //  Right now we create a single WorldManager class whenever this menu spins up, but we could make this
         //  a bit cleaner if the state inside this manager only persisted when we're actually managing these worlds
         //  Rather than expose utility functions to create/clean worlds, we'd simply initialize the worlds on
         //  according to whether it was a Server or not, and then do the appropriate clean-up on Dispose()
         //  This way, we can ensure no lingering state poisons our world manager when going in-between connections
-        ClientServerWorldManager _worldManager;
+        //  (Also we should manage this statically inside of its own class rather than hiding it in here)
+        EntityWorlds m_EntityWorlds;
         
         // TODO: These statics suck and should move into the IDisposeable WorldManager as constructor values,
         //  when that exists.
@@ -35,10 +39,9 @@ namespace NetCode
         public static ushort Port { get; set; } = 7979;
         public static bool IsServer { get; set; } = true;
         public static bool GameCanStart { get; set; }
-        public static bool GameStarted { get; set; }
         public static bool ShouldInitializeWorlds => GameCanStart
-            && !Instance._worldManager.WorldsAreInitialized 
-            && !Instance._worldManager.HasAttemptedInitialization;
+            && !EntityWorlds.AreInitialized 
+            && !EntityWorlds.HasAttemptedInitialization;
 
         void Awake()
         {
@@ -46,13 +49,12 @@ namespace NetCode
             GameCanStart = false;
             IsServer = true;
             IpAddress = "127.0.0.1";
-            _worldManager = new ClientServerWorldManager(this);
         }
 
-#if UNITY_EDITOR
         void Start()
         {
-            if (LoadWorldsOnPlay)
+            m_EntityWorlds = new EntityWorlds(this);
+            if (LoadWorldsOnPlay && Application.isEditor)
             {
                 Debug.Log("[DEBUG] Setting world init flag.");
                 GameCanStart = true;
@@ -61,21 +63,25 @@ namespace NetCode
 
         void Update()
         {
-            if (!LoadWorldsOnPlay || ImmediateLoadFinished)
+            if (!Application.isEditor || !LoadWorldsOnPlay || ImmediateLoadFinished)
                 return;
             
-            if (WorldManager.WorldsAreInitialized)
+            if (EntityWorlds.AreInitialized)
             {
                 Debug.Log("[DEBUG] Starting game.");
                 ImmediateLoadFinished = true;
-                WorldManager.StartGameOnServer();
+                EntityWorlds.StartGameOnServer();
             }
         }
-#endif
+
+        void OnDisable()
+        {
+            m_EntityWorlds = null;
+        }
 
         public static void InitializeWorlds(GameplaySceneReferences sceneReference)
         {
-            Instance._worldManager.InitializeWorlds(sceneReference, IpAddress, Port, IsServer);
+            Instance.m_EntityWorlds.InitializeWorlds(sceneReference, IpAddress, Port, IsServer);
         }
     }
     

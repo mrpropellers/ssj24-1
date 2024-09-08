@@ -7,7 +7,7 @@ public class PlayRandomSqueaks : MonoBehaviour
     [SerializeField] private float avgTimeBetweenSqueaks;
     [SerializeField] private float varianceBetweenSqueaks;
 
-    private void Awake()
+    private void Start()
     {
         StartCoroutine(Squeak());
     }

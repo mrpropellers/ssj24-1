@@ -11,6 +11,7 @@ namespace Presentation
     public class OldSchoolMenuController : MonoBehaviour
     {
         List<AsyncOperation> m_SceneLoaders;
+        bool m_IsLoadingMain;
         
         [SerializeField] float fadeOutTime = 3.0f;
 
@@ -21,7 +22,13 @@ namespace Presentation
 
         public void OnStartGameClicked()
         {
+            if (m_IsLoadingMain)
+            {
+                Debug.Log("Already loading main. Clicking again does nothing.");
+                return;
+            }
 
+            m_IsLoadingMain = true;
             StartCoroutine(LoadMainScene());
         }
 

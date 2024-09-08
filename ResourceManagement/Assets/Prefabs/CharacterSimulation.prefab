@@ -113,10 +113,10 @@ MonoBehaviour:
     y: -30
     z: -0
   ThrowHeight: 1.5
-  ThrowCooldownSeconds: 0.8
+  ThrowCooldownSeconds: 0.4
   PreventAirAccelerationAgainstUngroundedHits: 1
   StepAndSlopeHandling:
-    StepHandling: 0
+    StepHandling: 1
     MaxStepHeight: 0.5
     ExtraStepChecksDistance: 0.1
     CharacterWidthForStepGroundingCheck: 1

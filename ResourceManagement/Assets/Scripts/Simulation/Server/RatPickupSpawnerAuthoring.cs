@@ -21,7 +21,7 @@ namespace Simulation.Server
         [FormerlySerializedAs("RatPickupPrefab")]
         [SerializeField]
         GameObject RatPickupSimulation;
-        [SerializeField, Min(1f)]
+        [SerializeField, Min(0.1f)]
         float SpawnRadius = 5f;
         [SerializeField, Min(1f)]
         float SpawnCooldownSeconds;

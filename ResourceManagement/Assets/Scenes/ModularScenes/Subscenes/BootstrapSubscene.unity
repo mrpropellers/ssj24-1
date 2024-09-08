@@ -154,6 +154,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   GameplayScene: {fileID: 102900000, guid: 2d3f0ae80b065834bbc1084222c2a8a3, type: 3}
   GameSetupScene: {fileID: 102900000, guid: ec9a55b44fb9dd1498e81657096cdb7a, type: 3}
+  GameStatePrefab: {fileID: 5595396564465700597, guid: c371cded4019c314985e4dab373262d7,
+    type: 3}
 --- !u!4 &842611474
 Transform:
   m_ObjectHideFlags: 0

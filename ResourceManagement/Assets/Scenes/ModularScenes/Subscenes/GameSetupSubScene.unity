@@ -122,7 +122,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1001 &220745188054239647
+--- !u!1001 &1941908945
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -253,13 +253,7 @@ PrefabInstance:
       propertyPath: m_Name
       value: GameSetup
       objectReference: {fileID: 0}
-    - target: {fileID: 3470779037827607688, guid: 9576ce5d2c17aae4e833dc74c11848d4,
-        type: 3}
-      propertyPath: ForceUnderway
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents:
-    - {fileID: 3470779037827607688, guid: 9576ce5d2c17aae4e833dc74c11848d4, type: 3}
+    m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []
@@ -269,4 +263,4 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 6576753401644222055}
-  - {fileID: 220745188054239647}
+  - {fileID: 1941908945}

@@ -127,15 +127,29 @@ namespace NetCode
         bool m_ShouldReport = true;
         void Update()
         {
-            if (!GameplaySceneLoader.WorldManager.WorldsAreInitialized || !m_ShouldReport)
+            if (!EntityWorlds.AreInitialized)
                 return;
 
-            if (m_LastReported + m_ReportPeriod > Time.time)
-                return;
+            if (m_ShouldReport && CanReport)
+            {
+                ReportConnectionStatus();
+            }
 
+            // TODO | P4 | Tech Debt | Refactor UI manager to be event-driven
+            //  We shouldn't need to poll state here, but instead subscribe to a (currently non-existent)
+            //  event broadcaster which lets us know when game state has changed.
+            if (!IsInGame && EntityWorlds.GameplayIsUnderway)
+            {
+                setUI(uiModes.inGame);
+            }
+        }
+
+        bool CanReport => m_LastReported + m_ReportPeriod < Time.time;
+        void ReportConnectionStatus()
+        {
             m_LastReported = Time.time;
 
-            if (GameplaySceneLoader.WorldManager.IsClientConnected)
+            if (GameplaySceneLoader.EntityWorldsInstance.ClientIsConnected)
             {
                 Debug.Log("Client is connected!");
                 m_ShouldReport = false;
@@ -147,7 +161,7 @@ namespace NetCode
                 //  without having any idea what's going on. We should put something on the screen while the player
                 //  is trying to connect, and allow them to cancel (or timeout) after a certain amount of time
                 Debug.LogWarning($"Current Client status: " +
-                    $"{GameplaySceneLoader.WorldManager.ClientNetworkStream.CurrentState}");
+                    $"{GameplaySceneLoader.EntityWorldsInstance.ClientConnectionState}");
             }
         }
 
@@ -232,21 +246,25 @@ namespace NetCode
                 return;
             
             await m_IpFetcher.FetchTask;
+            // TODO | P0 | Matchmaking / UX | Let host specify their address in the UI
+            //  Rather than secretly populating the lobby key with a given UI that we've secretly fetched,
+            //  pre-populate a text field with our best guess of what their IP is, and let them change it
+            //  (might want to hide the field by default so as not to blast it to a stream)
             if (!m_IpFetcher.HasAddresses)
             {
                 Debug.LogError("Something bad happened while waiting for IP Addresses...");
             }
             SteamManager.currentLobby.SetData("ratMakerId", ratKingPass);
-            SteamManager.currentLobby.SetData("mymelon", m_IpFetcher.myAddressGlobal);
+            SteamManager.currentLobby.SetData("mymelon", m_IpFetcher.BestAddressFetched);
             SteamManager.currentLobby.SetData("lobbyName", _lobbyTitleField.text);
-            GameplaySceneLoader.IpAddress = ForceLocalIP ? m_IpFetcher.myAddressLocal : m_IpFetcher.myAddressGlobal;
+            GameplaySceneLoader.IpAddress = m_IpFetcher.BestAddressFetched;
             setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
             setUI(uiModes.Host);
             IsLobbyHost = true;
             GameplaySceneLoader.GameCanStart = true;
             Debug.Log($"Lobby created: {SteamManager.currentLobby.Id}");
             Debug.Log(SteamManager.currentLobby.ToString());
-            Debug.Log($"IP: {m_IpFetcher.myAddressGlobal}");
+            Debug.Log($"IP: {m_IpFetcher.BestAddressFetched}");
         }
 
         private void OnLobbyChanges(Lobby lobby, Friend friend)
@@ -258,7 +276,7 @@ namespace NetCode
         }
         private void OnCancelLobby()
         {
-            GameplaySceneLoader.WorldManager.CleanUpGameWorlds(true);
+            GameplaySceneLoader.EntityWorldsInstance.CleanUpGameWorlds(true);
             IsLobbyHost = false;
             GameplaySceneLoader.GameCanStart = false;
             SteamManager.currentLobby.SetData("melon", "000000000");
@@ -269,12 +287,26 @@ namespace NetCode
 
         async private void OnJoinLobby()
         {
-
-            RoomEnter joinedLobbySuccess = await SteamManager.activeLobbies[_lobbiesList.selectedIndex].Join();
+            var lobbyIdx = _lobbiesList.selectedIndex;
+            if (lobbyIdx >= SteamManager.activeLobbies.Count)
+            {
+                if (SteamManager.activeLobbies.Any())
+                {
+                    Debug.Log("Tried to join lobby without selecting any. Defaulting to first one.");
+                    lobbyIdx = 0;
+                }
+                else
+                {
+                    Debug.Log("no lobbies to join, returning");
+                    return;
+                }
+                    
+            }
+            RoomEnter joinedLobbySuccess = await SteamManager.activeLobbies[lobbyIdx].Join();
 
             if (joinedLobbySuccess == RoomEnter.Success)
             {
-                SteamManager.currentLobby = SteamManager.activeLobbies[_lobbiesList.selectedIndex];
+                SteamManager.currentLobby = SteamManager.activeLobbies[lobbyIdx];
                 setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
                 Debug.
                     Log($"ip is {SteamManager.currentLobby.GetData("mymelon")}");
@@ -292,7 +324,7 @@ namespace NetCode
 
         async private void OnLeaveLobby()
         {
-            GameplaySceneLoader.WorldManager.CleanUpGameWorlds(true);
+            GameplaySceneLoader.EntityWorldsInstance.CleanUpGameWorlds(false);
             await GetRatKingLobbies();
             OnFindLobby();
         }
@@ -343,6 +375,12 @@ namespace NetCode
             _lobbiesList.itemsSource = displayLobbiesList;
         }
 
+        bool IsInGame => uiMode switch
+        {
+            uiModes.inGame => true,
+            uiModes.pauseMenu => true,
+            _ => false
+        };
         private void setUI(uiModes newUIMode)
         {
             //setUI clears all UI elements, chooses which to reveal and sets menu titles. All other logic of contents of elements is handled in the button callback functions.
@@ -467,9 +505,7 @@ namespace NetCode
             Debug.LogWarning("running game startup");
 
             setUI(uiModes.inGame);
-            GameplaySceneLoader.WorldManager.StartGameOnServer();
-
-            GameplaySceneLoader.GameStarted = true;
+            EntityWorlds.StartGameOnServer();
         }
     }
 }

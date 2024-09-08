@@ -17,8 +17,10 @@ namespace NetCode
             ResponseReceived
         }
 
-        public string myAddressLocal;
-        public string myAddressGlobal;
+        public bool FoundGlobalAddress { get; private set; }
+        public string BestAddressFetched => FoundGlobalAddress ? myAddressGlobal : myAddressLocal;
+        private string myAddressLocal;
+        private string myAddressGlobal;
         public bool ShouldFetchAddresses => m_Status == Status.Uninitialized;
         public bool HasAddresses => m_Status == Status.ResponseReceived;
         public Task FetchTask { get; private set; }
@@ -65,17 +67,16 @@ namespace NetCode
                     Stream stream = response.GetResponseStream();
                     StreamReader reader = new StreamReader(stream, Encoding.UTF8);
                     myAddressGlobal = reader.ReadToEnd();
+                    FoundGlobalAddress = true;
                 }
                 else
                 {
-                    Debug.LogError("Timed out? " + response.StatusDescription);
-                    myAddressGlobal = myAddressLocal; //"127.0.0.1";
+                    Debug.LogWarning("Timed out? " + response.StatusDescription);
                 }
             }
             catch (WebException ex)
             {
                 Debug.Log($"Failed to get IP: {ex.Message} \n Will use local IP ({myAddressLocal})");
-                myAddressGlobal = myAddressLocal; // "127.0.0.1";
             }
 
             m_Status = Status.ResponseReceived;

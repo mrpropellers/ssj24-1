@@ -11,6 +11,7 @@ namespace NetCode
         [FormerlySerializedAs("Scene")]
         public UnityEditor.SceneAsset GameplayScene;
         public UnityEditor.SceneAsset GameSetupScene;
+        public GameObject GameStatePrefab;
         public class GameplaySceneReferenceBaker : Baker<GameplaySceneAuthoring>
         {
             public override void Bake(GameplaySceneAuthoring authoring)
@@ -19,7 +20,8 @@ namespace NetCode
                 AddComponent(entity, new GameplaySceneReferences()
                 {
                     Level = new EntitySceneReference(authoring.GameplayScene),
-                    GameSetup = new EntitySceneReference(authoring.GameSetupScene)
+                    GameSetup = new EntitySceneReference(authoring.GameSetupScene),
+                    GameState = new EntityPrefabReference(authoring.GameStatePrefab)
                 });
             }
         }

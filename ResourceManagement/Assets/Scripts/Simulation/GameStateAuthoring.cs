@@ -1,7 +1,6 @@
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.NetCode;
-using Unity.Physics;
 using UnityEngine;
 
 namespace Simulation
@@ -30,6 +29,12 @@ namespace Simulation
         public Entity EntityHit;
         //public CollisionEvent CollisionEvent;
     }
+
+    [InternalBufferCapacity(64)]
+    public struct PendingRespawn : IBufferElementData
+    {
+        public Entity Player;
+    }
     
     [GhostComponent]
     public struct GameState : IComponentData
@@ -50,6 +55,7 @@ namespace Simulation
                 });
                 AddBuffer<PendingRatScored>(entity);
                 AddBuffer<PendingCollision>(entity);
+                AddBuffer<PendingRespawn>(entity);
             }
         }
     }

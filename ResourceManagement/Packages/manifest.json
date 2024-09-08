@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "com.yasirkula.ingamedebugconsole": "https://github.com/yasirkula/UnityIngameDebugConsole.git",
     "com.unity.2d.aseprite": "1.1.5",
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.charactercontroller": "1.1.0-exp.10",

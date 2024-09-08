@@ -54,6 +54,7 @@ namespace NetCode
         public void OnCreate(ref SystemState state)
         {
             state.RequireForUpdate<GameSetup>();
+            //state.RequireForUpdate<GameState>();
             
             var builder = new EntityQueryBuilder(Allocator.Temp)
                 .WithAll<NetworkId>()
@@ -110,6 +111,11 @@ namespace NetCode
 
             var spawnPoints = new List<ValueTuple<RefRW<PlayerSpawnPoint>, RefRO<LocalTransform>>>();
             var foundSpawnPoints = false;
+
+            // if (!SystemAPI.TryGetSingletonEntity<GameState>(out _))
+            // {
+            //     state.EntityManager.Instantiate(gameSetup.GameState);
+            // }
             
             // When a client wants to join, spawn and setup a character for them
             foreach (var (recieveRPC, joinRequest, entity) in SystemAPI.Query<ReceiveRpcCommandRequest, ClientJoinRequest>().WithEntityAccess())

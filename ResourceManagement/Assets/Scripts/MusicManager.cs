@@ -1,11 +1,11 @@
+using System;
 using FMODUnity;
+using NetCode;
 using UnityEngine;
 
 
 public class MusicManager : MonoBehaviour
 {
-    static MusicManager _instance;
-    
     [SerializeField] private EventReference menuMusic;
     [SerializeField] private EventReference gameMusic;
 
@@ -16,10 +16,24 @@ public class MusicManager : MonoBehaviour
 
     private void Awake()
     {
-        _instance = this;
         _menuMusicInstance = RuntimeManager.CreateInstance(menuMusic);
         _gameMusicInstance = RuntimeManager.CreateInstance(gameMusic);
         _menuMusicInstance.start();
+    }
+
+    // TODO | P4 | Tech Debt | Refactor MusicManager to be event-driven
+    //  We shouldn't need to poll state here, but instead subscribe to a (currently non-existent)
+    //  event broadcaster which lets us know when game state has changed.
+    void Update()
+    {
+        if (IsPlayingGameMusic && !EntityWorlds.GameplayIsUnderway)
+        {
+            PlayMenuMusic();
+        }
+        else if (!IsPlayingGameMusic && EntityWorlds.GameplayIsUnderway)
+        {
+            PlayGameMusic();
+        }
     }
 
     public static void PlayGameMusic()

@@ -372,6 +372,13 @@
         "com.unity.render-pipelines.universal": "7.4.1"
       }
     },
+    "com.yasirkula.ingamedebugconsole": {
+      "version": "https://github.com/yasirkula/UnityIngameDebugConsole.git",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "51e0996359c31c9cb01cca4f5aedcd72251b2425"
+    },
     "com.unity.modules.ai": {
       "version": "1.0.0",
       "depth": 0,
