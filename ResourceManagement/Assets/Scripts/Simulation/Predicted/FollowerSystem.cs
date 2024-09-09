@@ -41,6 +41,10 @@ namespace Simulation
                         "Found an entity that with HasConfiguredOwner component enabled but value is set to false!");
                     continue;
                 }
+
+                // (9/8/2024) TODO | P1 | Tech Debt | Clean up followers when a Player disconnects
+                if (!state.EntityManager.Exists(pickUp.ValueRO.Owner))
+                    continue;
                 
                 var targetTf = SystemAPI.GetComponent<LocalTransform>(pickUp.ValueRO.Owner);
                 var followerBuffer = state.EntityManager.GetBuffer<ThrowableFollowerElement>(pickUp.ValueRO.Owner);

@@ -445,7 +445,9 @@ MonoBehaviour:
   defaultTitle: Rats II
   steamManagerObject: {fileID: 1911664947}
   ratKingPass: abc123throwthemrats
-  ForceLocalIP: 1
+  UseLocalIP: 0
+  OverrideIp: 0
+  IpOverride: 192.168.137.1
 --- !u!114 &1598922601
 MonoBehaviour:
   m_ObjectHideFlags: 0

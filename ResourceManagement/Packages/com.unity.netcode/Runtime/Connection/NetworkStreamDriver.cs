@@ -4,6 +4,7 @@ using Unity.Networking.Transport;
 using Unity.Collections.LowLevel.Unsafe;
 using System;
 using Unity.Networking.Transport.Relay;
+using UnityEngine;
 
 namespace Unity.NetCode
 {
@@ -143,6 +144,7 @@ namespace Unity.NetCode
                 var driverInstance = DriverStore.GetDriverInstance(i);
                 if(driverInstance.driver.Bind(tempAddress) != 0 || driverInstance.driver.Listen() != 0)
                     errors.Add(i);
+                Debug.Log($"Listening on {driverInstance}");
             }
             if(!errors.IsEmpty)
             {

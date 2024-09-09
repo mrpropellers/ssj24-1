@@ -9,7 +9,6 @@ namespace Simulation
         public Entity Player;
         public Entity CharacterSimulation;
         public Entity RatProjectileSimulation;
-        //public Entity GameState;
     }
 
     public class GameSetupAuthoring : MonoBehaviour
@@ -20,8 +19,6 @@ namespace Simulation
         GameObject CharacterPrefab;
         [SerializeField]
         GameObject RatProjectilePrefab;
-        // [SerializeField]
-        // GameObject GameStatePrefab;
         
         public class GameSetupBaker : Baker<GameSetupAuthoring>
         {
@@ -32,8 +29,6 @@ namespace Simulation
                     CharacterSimulation = GetEntity(authoring.CharacterPrefab, TransformUsageFlags.None),
                     Player = GetEntity(authoring.PlayerPrefab, TransformUsageFlags.None),
                     RatProjectileSimulation = GetEntity(authoring.RatProjectilePrefab, TransformUsageFlags.None),
-                    // GameState = GetEntity(authoring.GameStatePrefab, TransformUsageFlags.None),
-                    //CameraPrefab = GetEntity(authoring.CameraPrefab, TransformUsageFlags.None),
                 });
             }
         }

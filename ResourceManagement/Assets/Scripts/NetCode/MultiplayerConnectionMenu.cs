@@ -6,7 +6,6 @@ using Steamworks.Data;
 using Steamworks;
 using System.Linq;
 using System.Threading.Tasks;
-using UnityEngine.Serialization;
 
 namespace NetCode
 {
@@ -63,8 +62,13 @@ namespace NetCode
         [SerializeField] GameObject steamManagerObject;
         //[SerializeField] private FixedString64Bytes defaultScene = "DevinCharacterScene";
         [SerializeField] private string ratKingPass = "abc123throwthemrats";
-        [FormerlySerializedAs("UseLocalIp")]
-        public bool ForceLocalIP;
+        [SerializeField]
+        bool UseLocalIP;
+
+        public bool OverrideIp;
+        public string IpOverride;
+
+        string IpAddressToUse => OverrideIp ? IpOverride : UseLocalIP ? m_IpFetcher.myAddressLocal : m_IpFetcher.BestAddressFetched;
         //[SerializeField] private SceneAsset MenuScene;
         //[SerializeField] private SceneAsset GameScene;
         private SteamManager SteamManager { get; set; }
@@ -255,16 +259,16 @@ namespace NetCode
                 Debug.LogError("Something bad happened while waiting for IP Addresses...");
             }
             SteamManager.currentLobby.SetData("ratMakerId", ratKingPass);
-            SteamManager.currentLobby.SetData("mymelon", m_IpFetcher.BestAddressFetched);
+            SteamManager.currentLobby.SetData("mymelon", IpAddressToUse);
             SteamManager.currentLobby.SetData("lobbyName", _lobbyTitleField.text);
-            GameplaySceneLoader.IpAddress = m_IpFetcher.BestAddressFetched;
+            GameplaySceneLoader.IpAddress = IpAddressToUse;
             setLobbyMemberList(SteamManager.currentLobby.Members.ToList());
             setUI(uiModes.Host);
             IsLobbyHost = true;
             GameplaySceneLoader.GameCanStart = true;
             Debug.Log($"Lobby created: {SteamManager.currentLobby.Id}");
             Debug.Log(SteamManager.currentLobby.ToString());
-            Debug.Log($"IP: {m_IpFetcher.BestAddressFetched}");
+            Debug.Log($"IP: {IpAddressToUse}");
         }
 
         private void OnLobbyChanges(Lobby lobby, Friend friend)

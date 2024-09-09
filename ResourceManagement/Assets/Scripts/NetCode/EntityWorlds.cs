@@ -93,6 +93,9 @@ namespace NetCode
             && Instance.TryGetGameState(out _, out var gameState)
             && gameState.IsGameplayUnderway;
 
+        public static int NumConnectedPlayers => 
+            1;
+        
         EntityQuery? m_GameStateQuery;
 
         bool TryGetGameState(out Entity gameStateEntity, out GameState gameState)

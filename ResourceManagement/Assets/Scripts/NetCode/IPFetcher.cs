@@ -19,7 +19,7 @@ namespace NetCode
 
         public bool FoundGlobalAddress { get; private set; }
         public string BestAddressFetched => FoundGlobalAddress ? myAddressGlobal : myAddressLocal;
-        private string myAddressLocal;
+        public string myAddressLocal;
         private string myAddressGlobal;
         public bool ShouldFetchAddresses => m_Status == Status.Uninitialized;
         public bool HasAddresses => m_Status == Status.ResponseReceived;
