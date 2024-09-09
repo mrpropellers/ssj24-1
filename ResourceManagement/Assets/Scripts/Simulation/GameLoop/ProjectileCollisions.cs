@@ -11,6 +11,7 @@ namespace Simulation
     [BurstCompile]
     public struct ProjectileTriggersJob : ITriggerEventsJob
     {
+        public EntityCommandBuffer ECB;
         public DynamicBuffer<PendingRatScored> RatScoringBuffer;
         [ReadOnly]
         public ComponentLookup<LocalTransform> TransformLookup;
@@ -49,8 +50,9 @@ namespace Simulation
 
             if (CauldronLookup.TryGetComponent(otherEntity, out var cauldron))
             {
-                Debug.Log("Rat cauldron dunk detected!");
+                //Debug.Log("Rat cauldron dunk detected!");
                 projectile.HasScored = true;
+                ECB.SetComponent(projectileEntity, projectile);
                 RatScoringBuffer.Add(new PendingRatScored()
                 {
                     RatEntityScored = projectileEntity,
@@ -61,7 +63,7 @@ namespace Simulation
             }
             else
             {
-                Debug.Log("Rat hit a trigger that was not a cauldron??");
+                //Debug.Log("Rat hit a trigger that was not a cauldron??");
             }
         }
     }
@@ -72,7 +74,7 @@ namespace Simulation
     //  even if they end up being invalidated by the Server afterwards
     [BurstCompile]
     [UpdateInGroup(typeof(SimulationSystemGroup))]
-    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
+    //[WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [StructLayout(LayoutKind.Auto)]
     public partial struct CauldronTriggerProcessingSystem : ISystem
     {
@@ -98,8 +100,10 @@ namespace Simulation
             _tfLookup.Update(ref state);
             var ratScoringBuffer = SystemAPI.GetSingletonBuffer<PendingRatScored>();
 
+            var ecb = new EntityCommandBuffer(Allocator.TempJob);
             state.Dependency = new ProjectileTriggersJob()
             {
+                ECB = ecb,
                 CauldronLookup = _cauldronLookup, 
                 ProjectileLookup = _projectileLookup, 
                 TransformLookup = _tfLookup, 
@@ -107,6 +111,8 @@ namespace Simulation
             }.Schedule(SystemAPI.GetSingleton<SimulationSingleton>(), state.Dependency);
             
             state.CompleteDependency();
+            ecb.Playback(state.EntityManager);
+            ecb.Dispose();
         }
 
         [BurstCompile]

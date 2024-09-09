@@ -10,15 +10,18 @@ using UnityEngine;
 namespace Simulation
 {
     [UpdateInGroup(typeof(LateSimulationSystemGroup))]
+    [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation)]
     [StructLayout(LayoutKind.Auto)]
     public partial class UpdateScoreSystem : SystemBase 
     {
         Dictionary<int, int> m_PlayerScores;
+        HashSet<Entity> m_RatsSeen;
 
         protected override void OnCreate()
         {
             RequireForUpdate<PendingRatScored>();
             m_PlayerScores = new Dictionary<int, int>();
+            m_RatsSeen = new HashSet<Entity>();
         }
 
         protected override void OnUpdate()
@@ -30,8 +33,11 @@ namespace Simulation
             Debug.Log("Processing some rat scores");
             var ecb = new EntityCommandBuffer(Allocator.Temp);
             m_PlayerScores.Clear();
+            m_RatsSeen.Clear();
             foreach (var pending in pendingScores)
             {
+                if (m_RatsSeen.Contains(pending.RatEntityScored))
+                    continue;
                 if (m_PlayerScores.ContainsKey(pending.OwnerId))
                 {
                     m_PlayerScores[pending.OwnerId]++;
@@ -40,6 +46,8 @@ namespace Simulation
                 {
                     m_PlayerScores.Add(pending.OwnerId, 1);
                 }
+
+                m_RatsSeen.Add(pending.RatEntityScored);
             }
 
             if (pendingScores.Length == 0)
@@ -62,7 +70,7 @@ namespace Simulation
     }
 
     [BurstCompile]
-    [UpdateInGroup(typeof(InitializationSystemGroup))]
+    [UpdateInGroup(typeof(PresentationSystemGroup))]
     public partial struct BroadcastScoreEventsSystem : ISystem
     {
         public void OnCreate(ref SystemState state)
@@ -76,11 +84,21 @@ namespace Simulation
             if (pendingScores.Length == 0)
                 return;
 
-            //Debug.Log("As far as Scott can tell, this never happens.");
+            var scoredEntities = new HashSet<Entity>();
+            int thisPlayerId = -1;
+            foreach (var ghostOwner in SystemAPI.Query<RefRO<GhostOwner>>()
+                         .WithAll<GhostOwnerIsLocal, ThirdPersonCharacterComponent>())
+            {
+                thisPlayerId = ghostOwner.ValueRO.NetworkId;
+            }
 
             foreach (var score in pendingScores)
             {
-                GameEventQueues.Instance.RatsScored.Enqueue(score);
+                if (score.OwnerId == thisPlayerId && !scoredEntities.Contains(score.RatEntityScored))
+                {
+                    GameEventQueues.Instance.RatsScored.Enqueue(score);
+                    scoredEntities.Add(score.RatEntityScored);
+                }
             }
         }
     }
@@ -102,7 +120,7 @@ namespace Simulation
             var ecb = new EntityCommandBuffer(Allocator.Temp);
             if (pendingScores.Length > 0)
             {
-                Debug.Log($"Clearing {pendingScores.Length} entries from the rat score buffer");
+                //Debug.Log($"Clearing {pendingScores.Length} entries from the rat score buffer");
             }
 
             if (isServer)
