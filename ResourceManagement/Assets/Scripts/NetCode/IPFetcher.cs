@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using AddressFamily = System.Net.Sockets.AddressFamily;
 using UnityEngine;
+using PlayerPrefs = UnityEngine.PlayerPrefs;
+using DateTime = System.DateTime;
 
 namespace NetCode
 {
@@ -17,8 +19,13 @@ namespace NetCode
             ResponseReceived
         }
 
+        private string playerPrefIpHandle = "playerIp";
+        private string playerPrefIpTimestampHandle = "playerIpTimestamp";
+
         public bool FoundGlobalAddress { get; private set; }
         public string BestAddressFetched => FoundGlobalAddress ? myAddressGlobal : myAddressLocal;
+        public string locallyStoredAddress;
+
         private string myAddressLocal;
         private string myAddressGlobal;
         public bool ShouldFetchAddresses => m_Status == Status.Uninitialized;
@@ -26,16 +33,54 @@ namespace NetCode
         public Task FetchTask { get; private set; }
         Status m_Status;
 
+        public bool playerPrefIpIsCurrent()
+        {
+            if (!PlayerPrefs.HasKey(playerPrefIpHandle)) { return false; }
+
+            DateTime now = DateTime.Now;
+            DateTime lastUpdate = DateTime.Parse(PlayerPrefs.GetString(playerPrefIpTimestampHandle));
+
+            return (lastUpdate > now.AddHours(-24) && lastUpdate < now);
+        }
+
+        public void setPlayerPrefIp(string ipString)
+        {
+            Debug.LogError("Saving player ip: " + ipString);
+            PlayerPrefs.SetString(playerPrefIpHandle, ipString);
+            DateTime now = DateTime.Now;
+            locallyStoredAddress = ipString;
+
+            PlayerPrefs.SetString(playerPrefIpTimestampHandle, now.ToString());
+            PlayerPrefs.Save();
+
+        }
+
         public void FetchIPAddresses()
         {
+            if (playerPrefIpIsCurrent())
+            {
+                Debug.LogError("Loading player current ip address");
+                locallyStoredAddress = PlayerPrefs.GetString(playerPrefIpHandle);
+                return;
+            }
+
             if (m_Status != Status.Uninitialized)
             {
                 Debug.LogError("Already fetched addresses. Can't do it twice!");
                 return;
             }
-            FetchTask = Task.Run(AddressFetchTask);
+
+           FetchTask = Task.Run(AddressFetchTask);
+
+            FetchTask.Wait();
+            if (!HasAddresses)
+            {
+                Debug.LogError("Something bad happened while waiting for IP Addresses...");
+            }
+            setPlayerPrefIp(myAddressGlobal);
         }
-        
+    
+
         void AddressFetchTask()
         {
             m_Status = Status.RequestSent;
@@ -66,6 +111,7 @@ namespace NetCode
                 {
                     Stream stream = response.GetResponseStream();
                     StreamReader reader = new StreamReader(stream, Encoding.UTF8);
+                    
                     myAddressGlobal = reader.ReadToEnd();
                     FoundGlobalAddress = true;
                 }
