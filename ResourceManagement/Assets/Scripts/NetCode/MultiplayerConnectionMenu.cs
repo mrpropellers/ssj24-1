@@ -153,7 +153,7 @@ namespace NetCode
         {
             m_LastReported = Time.time;
 
-            if (GameplaySceneLoader.EntityWorldsInstance.ClientIsConnected)
+            if (EntityWorlds.ClientIsConnected)
             {
                 if (EntityWorlds.GameplayIsUnderway)
                 {

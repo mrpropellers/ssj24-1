@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using NetCode;
-using Simulation;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -158,7 +157,15 @@ namespace Presentation
 
         internal void UpdateScore()
         {
-            currentScore++;
+            // We won't immediately see the score update from the server so we need to wait at least one
+            // ping's worth of time (probably this is enough)
+            StartCoroutine(UpdateScoreAfter(0.5f));
+        }
+
+        IEnumerator UpdateScoreAfter(float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
+            currentScore = CurrentGame.ThisPlayerScore;
             SetScore(currentScore);
         }
     }

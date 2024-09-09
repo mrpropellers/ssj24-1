@@ -81,8 +81,8 @@ namespace NetCode
 
         bool ClientIsCreated => AreInitialized && clientWorld.EntityManager.Exists(_clientConnector);
         
-        public bool ClientIsConnected => ClientIsCreated
-            && ClientNetworkStream.CurrentState == ConnectionState.State.Connected;
+        public static bool ClientIsConnected => Instance.ClientIsCreated
+            && Instance.ClientNetworkStream.CurrentState == ConnectionState.State.Connected;
 
         public ConnectionState.State ClientConnectionState => ClientIsCreated
             ? ClientNetworkStream.CurrentState
@@ -90,7 +90,7 @@ namespace NetCode
 
         public static bool GameplayIsUnderway => 
             !ReferenceEquals(null, Instance) 
-            && Instance.ClientIsConnected
+            && ClientIsConnected
             && Instance.TryGetGameState(out _, out var gameState)
             && gameState.IsGameplayUnderway;
 
@@ -98,6 +98,9 @@ namespace NetCode
             Instance?.CountConnectedPlayers() ?? 0;
         
         EntityQuery? m_GameStateQuery;
+
+        public static EntityManager? ClientEntityManager =>
+            ClientIsConnected ? Instance.clientWorld.Unmanaged.EntityManager : null;
 
         bool TryGetGameState(out Entity gameStateEntity, out GameState gameState)
         {
