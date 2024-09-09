@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Simulation;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.NetCode;
 using Unity.Networking.Transport;
@@ -94,7 +95,7 @@ namespace NetCode
             && gameState.IsGameplayUnderway;
 
         public static int NumConnectedPlayers => 
-            1;
+            Instance?.CountConnectedPlayers() ?? 0;
         
         EntityQuery? m_GameStateQuery;
 
@@ -229,6 +230,19 @@ namespace NetCode
             {
                 _owner.StartCoroutine(StartClientAndConnect(gameScene, ip, port));
             }
+        }
+
+        int CountConnectedPlayers()
+        {
+            if (!ClientIsConnected)
+                return 0;
+
+            using var playerQuery = clientWorld.EntityManager.CreateEntityQuery(
+                ComponentType.ReadOnly<ThirdPersonPlayer>(), ComponentType.ReadOnly<GhostOwner>());
+            var players = playerQuery.ToEntityArray(Allocator.Temp);
+            var numPlayers = players.Length;
+            players.Dispose();
+            return numPlayers;
         }
         
         private bool TryStartServer(ushort port)

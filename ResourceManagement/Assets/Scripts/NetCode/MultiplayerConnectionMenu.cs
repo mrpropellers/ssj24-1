@@ -155,8 +155,16 @@ namespace NetCode
 
             if (GameplaySceneLoader.EntityWorldsInstance.ClientIsConnected)
             {
-                Debug.Log("Client is connected!");
-                m_ShouldReport = false;
+                if (EntityWorlds.GameplayIsUnderway)
+                {
+                    Debug.Log("Gameplay has started!");
+                    m_ShouldReport = false;
+                }
+                else
+                {
+                    Debug.Log($"Client is Connected. {EntityWorlds.NumConnectedPlayers} " +
+                        $"player(s) connected to game.");
+                }
             }
             else
             {
