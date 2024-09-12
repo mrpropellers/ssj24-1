@@ -138,9 +138,6 @@ namespace NetCode
         {
             var start = Time.time;
             
-            // TODO? There may be a race condition here. We should initialize worlds first, THEN do the connection
-            //  from client to server, although right now this seems to only be a problem when client is connecting
-            //  to a remote server (i.e. not here)
             if (TryStartServer(port))
             {
                 Debug.Log("Server and client started. Loading Server World");

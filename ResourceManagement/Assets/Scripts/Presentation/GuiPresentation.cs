@@ -32,6 +32,7 @@ namespace Presentation
 
         private const float MAX_TIME = 180f;
         private const float MAX_SCORE = 21.0f;
+        const float SERVER_UPDATE_LAG = 0.5f;
         private int currentScore = 0;
         private int currentRats = 0;
 
@@ -80,13 +81,15 @@ namespace Presentation
         public void SetScore(int score)
         {
             this.score.SetText($"{score}");
+            currentScore = score;
 
             float normal = ((float)score) / MAX_SCORE;
             scoreFill.fillAmount = normal;
         }
 
-        public void SetRats(int rats)
+        void SetRats(int rats)
         {
+            currentRats = rats;
             this.rats.SetText($"{rats}");
         }
 
@@ -142,31 +145,48 @@ namespace Presentation
             yield return new WaitForSeconds(5);
             DisableScoreboard();
         }
+        
+        Coroutine m_LaggedRatUpdate;
 
+        void RestartRatUpdateRoutine()
+        {
+            // Double check that we still match whatever the server has
+            if (m_LaggedRatUpdate != null)
+                StopCoroutine(m_LaggedRatUpdate);
+            m_LaggedRatUpdate = StartCoroutine(UpdateNumRatsAfter(SERVER_UPDATE_LAG));
+        }
         internal void RemoveRat()
         {
-            currentRats--;
-            SetRats(currentRats);
+            SetRats(currentRats - 1);
+            RestartRatUpdateRoutine();
         }
 
         internal void AddRat()
         {
-            currentRats++;
-            SetRats(currentRats);
+            SetRats(currentRats + 1);
+            RestartRatUpdateRoutine();
+        }
+        
+        IEnumerator UpdateNumRatsAfter(float seconds)
+        {
+            yield return new WaitForSeconds(seconds);
+            SetRats(CurrentGame.GetRatCount(CurrentGame.ThisPlayer));
         }
 
+        Coroutine m_LaggedScoreUpdate;
         internal void UpdateScore()
         {
-            // We won't immediately see the score update from the server so we need to wait at least one
-            // ping's worth of time (probably this is enough)
-            StartCoroutine(UpdateScoreAfter(0.5f));
+            if (m_LaggedScoreUpdate != null)
+                StopCoroutine(m_LaggedScoreUpdate);
+            // Double check that we still match whatever the server has
+            m_LaggedScoreUpdate = StartCoroutine(UpdateScoreAfter(SERVER_UPDATE_LAG));
+            SetScore(currentScore + 1);
         }
 
         IEnumerator UpdateScoreAfter(float seconds)
         {
             yield return new WaitForSeconds(seconds);
-            currentScore = CurrentGame.ThisPlayerScore;
-            SetScore(currentScore);
+            SetScore(CurrentGame.GetScore(CurrentGame.ThisPlayer));
         }
     }
 }
